@@ -1,0 +1,601 @@
+{
+    "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers.json?__referrer=runtime&Format=json",
+    "countries": [
+        {
+            "country_code": "AU",
+            "country": "Australia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AU.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AU/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AU/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AU/Mobile.json"
+            }
+        },
+        {
+            "country_code": "BE",
+            "country": "Belgium",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BE.json",
+            "beta": false,
+            "subresource_uris": {
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BE/TollFree.json"
+            }
+        },
+        {
+            "country_code": "SE",
+            "country": "Sweden",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SE.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SE/Mobile.json"
+            }
+        },
+        {
+            "country_code": "SK",
+            "country": "Slovakia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SK.json",
+            "beta": false,
+            "subresource_uris": {
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SK/TollFree.json"
+            }
+        },
+        {
+            "country_code": "PL",
+            "country": "Poland",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PL.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PL/Mobile.json"
+            }
+        },
+        {
+            "country_code": "LT",
+            "country": "Lithuania",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/LT.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/LT/Mobile.json"
+            }
+        },
+        {
+            "country_code": "JP",
+            "country": "Japan",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/JP.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/JP/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/JP/TollFree.json"
+            }
+        },
+        {
+            "country_code": "IE",
+            "country": "Ireland",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/IE.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/IE/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/IE/Mobile.json"
+            }
+        },
+        {
+            "country_code": "CA",
+            "country": "Canada",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CA.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CA/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CA/TollFree.json"
+            }
+        },
+        {
+            "country_code": "PT",
+            "country": "Portugal",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PT.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PT/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PT/Mobile.json"
+            }
+        },
+        {
+            "country_code": "RO",
+            "country": "Romania",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/RO.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/RO/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/RO/TollFree.json"
+            }
+        },
+        {
+            "country_code": "FI",
+            "country": "Finland",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/FI.json",
+            "beta": false,
+            "subresource_uris": {
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/FI/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/FI/Mobile.json"
+            }
+        },
+        {
+            "country_code": "GB",
+            "country": "United Kingdom",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GB.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GB/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GB/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GB/Mobile.json"
+            }
+        },
+        {
+            "country_code": "PA",
+            "country": "Panama",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PA.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PA/Local.json"
+            }
+        },
+        {
+            "country_code": "PE",
+            "country": "Peru",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PE.json",
+            "beta": false,
+            "subresource_uris": {
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PE/TollFree.json"
+            }
+        },
+        {
+            "country_code": "FR",
+            "country": "France",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/FR.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/FR/Local.json"
+            }
+        },
+        {
+            "country_code": "CZ",
+            "country": "Czech Republic",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CZ.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CZ/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CZ/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CZ/Mobile.json"
+            }
+        },
+        {
+            "country_code": "DE",
+            "country": "Germany",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DE.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DE/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DE/Mobile.json"
+            }
+        },
+        {
+            "country_code": "GH",
+            "country": "Ghana",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GH.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GH/Mobile.json"
+            }
+        },
+        {
+            "country_code": "DK",
+            "country": "Denmark",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DK.json",
+            "beta": false,
+            "subresource_uris": {
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DK/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DK/Mobile.json"
+            }
+        },
+        {
+            "country_code": "UG",
+            "country": "Uganda",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/UG.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/UG/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/UG/TollFree.json"
+            }
+        },
+        {
+            "country_code": "MX",
+            "country": "Mexico",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/MX.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/MX/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/MX/TollFree.json"
+            }
+        },
+        {
+            "country_code": "DZ",
+            "country": "Algeria",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DZ.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/DZ/Local.json"
+            }
+        },
+        {
+            "country_code": "ZA",
+            "country": "South Africa",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ZA.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ZA/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ZA/Mobile.json"
+            }
+        },
+        {
+            "country_code": "HR",
+            "country": "Croatia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HR.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HR/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HR/TollFree.json"
+            }
+        },
+        {
+            "country_code": "ID",
+            "country": "Indonesia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ID.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ID/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ID/TollFree.json"
+            }
+        },
+        {
+            "country_code": "BR",
+            "country": "Brazil",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BR.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BR/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BR/TollFree.json"
+            }
+        },
+        {
+            "country_code": "AT",
+            "country": "Austria",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AT.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AT/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AT/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AT/Mobile.json"
+            }
+        },
+        {
+            "country_code": "US",
+            "country": "United States",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/US.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/US/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/US/TollFree.json"
+            }
+        },
+        {
+            "country_code": "VI",
+            "country": "Virgin Islands, U.S.",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/VI.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/VI/Local.json"
+            }
+        },
+        {
+            "country_code": "EC",
+            "country": "Ecuador",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/EC.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/EC/Local.json"
+            }
+        },
+        {
+            "country_code": "KE",
+            "country": "Kenya",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/KE.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/KE/Local.json"
+            }
+        },
+        {
+            "country_code": "NL",
+            "country": "Netherlands",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/NL.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/NL/Mobile.json"
+            }
+        },
+        {
+            "country_code": "CL",
+            "country": "Chile",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CL.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CL/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CL/Mobile.json"
+            }
+        },
+        {
+            "country_code": "CH",
+            "country": "Switzerland",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CH.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CH/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CH/Mobile.json"
+            }
+        },
+        {
+            "country_code": "TN",
+            "country": "Tunisia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/TN.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/TN/Local.json"
+            }
+        },
+        {
+            "country_code": "TH",
+            "country": "Thailand",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/TH.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/TH/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/TH/TollFree.json"
+            }
+        },
+        {
+            "country_code": "SI",
+            "country": "Slovenia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SI.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SI/Local.json"
+            }
+        },
+        {
+            "country_code": "PR",
+            "country": "Puerto Rico",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PR.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PR/Local.json"
+            }
+        },
+        {
+            "country_code": "PH",
+            "country": "Philippines",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PH.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PH/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PH/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/PH/Mobile.json"
+            }
+        },
+        {
+            "country_code": "NZ",
+            "country": "New Zealand",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/NZ.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/NZ/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/NZ/TollFree.json"
+            }
+        },
+        {
+            "country_code": "NA",
+            "country": "Namibia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/NA.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/NA/Local.json"
+            }
+        },
+        {
+            "country_code": "MU",
+            "country": "Mauritius",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/MU.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/MU/Mobile.json"
+            }
+        },
+        {
+            "country_code": "ML",
+            "country": "Mali",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ML.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/ML/Local.json"
+            }
+        },
+        {
+            "country_code": "MO",
+            "country": "Macau",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/MO.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/MO/Mobile.json"
+            }
+        },
+        {
+            "country_code": "JM",
+            "country": "Jamaica",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/JM.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/JM/Local.json"
+            }
+        },
+        {
+            "country_code": "IL",
+            "country": "Israel",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/IL.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/IL/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/IL/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/IL/Mobile.json"
+            }
+        },
+        {
+            "country_code": "HU",
+            "country": "Hungary",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HU.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HU/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HU/Mobile.json"
+            }
+        },
+        {
+            "country_code": "HK",
+            "country": "Hong Kong",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HK.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HK/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HK/TollFree.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/HK/Mobile.json"
+            }
+        },
+        {
+            "country_code": "GN",
+            "country": "Guinea",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GN.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GN/Mobile.json"
+            }
+        },
+        {
+            "country_code": "GD",
+            "country": "Grenada",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GD.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GD/Local.json"
+            }
+        },
+        {
+            "country_code": "GR",
+            "country": "Greece",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GR.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GR/Local.json"
+            }
+        },
+        {
+            "country_code": "GE",
+            "country": "Georgia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GE.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/GE/Local.json"
+            }
+        },
+        {
+            "country_code": "EE",
+            "country": "Estonia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/EE.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/EE/Local.json",
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/EE/Mobile.json"
+            }
+        },
+        {
+            "country_code": "SV",
+            "country": "El Salvador",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SV.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/SV/Local.json"
+            }
+        },
+        {
+            "country_code": "CO",
+            "country": "Colombia",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CO.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CO/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/CO/TollFree.json"
+            }
+        },
+        {
+            "country_code": "BG",
+            "country": "Bulgaria",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BG.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BG/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BG/TollFree.json"
+            }
+        },
+        {
+            "country_code": "BW",
+            "country": "Botswana",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BW.json",
+            "beta": false,
+            "subresource_uris": {
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BW/TollFree.json"
+            }
+        },
+        {
+            "country_code": "BA",
+            "country": "Bosnia and Herzegovina",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BA.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BA/Local.json"
+            }
+        },
+        {
+            "country_code": "BJ",
+            "country": "Benin",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BJ.json",
+            "beta": false,
+            "subresource_uris": {
+                "mobile": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BJ/Mobile.json"
+            }
+        },
+        {
+            "country_code": "BB",
+            "country": "Barbados",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BB.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/BB/Local.json"
+            }
+        },
+        {
+            "country_code": "AR",
+            "country": "Argentina",
+            "uri": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AR.json",
+            "beta": false,
+            "subresource_uris": {
+                "local": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AR/Local.json",
+                "toll_free": "/2010-04-01/Accounts/AC442ffea3b9c8953ac90e2a73ca7c23e6/AvailablePhoneNumbers/AR/TollFree.json"
+            }
+        }
+    ]
+}

@@ -1,0 +1,73 @@
+// Write your overrides
+.bg-primary{
+  background-color: rgba(56, 166, 227, 1);
+}
+// Small devices
+@mixin sm {
+  @media (min-width: #{$screen-sm-min}) {
+    @content;
+  }
+}
+
+// Medium devices
+@mixin md {
+  @media (min-width: #{$screen-md-min}) {
+    @content;
+  }
+}
+
+// Large devices
+@mixin lg {
+  @media (min-width: #{$screen-lg-min}) {
+    @content;
+  }
+}
+
+// Extra large devices
+@mixin xl {
+  @media (min-width: #{$screen-xl-min}) {
+    @content;
+  }
+}
+
+body {
+  background-color: rgba(248, 252, 255, 1);
+}
+
+
+.v-row{
+
+  .top_shape{
+      position: absolute;
+      width: 237.44px;
+      height: 233.56px;
+      left: 650px;
+      top: 85px;
+
+    // 576px window width and more
+    @media (max-width: 768px) {
+      left: 50px;
+      top: 85px;
+    }
+  }
+
+  .bottom_shape{
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    left: 1080px;
+    top: 700.44px;
+
+    // 576px window width and more
+    @media (max-width: 768px) {
+      left: 50px;
+      top: 85px;
+    }
+  }
+}
+
+
+
+.__align-items-center{
+  align-items: center;
+}

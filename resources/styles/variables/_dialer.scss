@@ -1,0 +1,384 @@
+.chat-content-container {
+  /* stylelint-disable-next-line value-keyword-case */
+  background-color: v-bind(chatContentContainerBg);
+
+  // Adjust the padding so text field height stays 48px
+  .chat-message-input {
+    .v-field__append-inner {
+      align-items: center;
+      padding-block-start: 0;
+    }
+
+    .v-field--appended {
+      padding-inline-end: 9px;
+    }
+  }
+}
+
+.chat-log {
+  .chat-content {
+    border-end-end-radius: 6px;
+    border-end-start-radius: 6px;
+
+    &.chat-left {
+      border-start-end-radius: 6px;
+    }
+
+    &.chat-right {
+      border-start-start-radius: 6px;
+    }
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.custom-dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.selected-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.dropdown-items {
+  position: absolute;
+  z-index: 200;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  background-color: #fff;
+
+  //box-shadow: rgba(134, 146, 208, 0.08);
+  box-shadow: 0 0 15px 0 rgba(0, 0, 0, 10%);
+  inline-size: 300px;
+  inset-block-start: 100%;
+  inset-inline-start: 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f2f2f2;
+}
+
+.w-15 {
+  inline-size: 20px;
+}
+
+.h-15 {
+  block-size: 20px;
+}
+
+.dialer-container {
+  position: relative;
+  background: var(--light-solid-color-extra-white, #fff);
+  block-size: 773px;
+  inline-size: 500px;
+  margin-block-start: 5rem;
+}
+
+.dialer-header {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  justify-content: center;
+  background: var(--dark-opacity-color-gray-gray-8, rgba(134, 146, 208, 8%));
+  block-size: 43px;
+  color: var(--light-typography-color-heading-text, #4b465c);
+  font-feature-settings: "clig" off, "liga" off;
+  inline-size: 502px;
+  margin-block-start: auto;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: var(--dark-opacity-color-gray-gray-8, rgba(134, 146, 208, 8%));
+  margin-block: 0;
+  margin-inline: 52px;
+}
+
+.flag-dropdown {
+  position: relative;
+  cursor: pointer;
+  margin-inline-end: 4px;
+  outline: none;
+}
+
+.flag-dropdown:focus-visible {
+  outline-color: transparent !important;
+}
+
+.phone-input {
+  flex: 1;
+  color: var(--light-typography-color-heading-text, #4b465c);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 30px; /* 136.364% */
+  outline: none;
+}
+
+.clear-button {
+  margin-inline-start: 10px;
+}
+
+.dialer-grid {
+  display: grid;
+  justify-content: center;
+  margin: 20px;
+  grid-template-columns: repeat(1, 0fr);
+}
+
+.dialer-row {
+  display: flex;
+}
+
+.dialer-button {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  block-size: 70px;
+  color: var(--light-typography-color-heading-text, #4b465c);
+  cursor: pointer;
+  font-feature-settings: "clig" off, "liga" off;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 600;
+  inline-size: 132.333px;
+  line-height: 44px; /* 137.5% */
+  text-align: center;
+}
+
+.dialer-grid-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  block-size: 70px;
+  color: var(--light-typography-color-heading-text, #4b465c);
+  cursor: pointer;
+  font-feature-settings: "clig" off, "liga" off;
+  font-size: 32px;
+  font-weight: 600;
+  inline-size: 132.333px;
+  line-height: 44px; /* 137.5% */
+  text-align: center;
+}
+
+.dialer-button:hover {
+  background-color: whitesmoke;
+}
+
+.dialer-grid-button:not(:first-child) {
+  border-inline-start: 1px solid whitesmoke;
+}
+
+.dialer-button:not(:first-child) {
+  border-inline-start: 1px solid whitesmoke;
+}
+
+.dialer-row:not(:first-child) .dialer-button {
+  border-block-start: 1px solid whitesmoke;
+}
+
+.tab-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--light-solid-color-primary-primary-500-base, #38a6e3);
+  cursor: pointer;
+  inline-size: 100px;
+  padding-block: 18px;
+  padding-inline: 28px;
+}
+
+.tab-button:hover {
+  background: var(--light-solid-color-primary-primary-700-active, #2876a1);
+}
+
+.tab-button.active {
+  background: var(--light-solid-color-primary-primary-700-active, #2876a1);
+}
+
+.bottom__0 {
+  inset-block-end: 0;
+}
+
+.keys {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+}
+
+.key-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-block-end: 20px;
+}
+
+.key-row .btn {
+  font-weight: 100;
+  margin-inline: 20px;
+}
+
+.key-row .btn span {
+  display: block;
+  color: #787878;
+  font-size: 10px;
+  padding-block-start: 2px;
+}
+
+.controls,
+.keys {
+  padding-block-start: 10px;
+}
+
+.controls {
+  float: inline-start;
+}
+
+.controls .btn {
+  display: block;
+  margin-block-end: 20px;
+}
+
+.status-success {
+  border-radius: 100%;
+  background: rgb(40, 199, 111);
+  block-size: 10px;
+  inline-size: 10px;
+}
+
+[v-cloak] {
+  display: none;
+}
+
+.incoming-call-notification {
+  position: fixed;
+  z-index: 1000;
+  padding: 16px;
+  inset-block-start: 0; /* Initially, hide the notification above the viewport */
+  inset-inline-start: 50%; /* Horizontal centering */
+  transform: translateX(-50%);
+  transition: inset-block-start 0.5s ease-in-out; /* Use CSS transition for the slide-in animation */
+}
+
+.caller-id {
+  font-size: 18px;
+  margin-block-end: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Define the slide-in and fade-out animation */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: inset-block-start 0.5s, opacity 0.5s; /* Add opacity transition for fade-out effect */
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  inset-block-start: -100px; /* Start the animation from above the viewport */
+  opacity: 0; /* Initially, set opacity to 0 */
+}
+
+.slide-fade-enter-to,
+.slide-fade-leave-from {
+  inset-block-start: 20px; /* End the animation at the desired position */
+  opacity: 1; /* Fade in or out by changing opacity */
+}
+
+.dialer {
+  background: white;
+  block-size: 773px;
+  inline-size: 500px;
+  min-inline-size: 300px !important;
+}
+
+.tel-input-bg {
+  flex-shrink: 0;
+  border: none;
+  background: var(--dark-opacity-color-gray-gray-8, rgba(134, 146, 208, 8%));
+  block-size: 48px;
+  color: var(--light-typography-color-heading-text, #4b465c);
+  inline-size: 397px;
+}
+
+.vti__input {
+  color: var(--light-typography-color-heading-text, #4b465c);
+}
+
+.text-black {
+  color: var(--light-typography-color-heading-text, #4b465c);
+}
+
+.call-log {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-block-end: 1px solid #e1d8d8cc;
+  gap: 4px;
+  padding-block: 15px;
+  padding-inline: 25px;
+}
+
+.call-log:hover {
+  background: var(--light-solid-color-extra-body-background, #f8fcff);
+}
+
+.contact {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-block-end: 1px solid #e1d8d8cc;
+  gap: 4px;
+  padding-block: 12px;
+  padding-inline: 25px;
+}
+
+.contact .actions {
+  visibility: hidden;
+}
+
+.contact:hover {
+  background: var(--light-solid-color-extra-body-background, #f8fcff);
+
+  .actions {
+    visibility: visible;
+  }
+}
