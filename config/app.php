@@ -74,6 +74,8 @@ return [
 
     'TWILIO_AUTH_TOKEN' => env('TWILIO_AUTH_TOKEN'),
 
+    'TWILIO_VOICE_APP_SID' => env('TWILIO_VOICE_APP_SID'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

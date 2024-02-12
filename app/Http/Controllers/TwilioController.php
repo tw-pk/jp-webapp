@@ -32,7 +32,7 @@ class TwilioController extends Controller
 
     public function retrieveToken(){
         $capability = new ClientToken(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
-        $capability->allowClientOutgoing(env('TWILIO_VOICE_APP_SID'));
+        $capability->allowClientOutgoing(config('app.TWILIO_VOICE_APP_SID'));
         $client_name = Auth::user()->firstname ? Auth::user()->firstname :'Agent';
         $capability->allowClientIncoming($client_name);
         $token = $capability->generateToken();
@@ -55,26 +55,16 @@ class TwilioController extends Controller
 
     public function incomingCall(Request $request){
 
-        Log::info('Incoming Call Response: ');
-        Log::info($request->all());
-
-         //To
         $response = new VoiceResponse();
         // Answer the incoming call
         $response->say('Hello! Kindly wait you are being connected to the call....');
         // Connect the call with your Twilio Device (replace 'your-device-identity' with your actual Device identity)
-        //$dial = $response->dial();
-       
-        //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
-        $client_name = 'Usman Ghani';
-        $number = Str::replaceFirst('+', '', '923447431371');
-        
-        $dial = $response->dial('', ['callerId' => $request->input('From')]);
-        $dial->client($client_name);
-        $dial->number($number);
+        $dial = $response->dial();
+
+        $dial->client('Hamaad');
 
         // Answer the incoming call
-        $response->say('Thanks! Call ended....');
+        $response->say('Call ended....');
 
         // Render the TwiML response
         echo $response;
