@@ -3,6 +3,7 @@ import ChatContact from '@/views/apps/chat/ChatContact.vue'
 import { useChatStore } from '@/views/apps/chat/useChatStore'
 import { useContactStore } from "@/views/apps/contact/useContactStore"
 import { emailValidator, requiredValidator } from "@validators"
+import { onMounted, ref } from 'vue'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import { useChat } from './useChat'
 
@@ -36,7 +37,6 @@ const snackbarActionColor = ref(' ')
 const { resolveAvatarBadgeVariant } = useChat()
 const search = useVModel(props, 'search')
 const isDialogVisible = useVModel(props, 'isDialogVisible')
-const chatStore = useChatStore()
 const firstname = ref('')
 const lastname = ref('')
 const email = ref('')
@@ -45,6 +45,9 @@ const address_home = ref('')
 const address_office = ref('')
 const isDisabled = ref(false)
 const isLoading = ref(false)
+const store = useChatStore()
+const contactNotFound = ref(false)
+const phoneNumbers = ref([])
 
 const errors = ref({
   firstname: undefined,
@@ -87,53 +90,42 @@ const addContact = () => {
     })
 }
 
+
+// 👉 Fetching Contact
+const fetchContacts = () => {
+  const contacts = store.contacts ? store.contacts : null
+  let keys = contacts ? Object.keys(contacts) : null
+  let keyCount = keys ? keys.length ?? null : null
+  if (keyCount) {
+    contactNotFound.value = true
+
+    const phoneNumbersArray = Object.values(contacts).map(contact => {
+      return contact.phone
+    })
+
+    phoneNumbers.value = phoneNumbersArray
+  }
+}
+
 onMounted(() => {
-  console.log('onmounted')
+  setTimeout(() => {
+    fetchContacts()
+  }, 1000)
 })
 </script>
 
 <template>
   <!-- 👉 Chat list header -->
   <div
-    v-if="chatStore.profileUser"
+    v-if="store.profileUser"
     class="chat-list-header"
   >
-    <!--
-      <VBadge
-      dot
-      location="bottom right"
-      offset-x="3"
-      offset-y="3"
-      :color="resolveAvatarBadgeVariant(chatStore.profileUser.status)"
-      bordered
-      >
-      <VAvatar
-      size="38"
-      class="cursor-pointer"
-      @click="$emit('showUserProfile')"
-      >
-      <VImg
-      :src="chatStore.profileUser.avatar"
-      alt="John Doe"
-      />
-      </VAvatar>
-      </VBadge> 
-    -->
-
-   
-    <AppTextField
-      v-model="search"
-      placeholder="Search..."
-      class=" me-1 chat-list-search"
-    >
-      <template #prepend-inner>
-        <VIcon
-          size="22"
-          icon="tabler-search"
-        />
-      </template>
-    </AppTextField>
-
+    <AppAutocomplete
+      :items="phoneNumbers"
+      placeholder="Select Phone"
+      class="me-1"
+    />
+  
     <VDialog
       v-model="isDialogVisible"
       persistent
@@ -154,7 +146,7 @@ onMounted(() => {
             Add New Contact
           </VTooltip>
           <VIcon
-            icon="tabler-plus"
+            icon="tabler-edit"
             size="22"
           />
         </VBtn>
@@ -288,36 +280,37 @@ onMounted(() => {
     class="d-flex flex-column gap-y-1 chat-contacts-list px-3 list-none"
     :options="{ wheelPropagation: false }"
   >
-    <li>
+    <!--
+      <li>
       <span class="chat-contact-header d-block text-primary text-xl font-weight-medium">Chats</span>
-    </li>
+      </li>
 
-    <ChatContact
-      v-for="contact in chatStore.chatsContacts"
+      <ChatContact
+      v-for="contact in store.chatsContacts"
       :key="`chat-${contact.id}`"
       :user="contact"
       is-chat-contact
       @click="$emit('openChatOfContact', contact.id)"
-    />
+      />
 
-    <span
-      v-show="!chatStore.chatsContacts.length"
+      <span
+      v-show="!store.chatsContacts.length"
       class="no-chat-items-text text-disabled"
-    >No chats found</span>
+      >No chats found</span>
+    -->
 
     <li> 
       <span class="chat-contact-header d-block text-primary text-xl font-weight-medium">Contacts</span> 
     </li> 
 
     <ChatContact 
-      v-for="contact in chatStore.contacts" 
+      v-for="contact in store.contacts" 
       :key="`chat-${contact.id}`" 
       :user="contact" 
       @click="$emit('openChatOfContact', contact.id)" 
     /> 
-
     <span 
-      v-show="!chatStore.contacts.length" 
+      v-show="!contactNotFound" 
       class="no-chat-items-text text-disabled" 
     >No contacts found</span> 
   </PerfectScrollbar>

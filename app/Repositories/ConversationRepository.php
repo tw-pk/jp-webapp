@@ -26,11 +26,15 @@ class ConversationRepository
      */
     public function getConversations($query, $perPage=10): array
     {
-        $contacts = Auth::user()->contacts;
-
+        $contacts = Auth::user()->contacts->map(function ($contact) {
+            $contact->fullName = $contact->firstname . ' ' . $contact->lastname;
+            return $contact;
+        })
+        ->sortByDesc('id');
+        
         $chats = [];
         $filteredContacts = [];
-
+        
         if ($query) {
             $conversations = Auth::user()->conversations()
                 ->whereHas('contact', function ($q) use ($query) {
@@ -43,13 +47,12 @@ class ConversationRepository
         }
 
         $conversations = Auth::user()->conversations;
-
+        
         // Count unread messages
         $unreadCount = 0;
         $chat = [];
-
+        
         foreach ($conversations as $conversation) {
-
             if ($conversation->messages->count()) {
                 $lastMessage = $conversation->messages()->orderBy('created_at', 'desc')->first();
 
@@ -101,7 +104,7 @@ class ConversationRepository
 
         return [
             'chatContacts' => $chats,
-            'contacts' => [],
+            'contacts' => $contacts,
             'profileUser' => [
                 'id' => Auth::user()->id,
                 'avatar' => Auth::user()->profile?->avatar,
@@ -136,16 +139,24 @@ class ConversationRepository
     }
 
 
-    public function getConversationMessages($conversationId, $perPage=10)
+    public function getConversationMessages($contactId, $perPage=10)
     {
-        $conversation = Auth::user()->conversations->where('id', $conversationId)->first();
+        $conversation = Auth::user()->conversations->where('contact_id', $contactId)->first();
         if(!$conversation){
+            $contact = Auth::user()->contacts->where('id', $contactId)->first();
             return [
                 'chat' => "",
-                'contact' => [],
+                'contact' => [
+                    'id' => $contact->id,
+                    'phone_number' => $contact->phone,
+                    'fullName' => $contact?->fullName(),
+                    'about' => $contact->address_home,
+                    'role' => 'contact',
+                    'avatar' => '',
+                    'status' => 'online',
+                ],
             ];
         }
-
 
         $chat_messages = [];
 

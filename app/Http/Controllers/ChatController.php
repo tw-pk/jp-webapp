@@ -35,8 +35,8 @@ class ChatController extends Controller
        return $this->messagingService->allConversations($request->q ?? null, $request->perPage ?? null);
     }
 
-    public function fetch_chat($conversationId){
-        return $this->messagingService->getConversationMessages($conversationId);
+    public function fetch_chat($contactId){
+        return $this->messagingService->getConversationMessages($contactId);
     }
 
 
@@ -45,7 +45,7 @@ class ChatController extends Controller
             'message' => 'required',
             'conversationId' => 'sometimes',
         ]);
-
+        
         $conversation = Conversation::where('id',$request->conversationId)->first();
         if(!$conversation){
             $conversationCreated = $this->createConversation($request->contactId);
@@ -86,7 +86,7 @@ class ChatController extends Controller
                 'chat' => 'undefined'
             ]);
         }
-
+    
         //create twilio message here
         $messageResponse = $this->twilio->conversations->v1->conversations($conversation->sid)
             ->messages->create([
@@ -121,12 +121,12 @@ class ChatController extends Controller
     }
 
     private function createConversation($contactId){
-
+       
         $twilio_conversation = $this->twilio->conversations->v1->conversations->create([
             'friendlyName' => Contact::find($contactId)->fullName(),
-            'uniqueName' => Contact::find($contactId)->phone_number
+            'uniqueName' => Contact::find($contactId)->phone
         ]);
-
+        
        $conversation = Conversation::create([
             'sid' => $twilio_conversation->sid,
             'user_id' => Auth::user()->id,

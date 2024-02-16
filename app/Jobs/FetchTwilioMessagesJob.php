@@ -41,7 +41,7 @@ class FetchTwilioMessagesJob implements ShouldQueue
         foreach ($users as $user) {
             if ($user->hasRole('Admin')) {
                 $numbers = $user->numbers;
-                dd($numbers);
+                
                 foreach ($numbers as $number) {
                     $twilioCallsIncoming = $twilio->calls->read(['to' => $number->phone_number], 100);
                     $twilioCallsOutgoing = $twilio->calls->read([ 'from' => $number->phone_number], 100);

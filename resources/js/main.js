@@ -1,6 +1,6 @@
 /* eslint-disable import/order */
 // import '@/@fake-db/db'
-import '@/@iconify/icons-bundle'
+//import '@/@iconify/icons-bundle'
 
 import App from '@/App.vue'
 import { createApp } from 'vue'
