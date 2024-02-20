@@ -758,56 +758,156 @@ const moreList = [
     
 <template>
   <!-- Show the incoming call notification when `showNotification` is true -->
-  <Transition name="slide-fade">
-    <VCol
+  <Transition
+    name="slide-fade"
+    class="dialer-notification"
+  >
+    <VRow
       v-if="showNotification"
       key="tabler-phone-incoming"
       class="incoming-call-notification"
-      sm="6"
-      md="4"
-      lg="3"
-      style="z-index: 1000;"
+      justify="center"
+      style="z-index: 1000;" 
     >
-      <VCard class="bg-surface">
-        <VCardItem>
-          <template #prepend>
-            <VIcon
-              size="1.9rem"
-              color="white"
-              icon="tabler-phone-incoming"
-            />
-          </template>
-          <VCardTitle class="text-white">
-            {{ callerId }}
-          </VCardTitle>
-        </VCardItem>
+      <VCard class="dialer-container bg-surface">
+        <div class="dialer-header">
+          <p class="mb-auto mt-auto">
+            {{ activeTab }}
+          </p>
+        </div>
 
-        <VCardText class="d-flex justify-space-between align-center flex-wrap">
-          <IconBtn
-            icon="tabler-phone"
-            color="success"
-            variant="tonal"
-            size="x-large"
-            @click="acceptCall"
-          />
+        <div class="status-container mt-10">
+          <div class="d-flex flex-row justify-center">
+            <h2>
+              Usman Ghani
+            </h2>
+          </div>
+          <div class="d-flex flex-row justify-center mt-2">
+            <h3>
+              Calling via (230) 768-6032 - NYC
+            </h3>
+          </div>
+  
+          <div class="d-flex flex-row justify-center mt-2">
+            <h3 class="text-success">
+              Connecting...
+            </h3>
+          </div>
+        </div>
 
-          <IconBtn
-            icon="tabler-phone-x"
-            color="error"
-            variant="tonal"
-            size="x-large"
-            @click="rejectCall"
-          />
-        </VCardText>
+        <div class="input-container-time d-flex flex-row justify-center mt-10">
+          It’s 10:30 PM there
+        </div>
+
+        <div class="dialer-grid mt-12">
+          <div class="dialer-row">
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-microphone-off"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Mute</small>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-dialpad-filled"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Keypad</small>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-volume"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Speaker</small>
+            </div>
+          </div>
+          <div class="dialer-row-second">
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-arrow-forward-up"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Transfer</small>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-player-pause-filled"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Hold</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialer-grid mt-15">
+          <div class="dialer-row mt-10">
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-note"
+                  size="30"
+                  color="warning"
+                />
+              </IconBtn>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+                color="error"
+              >
+                <VIcon
+                  icon="tabler-phone-off"
+                  size="30"
+                />
+              </IconBtn>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-record-mail"
+                  size="30"
+                  color="error"
+                />
+              </IconBtn>
+            </div>
+          </div>
+        </div>
       </VCard>
-    </VCol>
-    <!--    <div v-if="showNotification" class="incoming-call-notification"> -->
-    <!--      <div class="caller-id">{{ callerId }}</div> -->
-    <!--      <div class="action-buttons"> -->
-    <!--        <button @click="acceptCall">Accept</button> -->
-    <!--        <button @click="rejectCall">Reject</button> -->
-    <!--      </div> -->
-    <!--    </div> -->
+    </VRow>
   </Transition>
 
   <VRow
