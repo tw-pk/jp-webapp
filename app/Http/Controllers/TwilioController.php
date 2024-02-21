@@ -12,6 +12,7 @@ use Twilio\Exceptions\TwilioException;
 use Twilio\Jwt\ClientToken;
 use Twilio\Rest\Client;
 use Twilio\TwiML\VoiceResponse;
+use Illuminate\Support\Facades\Broadcast;
 
 class TwilioController extends Controller
 {
@@ -58,26 +59,30 @@ class TwilioController extends Controller
         Log::info('Incoming Call Response: ');
         Log::info($request->all());
 
-         //To
-        $response = new VoiceResponse();
-        // Answer the incoming call
-        $response->say('Hello! Kindly wait you are being connected to the call....');
-        // Connect the call with your Twilio Device (replace 'your-device-identity' with your actual Device identity)
-        //$dial = $response->dial();
+        Broadcast::channel('incoming-calls', function () use ($request) {
+            return $request->all();
+        });
+
+        //  //To
+        // $response = new VoiceResponse();
+        // // Answer the incoming call
+        // $response->say('Hello! Kindly wait you are being connected to the call....');
+        // // Connect the call with your Twilio Device (replace 'your-device-identity' with your actual Device identity)
+        // //$dial = $response->dial();
        
-        //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
-        $client_name = 'Usman Ghani';
-        $number = Str::replaceFirst('+', '', '923447431371');
+        // //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
+        // $client_name = 'Usman Ghani';
+        // $number = Str::replaceFirst('+', '', '923447431371');
         
-        $dial = $response->dial('', ['callerId' => $request->input('From')]);
-        $dial->client($client_name);
-        $dial->number($number);
+        // $dial = $response->dial('', ['callerId' => $request->input('From')]);
+        // $dial->client($client_name);
+        // $dial->number($number);
 
-        // Answer the incoming call
-        $response->say('Thanks! Call ended....');
+        // // Answer the incoming call
+        // $response->say('Thanks! Call ended....');
 
-        // Render the TwiML response
-        echo $response;
+        // // Render the TwiML response
+        // echo $response;
     }
 
     public function get_countries()

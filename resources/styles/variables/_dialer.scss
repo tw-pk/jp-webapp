@@ -329,6 +329,16 @@
   padding: 16px;
   inset-block-start: 0; /* Initially, hide the notification above the viewport */
   inset-inline-start: 50%; /* Horizontal centering */
+  transform: translateX(-50%);
+  transition: inset-block-start 0.5s ease-in-out; /* Use CSS transition for the slide-in animation */
+}
+
+.incoming-call-notification-menu {
+  position: fixed;
+  z-index: 1000;
+  padding: 16px;
+  inset-block-start: 0; /* Initially, hide the notification above the viewport */
+  inset-inline-start: 50%; /* Horizontal centering */
   transform: translateX(-47.7%);
   transition: inset-block-start 0.5s ease-in-out; /* Use CSS transition for the slide-in animation */
 }

@@ -16,6 +16,7 @@ let isCallAccepted = false
 const vuetifyTheme = useTheme()
 const dialerStore = useDialerStore()
 const showNotification = ref(false)
+const showNotificationMenu = ref(false)
 const callerId = ref("") // Replace with the actual caller ID
 const twilioDevice = computed(() => dialerStore.twilioDevice)
 const currentNumber = ref('')
@@ -709,6 +710,7 @@ import { avatarText } from '@core/utils/formatters'
 
 const isLeftSidebarOpen = ref(true)
 const store = useChatStore()
+const incomingCall = ref(null)
 
 // Chat message
 const msg = ref('')
@@ -754,20 +756,80 @@ const moreList = [
     value: 'Report',
   },
 ]
+
+onMounted(() => {
+  console.log('Dialer component mounted')
+  window.Echo.channel('incoming-calls')
+    .listen('.incoming-call', data => {
+      incomingCall.value = data
+
+      alert('incoming call')
+      console.log('incoming call')
+      console.log(data)
+      
+      // Handle the incoming call data here, e.g., display a notification
+    })
+})
 </script>
     
 <template>
   <!-- Show the incoming call notification when `showNotification` is true -->
-  <Transition
-    name="slide-fade"
-    class="dialer-notification"
-  >
-    <VRow
+  <Transition name="slide-fade">
+    <VCol
       v-if="showNotification"
       key="tabler-phone-incoming"
       class="incoming-call-notification"
+      sm="6"
+      md="4"
+      lg="3"
+      style="z-index: 2;"
+    >
+      <VCard class="bg-surface">
+        <VCardItem>
+          <template #prepend>
+            <VIcon
+              size="1.9rem"
+              color="white"
+              icon="tabler-phone-incoming"
+            />
+          </template>
+          <div class="status-container">
+            <div class="d-flex flex-row justify-center">
+              <VCardTitle class="mr-7">
+                {{ callerId }}
+              </VCardTitle>
+            </div>
+          </div>
+        </VCardItem>
+        
+        <VCardText class="d-flex justify-space-between align-center flex-wrap">
+          <IconBtn
+            icon="tabler-phone"
+            color="success"
+            variant="tonal"
+            size="x-large"
+            @click="acceptCall"
+          />
+
+          <IconBtn
+            icon="tabler-phone-x"
+            color="error"
+            variant="tonal"
+            size="x-large"
+            @click="rejectCall"
+          />
+        </VCardText>
+      </VCard>
+    </VCol>
+  </Transition>
+  <!-- The notification menu will show when the notification is ture -->
+  <Transition name="slide-fade">
+    <VRow
+      v-if="showNotificationMenu"
+      key="tabler-phone-incoming"
+      class="incoming-call-notification-menu dialer-notification"
       justify="center"
-      style="z-index: 1000;" 
+      style="z-index: 1;"
     >
       <VCard class="dialer-container bg-surface">
         <div class="dialer-header">
