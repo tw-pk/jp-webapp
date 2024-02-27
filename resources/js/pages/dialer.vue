@@ -707,6 +707,7 @@ const closeInbox = () => {
 import { useChatStore } from '@/views/apps/chat/useChatStore'
 import DialerSettings from "@/views/apps/dialer/components/DialerSettings.vue"
 import { avatarText } from '@core/utils/formatters'
+import { onMounted, ref } from 'vue'
 
 const isLeftSidebarOpen = ref(true)
 const store = useChatStore()
@@ -758,17 +759,18 @@ const moreList = [
 ]
 
 onMounted(() => {
-  console.log('Dialer component mounted')
   window.Echo.channel('incoming-calls')
-    .listen('.incoming-call', data => {
-      incomingCall.value = data
-
-      alert('incoming call')
-      console.log('incoming call')
-      console.log(data)
+    .listen('IncomingCallEvent', event => {
       
-      // Handle the incoming call data here, e.g., display a notification
+      console.log('incoming call')
+      console.log(event)
+
+      //console.log(event.callData)
+
+      showNotification.value = true
+      showNotificationMenu.value = true
     })
+
 })
 </script>
     

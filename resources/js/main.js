@@ -34,13 +34,15 @@ window.Echo = new Echo({
   broadcaster: 'pusher',
   key: import.meta.env.VITE_PUSHER_APP_KEY,
   cluster: 'mt1',
-  wssHost: import.meta.env.VITE_PUSHER_HOST,
+
+  //wssHost: import.meta.env.VITE_PUSHER_HOST,
   wsHost: import.meta.env.VITE_PUSHER_HOST, // Your domain
   encrypted: true,
-  wsPort: 6001, // Https port
-  wssPort: 6001, // Https port
+  wsPort: import.meta.env.VITE_PUSHER_PORT, // Https port
+  //wssPort: import.meta.env.VITE_PUSHER_PORT, // Https port
   enableStats: false, // Change this to your liking this disables statistics
-  forceTLS: import.meta.env.VITE_PUSHER_TLS === 'true',
+  //forceTLS: import.meta.env.VITE_PUSHER_TLS === 'true',
+  forceTLS: false,
   enabledTransports: ['ws', 'wss'],
   authorizer: (channel, options) => {
     return {
