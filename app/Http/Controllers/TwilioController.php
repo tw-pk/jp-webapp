@@ -77,8 +77,15 @@ class TwilioController extends Controller
 
                 $response->say('Hello! Kindly wait you are being connected to the call....');
                 
+                // $data['broadcaster'] = $request->broadcaster;
+                // $data['receiver'] = $request->receiver;
+                // $data['offer'] = $request->offer;
+
+                // event(new StreamOffer($data));
+                $dial = $response->dial();
+                $dial->client('browser-client-identifier');
                 event(new IncomingCallEvent($request->all()));
-                return response()->json(['message' => 'Incoming call processed successfully']);
+                //return response($response)->header('Content-Type', 'text/xml');
             } else {
 
                 $response->say('Sorry! The user you are calling up is not present on the system.');

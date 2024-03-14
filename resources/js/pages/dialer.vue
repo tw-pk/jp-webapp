@@ -4,20 +4,27 @@ import { useDialerStore } from "@/views/apps/dialer/useDialerStore"
 import { isEmpty } from "@core/utils"
 import defaultAvatar from "@images/avatars/avatar-0.png"
 import defaultAudio from "@images/default-audio-3s.mp3"
-import DialerLoader from "./dialerLoader.vue"
-
+import defaultRingtone from "@images/default-ringtone.mp3"
 import "flag-icons/css/flag-icons.min.css"
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import { onMounted, ref } from 'vue'
 import { PerfectScrollbar } from "vue3-perfect-scrollbar"
 import { useTheme } from 'vuetify'
+import DialerLoader from "./dialerLoader.vue"
 
-let incomingCallSound
+//import ChatLog from '@/views/apps/chat/ChatLog.vue'
+import { useChatStore } from '@/views/apps/chat/useChatStore'
+import DialerSettings from "@/views/apps/dialer/components/DialerSettings.vue"
+import { avatarText } from '@core/utils/formatters'
+
+const incomingCallSound = ref(null)
 let isCallAccepted = false
 const vuetifyTheme = useTheme()
 const dialerStore = useDialerStore()
 const showNotification = ref(false)
 const showNotificationMenu = ref(false)
 const callerId = ref("") // Replace with the actual caller ID
+const calledId = ref("")
 const twilioDevice = computed(() => dialerStore.twilioDevice)
 const currentNumber = ref('')
 const muted = ref(false)
@@ -57,6 +64,16 @@ const loading = ref(false)
 const searchLogs = ref('')
 const searchContact = ref('')
 const activeTabName = ref('home')
+const incomingCall = ref(null)
+
+// Chat message
+const msg = ref('')
+
+// file input
+const refInputEl = ref()
+const isLeftSidebarOpen = ref(true)
+
+const store = useChatStore()
 
 const outputDeviceError = ref({
   cls: '',
@@ -261,7 +278,6 @@ const validPhone = computed(() => {
 })
     
 const handleSuccessfulRegistration = device => {
-  console.log(device)
   log.value = 'Connected'
   connected.value = true
   console.log('The device is ready to receive incoming calls.')
@@ -317,27 +333,14 @@ const toggleCall = async () => {
 }
     
 const playIncomingCallSound = connection => {
-  const device = dialerStore.twilioDevice
-    
-  // Create an audio element
-  const audioElement = document.createElement('audio')
-    
-  // Ensure that device.audio.incoming.stream and audioElement.srcObject are defined
-  if (device.audio.incoming && device.audio.incoming.stream && audioElement.srcObject) {
-    // Connect the audio element to the incoming audio stream
-    device.audio.incoming.stream.pipe(audioElement.srcObject)
-    
-    // Play the audio element
-    audioElement.play()
-  }
-    
-  return audioElement
+  incomingCallSound.value = new Audio(defaultRingtone)
+  incomingCallSound.value.play()
 }
     
 const stopIncomingCallSound = () => {
-  if (incomingCallSound) {
-    incomingCallSound.pause()
-    incomingCallSound = null
+  if (incomingCallSound.value) {
+    incomingCallSound.value.pause()
+    incomingCallSound.value = null
   }
 }
     
@@ -361,33 +364,39 @@ const setInputDevice = async () => {
 }
     
 const handleIncomingCall = incomingCall => {
-    
+ 
   const device = dialerStore.twilioDevice
-    
-  console.log('Incoming connection from ' + incomingCall.parameters.From)
-    
-  // Event listener for call answered
-  device.on('connect', connection => {
-    log.value = 'Call connected.'
-  })
-    
+
+  console.log('incomingCall')
+  console.log(device)
   try {
-    callerId.value = incomingCall.parameters.From
+    calledId.value = incomingCall.From
+    callerId.value = incomingCall.To
+    call.value = incomingCall
+
+    // Play incoming call sound
+    playIncomingCallSound(device)
     triggerIncomingCall()
     
-    call.value = incomingCall
-    
+    // Event listener for call answered
+    device.on('connect', connection => {
+      log.value = 'Call connected.'
+    })
+
     // Event listener for call disconnect
-    // incomingCall.on('disconnect', () => {
-    //   callerId.value = ''
-    // })
-    
-    // Event listener for call reject
-    // incomingCall.on('reject', () => {
-    //   // Stop the incoming call sound when the call is rejected
-    //   // stopIncomingCallSound();
-    //   callerId.value = ''
-    // })
+    device.on('disconnect', () => {
+      stopIncomingCallSound()
+      log.value = 'Call disconnected.'
+      callerId.value = ''
+    })
+
+    // // Event listener for call reject
+    device.on('reject', () => {
+      // Stop the incoming call sound when the call is rejected
+      stopIncomingCallSound()
+      log.value = 'Call rejected.'
+      callerId.value = ''
+    })
     
   } catch (error) {
     console.log(error)
@@ -401,6 +410,10 @@ const initializeTwilio = async () => {
   
   // Get Twilio Device from Store (Pinia)
   const device = dialerStore.twilioDevice
+  
+  device.on("ready", function (device) {
+    log("Twilio.Device Ready!")
+  })
 
   // add event Listener to check if device is registered and ready
   device.on('registered', handleSuccessfulRegistration)
@@ -411,8 +424,10 @@ const initializeTwilio = async () => {
   }
   
   device.on('incoming', conn => {
+    alert('incoming')
     handleIncomingCall(conn)
   })
+
 }
     
 const triggerIncomingCall = () => {
@@ -421,18 +436,48 @@ const triggerIncomingCall = () => {
 }
     
 const acceptCall = () => {
-  // Handle call acceptance logic here
-  showNotification.value = true
-    
-  call.value.accept()
+  
+  stopIncomingCallSound()
+  showNotification.value = false
+  showNotificationMenu.value = true
+
+  // Handle call acceptance logic here  
+  //call.value.accept()
+  
+  const device = dialerStore.twilioDevice
+
+  if (device && call) {
+    try {
+      // Connect the call using Twilio Voice SDK
+      device.connect()
+
+      //const connection = device.connect({ CallSid: call.value.CallSid })
+
+      //device.connect({ parameters: { CallSid: incomingCall.CallSid } });
+      console.log('Call connected')
+    } catch (error) {
+      console.error('Error accepting call:', error)
+    }
+  } else {
+    console.error('Device or call not available')
+  }
 }
     
 const rejectCall = () => {
-  // Handle call rejection logic here
-  // Instead of immediately hiding the notification, you can add a fade-out effect
-    
-  call.value.reject()
+
+  stopIncomingCallSound()
   showNotification.value = false
+  showNotificationMenu.value = false
+  
+  // Instead of immediately hiding the notification, you can add a fade-out effect
+
+  const device = dialerStore.twilioDevice
+
+  console.log('rejectedCall')
+  console.log(device.audio.incoming.stream)
+  console.log(call.value.CallSid)
+  
+  device.disconnectAll()
 }
     
 initializeTwilio()
@@ -450,7 +495,16 @@ const phoneNumber = ref('')
 const clearInput = () => {
   currentNumber.value = currentNumber.value.slice(0, -1)
 }
-    
+   
+onMounted(() => {
+  window.Echo.channel('incoming-calls')
+    .listen('IncomingCallEvent', event => {
+      if(event.CallStatus =='ringing'){
+        handleIncomingCall(event)
+      }
+    })
+})
+
 watch(currentNumber, number => {
   for (const country of countries.value) {
     const cleanedNumber = number.replace(/^\+/, '')
@@ -464,7 +518,7 @@ watch(currentNumber, number => {
 watch(selectedCountryCode, newCode => {
   phoneNumber.value = newCode + phoneNumber.value
 })
-    
+ 
 const isDropdownOpen = ref(false)
     
 const selectedCountry = ref({
@@ -702,20 +756,6 @@ const closeInbox = () => {
   inboxIsOpened.value = false
 }
 
-
-//import ChatLog from '@/views/apps/chat/ChatLog.vue'
-import { useChatStore } from '@/views/apps/chat/useChatStore'
-import DialerSettings from "@/views/apps/dialer/components/DialerSettings.vue"
-import { avatarText } from '@core/utils/formatters'
-import { onMounted, ref } from 'vue'
-
-const isLeftSidebarOpen = ref(true)
-const store = useChatStore()
-const incomingCall = ref(null)
-
-// Chat message
-const msg = ref('')
-
 const sendMessage = async () => {
   if (!msg.value)
     return
@@ -729,11 +769,6 @@ const sendMessage = async () => {
   //   scrollToBottomInChatLog()
   // })
 }
-
-
-
-// file input
-const refInputEl = ref()
 
 const moreList = [
   {
@@ -757,21 +792,6 @@ const moreList = [
     value: 'Report',
   },
 ]
-
-onMounted(() => {
-  window.Echo.channel('incoming-calls')
-    .listen('IncomingCallEvent', event => {
-      
-      console.log('incoming call')
-      console.log(event)
-
-      //console.log(event.callData)
-
-      showNotification.value = true
-      showNotificationMenu.value = true
-    })
-
-})
 </script>
     
 <template>
@@ -798,7 +818,7 @@ onMounted(() => {
           <div class="status-container">
             <div class="d-flex flex-row justify-center">
               <VCardTitle class="mr-7">
-                {{ callerId }}
+                {{ calledId }}
               </VCardTitle>
             </div>
           </div>
@@ -949,6 +969,7 @@ onMounted(() => {
                 variant="tonal"
                 size="4.5rem"
                 color="error"
+                @click="rejectCall"
               >
                 <VIcon
                   icon="tabler-phone-off"
