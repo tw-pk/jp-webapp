@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Services\TwilioService;
+use App\Services\TwilioServices;
 use Illuminate\Support\Facades\Log;
 
 class TwilioCallJob implements ShouldQueue
@@ -27,10 +27,10 @@ class TwilioCallJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(TwilioService $twilioService): void
+    public function handle(TwilioServices $TwilioServices): void
     {
         try {
-            $calls = $twilioService->makeTwilioCall($this->callTypeTab);
+            $calls = $TwilioServices->makeTwilioCall($this->callTypeTab);
             // Handle the Twilio API response as needed
         } catch (\Exception $e) {
             Log::error('Twilio API error: ' . $e->getMessage());

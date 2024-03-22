@@ -1,7 +1,6 @@
 <script setup>
 import AccountSettingsAccount from '@/views/pages/account-settings/AccountSettingsAccount.vue'
 import AccountSettingsBillingAndPlans from '@/views/pages/account-settings/AccountSettingsBillingAndPlans.vue'
-import AccountSettingsConnections from '@/views/pages/account-settings/AccountSettingsConnections.vue'
 import AccountSettingsNotification from '@/views/pages/account-settings/AccountSettingsNotification.vue'
 import AccountSettingsSecurity from '@/views/pages/account-settings/AccountSettingsSecurity.vue'
 import { useRoute } from 'vue-router'
@@ -31,7 +30,7 @@ const tabs = [
     title: 'Notifications',
     icon: 'tabler-bell',
     tab: 'notification',
-  }
+  },
 ]
 </script>
 
@@ -82,9 +81,9 @@ const tabs = [
       </VWindowItem>
 
       <!-- Connections -->
-<!--      <VWindowItem value="connection">-->
-<!--        <AccountSettingsConnections />-->
-<!--      </VWindowItem>-->
+      <!--      <VWindowItem value="connection"> -->
+      <!--        <AccountSettingsConnections /> -->
+      <!--      </VWindowItem> -->
     </VWindow>
   </div>
 </template>

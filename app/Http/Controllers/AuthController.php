@@ -7,6 +7,7 @@ use App\Models\PasswordReset;
 use App\Models\Plans;
 use App\Models\UserProfile;
 use App\Services\EmailVerificationService;
+use App\Services\TwilioServices;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,6 +76,47 @@ class AuthController extends Controller
         }
     }
 
+
+    public function create_ten_dlc(Request $request)
+    {
+        $request->validate([
+            'firstname' => 'required|string',
+            'email' => 'required|string|unique:users',
+        ]);
+
+        $user = $request->all();
+        $twilioServices = new TwilioServices();
+        $response = $twilioServices->createTwilioTenDLC($user);
+
+        $message = 'Profile not created! There is some problem.';
+        if($response ==true){
+            $message = 'Successfully created profile 10DLC!';
+        }
+        return response()->json([
+            'response' => $response,
+            'message' => $message
+        ], 201);
+    }
+
+    public function delete_ten_dlc(Request $request)
+    {
+        $request->validate([
+            'sid' => 'required|string',
+        ]);
+        
+        $user = $request->all();
+        $twilioServices = new TwilioServices();
+        $response = $twilioServices->deleteTwilioTenDLC($user);
+
+        $message = 'Profile not deleted! There is some problem.';
+        if($response ==true){
+            $message = 'Successfully deleted profile 10DLC!';
+        }
+        return response()->json([
+            'response' => $response,
+            'message' => $message
+        ], 201);
+    }
 
     /**
      * Login user and create token

@@ -109,6 +109,11 @@ class TwilioController extends Controller
         echo $response;
     }
 
+    public function webhook_ten_dlc(Request $request){
+
+        Log::info('Status callback Webhook: ');
+        Log::info($request->all());
+    }
     public function get_countries()
     {
         $countryList = $this->fetchCountryList();

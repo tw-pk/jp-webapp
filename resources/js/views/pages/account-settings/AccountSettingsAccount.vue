@@ -1,7 +1,39 @@
 <script setup>
-import avatar from '@images/avatars/avatar-0.png'
 import User from "@/apis/user"
 import axiosIns from "@axios"
+import avatar from '@images/avatars/avatar-0.png'
+import { defineEmits, onMounted, ref } from "vue"
+
+
+const emits = defineEmits(['update:isDialogVisible', 'confirmed']);
+
+console.log('deactivateAccount123')
+console.log(emits)
+
+const confirmAction = () => {
+  console.log('deactivateAccount12355555')
+  emits('confirmed')
+}
+
+
+const handleConfirmation = () => {
+  console.log('Account deactivation confirmed')
+
+  // Perform further actions here, such as calling the deactivateAccount function
+  deactivateAccount()
+}
+
+const deactivateAccount = async () => {
+  console.log('deactivateAccount')
+  try {
+    console.log('deactivateAccount')
+
+    // await axios.post('/api/deactivate-account');
+    // this.isAccountDeactivated = true;
+  } catch (error) {
+    console.error('Error deactivating account:', error)
+  }
+}
 
 const accountData = {
   avatar: avatar,
@@ -18,7 +50,6 @@ const accountData = {
   timezone: '',
   bio: '',
 }
-
 
 const refInputEl = ref(null)
 const isConfirmDialogOpen = ref(false)
@@ -87,16 +118,12 @@ const currencies = [
 ]
 
 const phoneNumberElRef = ref(null)
-
 const isError = ref(false)
-
 const apiResponse = ref(false)
-
 const responseMessage = ref('')
-
 const emailDisabled = ref(true)
-
 const formRef = ref(null)
+const countries = ref([])
 
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData)
@@ -160,7 +187,7 @@ const resetAvatar = () => {
 
 onMounted(async() => {
   const userData = await User.profileData()
-
+  
   accountData.firstName = userData.data.firstName
   accountData.lastName = userData.data.lastName
   accountData.email = userData.data.email
@@ -174,6 +201,10 @@ onMounted(async() => {
   accountData.avatar = userData.data.avatar
   accountData.bio = userData.data.bio
   accountDataLocal.value = structuredClone(accountData)
+
+  const countryList = await User.profileCountries()
+
+  countries.value = countryList.data.countries
 })
 </script>
 
@@ -365,24 +396,26 @@ onMounted(async() => {
                 cols="12"
                 md="6"
               >
-                <AppSelect
+                <AppAutocomplete
                   v-model="accountDataLocal.country"
                   label="Country"
-                  :items="['USA', 'Canada', 'UK', 'India', 'Australia', 'Pakistan']"
+                  :items="countries"
+                  item-title="name"
+                  item-value="name"
                 />
               </VCol>
 
               <!-- 👉 Language -->
-<!--              <VCol-->
-<!--                cols="12"-->
-<!--                md="6"-->
-<!--              >-->
-<!--                <AppSelect-->
-<!--                  v-model="accountDataLocal.language"-->
-<!--                  label="Language"-->
-<!--                  :items="['English', 'Spanish', 'Arabic', 'Hindi', 'Urdu']"-->
-<!--                />-->
-<!--              </VCol>-->
+              <!--              <VCol -->
+              <!--                cols="12" -->
+              <!--                md="6" -->
+              <!--              > -->
+              <!--                <AppSelect -->
+              <!--                  v-model="accountDataLocal.language" -->
+              <!--                  label="Language" -->
+              <!--                  :items="['English', 'Spanish', 'Arabic', 'Hindi', 'Urdu']" -->
+              <!--                /> -->
+              <!--              </VCol> -->
 
               <!-- 👉 Timezone -->
               <VCol
@@ -398,24 +431,26 @@ onMounted(async() => {
               </VCol>
 
               <!-- 👉 Currency -->
-<!--              <VCol-->
-<!--                cols="12"-->
-<!--                md="6"-->
-<!--              >-->
-<!--                <AppSelect-->
-<!--                  v-model="accountDataLocal.currency"-->
-<!--                  label="Currency"-->
-<!--                  :items="currencies"-->
-<!--                  :menu-props="{ maxHeight: 200 }"-->
-<!--                />-->
-<!--              </VCol>-->
+              <!--              <VCol -->
+              <!--                cols="12" -->
+              <!--                md="6" -->
+              <!--              > -->
+              <!--                <AppSelect -->
+              <!--                  v-model="accountDataLocal.currency" -->
+              <!--                  label="Currency" -->
+              <!--                  :items="currencies" -->
+              <!--                  :menu-props="{ maxHeight: 200 }" -->
+              <!--                /> -->
+              <!--              </VCol> -->
 
               <!-- 👉 Form Actions -->
               <VCol
                 cols="12"
                 class="d-flex flex-wrap gap-4"
               >
-                <VBtn type="submit">Save changes</VBtn>
+                <VBtn type="submit">
+                  Save changes
+                </VBtn>
 
                 <VBtn
                   color="secondary"
@@ -460,12 +495,13 @@ onMounted(async() => {
 
   <!-- Confirm Dialog -->
   <ConfirmDialog
-    v-model:isDialogVisible="isConfirmDialogOpen"
-    confirmation-question="Are you sure you want to deactivate your account?"
-    confirm-title="Deactivated!"
-    confirm-msg="Your account has been deactivated successfully."
-    cancel-title="Cancelled"
-    cancel-msg="Account Deactivation Cancelled!"
-  />
+      v-model:isDialogVisible="isConfirmDialogOpen"
+      @confirmed="handleConfirmation"
+      confirmation-question="Are you sure you want to deactivate your account?"
+      confirm-title="Deactivated!"
+      confirm-msg="Your account has been deactivated successfully."
+      cancel-title="Cancelled"
+      cancel-msg="Account Deactivation Cancelled!"
+    />
 </template>
 
