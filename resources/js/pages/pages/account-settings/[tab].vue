@@ -3,6 +3,7 @@ import AccountSettingsAccount from '@/views/pages/account-settings/AccountSettin
 import AccountSettingsBillingAndPlans from '@/views/pages/account-settings/AccountSettingsBillingAndPlans.vue'
 import AccountSettingsNotification from '@/views/pages/account-settings/AccountSettingsNotification.vue'
 import AccountSettingsSecurity from '@/views/pages/account-settings/AccountSettingsSecurity.vue'
+import BusinessProfile from '@/views/pages/account-settings/BusinessProfile.vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -30,6 +31,11 @@ const tabs = [
     title: 'Notifications',
     icon: 'tabler-bell',
     tab: 'notification',
+  },
+  {
+    title: 'Business Profile',
+    icon: 'tabler-building-skyscraper',
+    tab: 'business-profile',
   },
 ]
 </script>
@@ -78,6 +84,11 @@ const tabs = [
       <!-- Notification -->
       <VWindowItem value="notification">
         <AccountSettingsNotification />
+      </VWindowItem>
+
+      <!-- Business Profile -->
+      <VWindowItem value="business-profile">
+        <BusinessProfile />
       </VWindowItem>
 
       <!-- Connections -->
