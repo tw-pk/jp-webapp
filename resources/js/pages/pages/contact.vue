@@ -21,8 +21,7 @@ const firstname = ref('')
 const lastname = ref('')
 const email = ref('')
 const phone = ref('')
-const address_home = ref('')
-const address_office = ref('')
+const company_name = ref('')
 const form = ref()
 const contacts = ref([])
 const avatarInput = ref(null)
@@ -137,8 +136,7 @@ const addContact = () => {
   formData.append('lastname', lastname.value)
   formData.append('email', email.value)
   formData.append('phone', phone.value)
-  formData.append('address_home', address_home.value)
-  formData.append('address_office', address_office.value)
+  formData.append('company_name', company_name.value)
   contactStore.addContact(formData).then(response => {
     isDialogVisible.value = false
     isDisabled.value = false
@@ -196,8 +194,7 @@ const editItem = item => {
   lastname.value = item.lastname,
   email.value = item.email,
   phone.value = item.phone,
-  address_home.value = item.address_home,
-  address_office.value = item.address_office,
+  company_name.value = item.company_name,
   
   isDialogVisible.value = true
 }
@@ -388,22 +385,10 @@ const onCloseDialog = () => {
                             md="12"
                           >
                             <AppTextField
-                              v-model="address_home"
-                              label="Address Home"
+                              v-model="company_name"
+                              label="Company Name"
                               :rules="[requiredValidator]"
                               required
-                            />
-                          </VCol>
-                        </VRow>
-                        <VRow>
-                          <VCol
-                            cols="12"
-                            sm="12"
-                            md="12"
-                          >
-                            <AppTextField
-                              v-model="address_office"
-                              label="Address Office"
                             />
                             <input
                               v-model="id"

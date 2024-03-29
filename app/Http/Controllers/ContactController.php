@@ -19,7 +19,7 @@ class ContactController extends Controller
         $options = $request->input('options');
 
         $query = Contact::with('userProfile:contact_id,avatar')
-            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'phone', 'address_home', 'address_office')
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'phone', 'company_name')
             ->where('user_id', Auth::user()->id);
 
         if ($searchQuery) {
@@ -77,7 +77,7 @@ class ContactController extends Controller
             'lastname' => 'required|string',
             'email' => 'required|email|unique:contacts,email,' . ($request->all() ? $request->id : 'NULL') . ',id',
             'phone' => 'required',
-            'address_home' => 'required|string',
+            'company_name' => 'required|string',
         ]);
 
         $contact = Contact::find($request->id);
@@ -89,8 +89,7 @@ class ContactController extends Controller
         $contact->lastname = $request->lastname;
         $contact->email = $request->email;
         $contact->phone = $request->phone;
-        $contact->address_home = $request->address_home;
-        $contact->address_office = $request->address_office;
+        $contact->company_name = $request->company_name;
         try {
             $contact->save();
             if ($request->hasFile('avatar')) {
@@ -153,8 +152,7 @@ class ContactController extends Controller
             'fullName' => $contact->fullName(),
             'email' => $contact->email,
             'phone' => $contact->phone,
-            'address_home' => $contact->address_home,
-            'address_office' => $contact->address_office,
+            'company_name' => $contact->company_name,
             'joinedAt' => Carbon::parse($contact->created_at)->format('d M, Y'),
             'avatar' => $contact->userProfile ? ($contact->userProfile->avatar ? asset('storage/' . $contact->userProfile->avatar) : null) : null
         ];

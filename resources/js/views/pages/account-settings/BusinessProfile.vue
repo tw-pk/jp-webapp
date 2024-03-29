@@ -1,236 +1,270 @@
 <script setup>
-import User from "@/apis/user"
-import axiosIns from "@axios"
-import avatar from '@images/avatars/avatar-0.png'
-import { defineEmits, onMounted, ref } from "vue"
+import { useProfileStore } from "@/views/apps/business-profile/useProfileStore"
+import { emailValidator, requiredValidator } from '@validators'
+import { ref } from "vue"
 
-
-const emits = defineEmits(['update:isDialogVisible', 'confirmed'])
-
-console.log('deactivateAccount123')
-console.log(emits)
-
-const confirmAction = () => {
-  console.log('deactivateAccount12355555')
-  emits('confirmed')
-}
-
-
-const handleConfirmation = () => {
-  console.log('Account deactivation confirmed')
-
-  // Perform further actions here, such as calling the deactivateAccount function
-  deactivateAccount()
-}
-
-const deactivateAccount = async () => {
-  console.log('deactivateAccount')
-  try {
-    console.log('deactivateAccount')
-
-    // await axios.post('/api/deactivate-account');
-    // this.isAccountDeactivated = true;
-  } catch (error) {
-    console.error('Error deactivating account:', error)
-  }
-}
-
-const accountData = {
-  avatar: avatar,
-  avatarObject: [],
-  firstName: '',
-  lastName: '',
-  email: '',
-  organization: '',
-  phoneNumber: '',
-  address: '',
-  state: '',
-  zipcode: '',
-  country: '',
-  timezone: '',
-  bio: '',
-}
-
-const refInputEl = ref(null)
-const isConfirmDialogOpen = ref(false)
-
-const isAccountDeactivated = ref(false)
-const validateAccountDeactivation = [v => !!v || 'Please confirm account deactivation']
-
-const accountDataLocal = ref(structuredClone(accountData))
-
-const timezones = [
-  '(GMT-11:00) International Date Line West',
-  '(GMT-11:00) Midway Island',
-  '(GMT-10:00) Hawaii',
-  '(GMT-09:00) Alaska',
-  '(GMT-08:00) Pacific Time (US & Canada)',
-  '(GMT-08:00) Tijuana',
-  '(GMT-07:00) Arizona',
-  '(GMT-07:00) Chihuahua',
-  '(GMT-07:00) La Paz',
-  '(GMT-07:00) Mazatlan',
-  '(GMT-07:00) Mountain Time (US & Canada)',
-  '(GMT-06:00) Central America',
-  '(GMT-06:00) Central Time (US & Canada)',
-  '(GMT-06:00) Guadalajara',
-  '(GMT-06:00) Mexico City',
-  '(GMT-06:00) Monterrey',
-  '(GMT-06:00) Saskatchewan',
-  '(GMT-05:00) Bogota',
-  '(GMT-05:00) Eastern Time (US & Canada)',
-  '(GMT-05:00) Indiana (East)',
-  '(GMT-05:00) Lima',
-  '(GMT-05:00) Quito',
-  '(GMT-04:00) Atlantic Time (Canada)',
-  '(GMT-04:00) Caracas',
-  '(GMT-04:00) La Paz',
-  '(GMT-04:00) Santiago',
-  '(GMT-03:30) Newfoundland',
-  '(GMT-03:00) Brasilia',
-  '(GMT-03:00) Buenos Aires',
-  '(GMT-03:00) Georgetown',
-  '(GMT-03:00) Greenland',
-  '(GMT-02:00) Mid-Atlantic',
-  '(GMT-01:00) Azores',
-  '(GMT-01:00) Cape Verde Is.',
-  '(GMT+00:00) Casablanca',
-  '(GMT+00:00) Dublin',
-  '(GMT+00:00) Edinburgh',
-  '(GMT+00:00) Lisbon',
-  '(GMT+00:00) London',
-  '(GMT+05:00) Islamabad, Karachi',
-]
-
-const currencies = [
-  'USD',
-  'EUR',
-  'GBP',
-  'AUD',
-  'BRL',
-  'CAD',
-  'CNY',
-  'CZK',
-  'DKK',
-  'HKD',
-  'HUF',
-  'INR',
-]
-
-const phoneNumberElRef = ref(null)
+const profileStore = useProfileStore()
+const friendlyName = ref()
+const registerBusiness = ref()
+const firstName = ref()
+const lastName = ref()
+const businessName = ref()
+const socialMediaProfileUrls = ref()
+const websiteLink = ref()
+const businessRegionsOfOperation = ref(null)
+const companyStatus = ref()
+const businessType = ref()
+const businessRegistrationId = ref()
+const businessIdentity = ref()
+const businessIndustry = ref()
+const businessRegistrationNumber = ref()
+const jobPosition = ref()
+const phoneNumber = ref()
+const email = ref()
+const callingCode = ref()
+const businessTitle = ref()
+const addressLine1 = ref()
+const addressLine2 = ref()
+const city = ref()
+const regionState = ref()
+const country = ref()
+const zipcode = ref()
+const isDisabled = ref(false)
+const isLoading = ref(false)
 const isError = ref(false)
 const apiResponse = ref(false)
 const responseMessage = ref('')
-const emailDisabled = ref(true)
-const formRef = ref(null)
+const form = ref()
 const countries = ref([])
 
-const resetForm = () => {
-  accountDataLocal.value = structuredClone(accountData)
+const busTypeOpt = [
+  'Partnership', 
+  'Limited Liability Corporation', 
+  'Co-operative', 
+  'Non-profit Corporation',
+  'Corporation',
+]
+
+
+const onMountedFunction = async () => {
+  profileStore.fetchCountries()
+    .then(res => {
+      countries.value = res.countries
+    })
+    .catch(error => {
+      console.log(error)
+    })
 }
 
-const onSubmit = () => {
-  let formData = new FormData()
-  formData.append("firstName", accountDataLocal.value.firstName)
-  formData.append("lastName", accountDataLocal.value.lastName)
-  formData.append("phoneNumber", accountDataLocal.value.phoneNumber)
-  formData.append("address", accountDataLocal.value.address)
-  formData.append("state", accountDataLocal.value.state)
-  formData.append("country", accountDataLocal.value.country)
-  formData.append("timezone", accountDataLocal.value.timezone)
-  formData.append("organization", accountDataLocal.value.organization)
-  formData.append("zipcode", accountDataLocal.value.zipcode)
-  formData.append("bio", accountDataLocal.value.bio)
+onMountedFunction()
 
-  if(accountDataLocal.value.avatar !== null || accountDataLocal.value.avatar !== ""){
-    formData.append("avatar", accountDataLocal.value.avatarObject)
-  }
-  axiosIns.post('/api/auth/user/profile/update', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+
+const busIndustryOpt = [
+  'AUTOMOTIVE',
+  'AGRICULTURE',
+  'BANKING',
+  'CONSTRUCTION',
+  'CONSUMER',
+  'EDUCATION',
+  'ENGINEERING',
+  'ENERGY',
+  'OIL_AND_GAS',
+  'FAST_MOVING_CONSUMER_GOODS',
+  'FINANCIAL',
+  'FINTECH',
+  'FOOD_AND_BEVERAGE',
+  'GOVERNMENT',
+  'HEALTHCARE',
+  'HOSPITALITY',
+  'INSURANCE',
+  'LEGAL',
+  'MANUFACTURING',
+  'MEDIA',
+  'ONLINE',
+  'PROFESSIONAL_SERVICES',
+  'RAW_MATERIALS',
+  'REAL_ESTATE',
+  'RELIGION',
+  'RETAIL',
+  'JEWELRY',
+  'TECHNOLOGY',
+  'TELECOMMUNICATIONS',
+  'TRANSPORTATION',
+  'TRAVEL',
+  'ELECTRONICS',
+  'NOT_FOR_PROFIT',
+]
+
+const busRegistrationIdOpt = [
+  {
+    title: 'USA: Employer Identification Number (EIN)',
+    value: 'EIN',
+  },
+  {
+    title: 'DUNS Number (Non-US Businesses Only)',
+    value: 'DUNS',
+  },
+  {
+    title: 'Canada: Canadian Business Number (CBN)',
+    value: 'CBN',
+  },
+  {
+    title: 'CN Great Britain: Company Number',
+    value: 'CN',
+  },
+  {
+    title: 'Australia: Company Number from ASIC (ACN)',
+    value: 'ACN',
+  },
+  {
+    title: 'CIN India: Corporate Identity Number',
+    value: 'CIN',
+  },
+  {
+    title: 'VAT Estonia: VAT Number',
+    value: 'VAT',
+  },
+  {
+    title: 'VATRN Romania: VAT Registration Number',
+    value: 'VATRN',
+  },
+  {
+    title: 'RN Israel: Registration Number',
+    value: 'RN',
+  },
+  {
+    title: 'Other',
+    value: 'Other',
+  },
+]
+
+const busIdentityOpt = [
+  {
+    title: 'Direct Customer',
+    value: 'direct_customer',
+  },
+]
+
+const regions = [
+  { 
+    label: 'Africa', 
+    value: 'AFRICA', 
+  },
+  { 
+    label: 'Asia', 
+    value: 'ASIA', 
+  },
+  { 
+    label: 'Europe',
+    value: 'EUROPE', 
+  },
+  { 
+    label: 'Latin America', 
+    value: 'LATIN_AMERICA', 
+  },
+  { 
+    label: 'USA And Canada', 
+    value: 'USA_AND_CANADA', 
+  },
+]
+
+const addProfile = () => {
+  isDisabled.value = true
+  isLoading.value = true 
+  
+  profileStore.addProfile({
+    friendlyName: friendlyName.value,
+    email: email.value,
+    firstName: firstName.value,
+    lastName: lastName.value,
+    businessName: businessName.value,
+    socialMediaProfileUrls: socialMediaProfileUrls.value,
+    websiteLink: websiteLink.value,
+    businessRegionsOfOperation: businessRegionsOfOperation.value,
+    businessType: businessType.value,
+    businessRegistrationId: businessRegistrationId.value,
+    businessIdentity: businessIdentity.value,
+    businessIndustry: businessIndustry.value,
+    businessRegistrationNumber: businessRegistrationNumber.value,
+    jobPosition: jobPosition.value,
+    callingCode: callingCode.value,
+    phoneNumber: phoneNumber.value,
+    businessTitle: businessTitle.value,
+    addressLine1: addressLine1.value,
+    addressLine2: addressLine2.value,
+    city: city.value,
+    regionState: regionState.value,
+    zipcode: zipcode.value,
+    country: country.value,
+    registerBusiness: registerBusiness.value,
+    companyStatus: companyStatus.value,
+
+  }).then(response => {
+    console.log('response')
+    console.log(response)
+    isDisabled.value = false
+    isLoading.value = false
+    
+    isError.value = false
+    apiResponse.value = true
+    responseMessage.value = response.data.message
+
+    // Clear input fields
+    //form.value.reset()
   })
-    .then(res => {
-      if(res.data.status){
-        isError.value = false
-        apiResponse.value = true
-        responseMessage.value = res.data.message
+    .catch(error => {
+      isDisabled.value = false
+      isLoading.value = false
+      let errorMsg = ''
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMsg = error.response.data.message
+      } else {
+        errorMsg = error.message
       }
-    })
-    .catch(err => {
       apiResponse.value = true
       isError.value = true
-      responseMessage.value = err.response.data.message
+      responseMessage.value = errorMsg
+      form.value.validate().then(isValid => {
+        if(isValid.valid === true) {
+          form.value.resetValidation()
+        }
+      })
     })
 }
 
-const changeAvatar = file => {
-  const fileReader = new FileReader()
-  const { files } = file.target
-  if (files && files.length) {
-    fileReader.readAsDataURL(files[0])
-    fileReader.onload = () => {
-      if (typeof fileReader.result === 'string'){
-        accountDataLocal.value.avatar = fileReader.result
-        accountDataLocal.value.avatarObject = files[0]
-      }
-    }
-  }
+const submitProfile = () => {
+  // form.value.validate().then(isValid => {
+  //   if(isValid.valid === true) {
+  //     form.value.resetValidation()
+  addProfile()
+
+  //   }
+  // })
 }
-
-// reset avatar image
-const resetAvatar = () => {
-  accountDataLocal.value.avatar = accountData.avatar
-  accountDataLocal.value.avatarObject = accountData.avatar
-}
-
-
-onMounted(async() => {
-  const userData = await User.profileData()
-  
-  accountData.firstName = userData.data.firstName
-  accountData.lastName = userData.data.lastName
-  accountData.email = userData.data.email
-  accountData.organization = userData.data.organization
-  accountData.phoneNumber = userData.data.phoneNumber
-  accountData.address = userData.data.address
-  accountData.state = userData.data.state
-  accountData.zipcode = userData.data.zipcode
-  accountData.country = userData.data.country
-  accountData.timezone = userData.data.timezone
-  accountData.avatar = userData.data.avatar
-  accountData.bio = userData.data.bio
-  accountDataLocal.value = structuredClone(accountData)
-
-  const countryList = await User.profileCountries()
-
-  countries.value = countryList.data.countries
-})
 </script>
 
 <template>
   <VRow>
     <VCol cols="12">
       <div
-        v-if="!apiResponse"
+        v-if="apiResponse"
         class="my-3"
       >
         <VAlert
           density="compact"
-          :color="isError ? 'error' : 'info'"
+          :color="isError ? 'error' : 'primary'"
           variant="tonal"
           closable
         >
-          {{ responseMessage }}
-          Your registration form will be successfully saved, or your data will be prefilled and you can access the form by going to setting & Business profile.
+          <span v-html="responseMessage" />
         </VAlert>
       </div>
       <VCard>
         <VCardText>
           <!-- 👉 Form -->
           <VForm
-            ref="formRef"
-            @submit.prevent="onSubmit"
+            ref="form"
+            lazy-validation
           >
             <VRow>
               <VCol
@@ -257,10 +291,34 @@ onMounted(async() => {
                 md="12"
                 cols="12"
               >
-                <VCheckbox label="Register Business for Stir/Shaken" />
-                <VCheckbox label="Register Business for 10DLC" />
-                <VCheckbox label="Register Business for CNAM" />
-                <VCheckbox label="Register Business for Toll-Free Numbers" />
+                <VCheckbox
+                  v-model="registerBusiness"
+                  value="stirShaken"
+                  label="Register Business for Stir/Shaken"
+                  :rules="[requiredValidator]"
+                  required
+                />
+                <VCheckbox
+                  v-model="registerBusiness"
+                  value="tenDlc"
+                  label="Register Business for 10DLC"
+                  :rules="[requiredValidator]"
+                  required
+                />
+                <VCheckbox
+                  v-model="registerBusiness"
+                  value="cnam"
+                  label="Register Business for CNAM"
+                  :rules="[requiredValidator]"
+                  required
+                />
+                <VCheckbox
+                  v-model="registerBusiness"
+                  value="tollFreeNumbers"
+                  label="Register Business for Toll-Free Numbers"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <VCol
@@ -270,13 +328,30 @@ onMounted(async() => {
                 <h2>Organization Information</h2>
               </VCol>
 
+              <!-- 👉 Friendly Name* -->
+              <VCol
+                md="6"
+                cols="6"
+              >
+                <AppTextField
+                  v-model="friendlyName"
+                  label="Friendly Name*"
+                  :rules="[requiredValidator]"
+                  required
+                />
+              </VCol>
 
               <!-- 👉 Business Name* -->
               <VCol
                 md="6"
                 cols="6"
               >
-                <AppTextField label="Business Name*" />
+                <AppTextField
+                  v-model="businessName"
+                  label="Business Name*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Address Line 1* -->
@@ -284,7 +359,12 @@ onMounted(async() => {
                 cols="12"
                 md="12"
               >
-                <AppTextField label="Address Line 1*" />
+                <AppTextField 
+                  v-model="addressLine1"
+                  label="Address Line 1*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Address Line 2* -->
@@ -292,7 +372,10 @@ onMounted(async() => {
                 cols="12"
                 md="12"
               >
-                <AppTextField label="Address Line 2*" />
+                <AppTextField 
+                  v-model="addressLine2"
+                  label="Address Line 2*"
+                />
               </VCol>
 
               <!-- 👉 City* -->
@@ -300,7 +383,12 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="City*" />
+                <AppTextField 
+                  v-model="city"
+                  label="City*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Region/State/Province* -->
@@ -308,7 +396,12 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="Region/State/Province*" />
+                <AppTextField 
+                  v-model="regionState"
+                  label="Region/State/Province*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
               
               <!-- 👉 Country* -->
@@ -316,7 +409,16 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="Country*" />
+                <AppAutocomplete 
+                  v-model="country"
+                  label="Country*"
+                  :items="countries"
+                  :item-title="item => `${item.emoji} ${item.name}`"
+                  item-value="code_2"
+                  placeholder="Select your country"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Zip Code* -->
@@ -324,7 +426,12 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="Zip Code*" />
+                <AppTextField 
+                  v-model="zipcode"
+                  label="Zip Code*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Business Type* -->
@@ -333,9 +440,12 @@ onMounted(async() => {
                 md="8"
               >
                 <AppAutocomplete
+                  v-model="businessType"
                   label="Business Type*"
-                  :items="['test', 'test2']"
-                  placeholder="Select Your Business Type"
+                  :items="busTypeOpt"
+                  placeholder="Select your business type"
+                  :rules="[requiredValidator]"
+                  required
                 />
               </VCol>
               
@@ -345,21 +455,29 @@ onMounted(async() => {
                 md="8"
               >
                 <AppAutocomplete
+                  v-model="businessIndustry"
                   label="Business Industry*"
-                  :items="['test', 'test2']"
-                  placeholder="Select Your Business Industry"
+                  :items="busIndustryOpt"
+                  placeholder="Select your business industry"
+                  :rules="[requiredValidator]"
+                  required
                 />
               </VCol>
               
-              <!-- 👉 Business Registration ID Type* -->
+              <!-- 👉 Business Registration Identifier* -->
               <VCol
                 cols="8"
                 md="8"
               >
                 <AppAutocomplete
-                  label="Business Registration ID Type*"
-                  :items="['test', 'test2']"
-                  placeholder="Select Your Business Registration ID Type"
+                  v-model="businessRegistrationId"
+                  label="Business Registration Identifier*"
+                  :items="busRegistrationIdOpt"
+                  item-title="title"
+                  item-value="value"
+                  placeholder="Select your business registration identifier"
+                  :rules="[requiredValidator]"
+                  required
                 />
               </VCol>
 
@@ -368,10 +486,30 @@ onMounted(async() => {
                 cols="8"
                 md="8"
               >
-                <AppAutocomplete
+                <AppTextField
+                  v-model="businessRegistrationNumber"
                   label="Business Registration Number*"
-                  :items="['test', 'test2']"
-                  placeholder="Select Your Business Registration Number"
+                  placeholder="Enter your business registration number"
+                  :rules="[requiredValidator]"
+                  required
+                />
+                <small>e.g.: US EIN: [xx-xxxxxxx] (NUMERICAL) US DUNS: [xx-xxx-xxxx] (NUMERICAL) CA CBN: [xxxxxxxxx] (NUMERICAL)</small>
+              </VCol>
+
+              <!-- 👉 Business Identity* -->
+              <VCol
+                cols="8"
+                md="8"
+              >
+                <AppAutocomplete
+                  v-model="businessIdentity"
+                  label="Business Identity*"
+                  :items="busIdentityOpt"
+                  item-title="title"
+                  item-value="value"
+                  placeholder="Select your business identity"
+                  :rules="[requiredValidator]"
+                  required
                 />
               </VCol>
 
@@ -380,7 +518,26 @@ onMounted(async() => {
                 cols="12"
                 md="12"
               >
-                <AppTextField label="Website Link*" />
+                <AppTextField
+                  v-model="websiteLink"
+                  type="url"
+                  label="Website Link*"
+                  :rules="[requiredValidator]"
+                  required
+                />
+              </VCol>
+
+              <!-- 👉 Social Media Profile Url* -->
+              <VCol
+                cols="12"
+                md="12"
+              >
+                <AppTextField
+                  v-model="socialMediaProfileUrls"
+                  label="Social Media Profile Url*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Checkbox Register Business -->
@@ -391,44 +548,29 @@ onMounted(async() => {
                 <label>Region of Operations*</label>
               </VCol>
               <VCol
+                v-for="region in regions"
+                :key="region.value"
                 md="2"
                 cols="2"
               >
-                <VCheckbox label="America" />
+                <VCheckbox
+                  v-model="businessRegionsOfOperation"
+                  :label="region.label"
+                  :value="region.value"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
-              <VCol
-                md="2"
-                cols="2"
-              >
-                <VCheckbox label="Asia" />
-              </VCol>
-              <VCol
-                md="2"
-                cols="2"
-              >
-                <VCheckbox label="Europe" />
-              </VCol>
-              <VCol
-                md="2"
-                cols="2"
-              >
-                <VCheckbox label="Latin America" />
-              </VCol>
-              <VCol
-                md="2"
-                cols="2"
-              >
-                <VCheckbox label="USA & Canada" />
-              </VCol>
-
+              
               <!-- 👉 Company Status* -->
               <VCol
                 cols="5"
                 md="5"
               >
                 <AppAutocomplete
+                  v-model="companyStatus"
                   label="Company Status*"
-                  :items="['test', 'test2']"
+                  :items="['PRIVATE', 'PUBLIC']"
                   placeholder="Select Company Status"
                 />
               </VCol>
@@ -451,7 +593,12 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="First Name*" />
+                <AppTextField 
+                  v-model="firstName"
+                  label="First Name*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Last Name* -->
@@ -459,7 +606,12 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="Last Name*" />
+                <AppTextField
+                  v-model="lastName"
+                  label="Last Name*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Job Position* -->
@@ -468,9 +620,12 @@ onMounted(async() => {
                 md="6"
               >
                 <AppAutocomplete
+                  v-model="jobPosition"
                   label="Job Position*"
-                  :items="['test', 'test2']"
+                  :items="['Director','GM','VP','CEO','CFO','General Counsel','Other']"
                   placeholder="Job Position"
+                  :rules="[requiredValidator]"
+                  required
                 />
               </VCol>
 
@@ -480,8 +635,11 @@ onMounted(async() => {
                 md="6"
               >
                 <AppTextField
+                  v-model="email"
                   label="Email*"
                   type="email"
+                  :rules="[emailValidator, requiredValidator]"
+                  required
                 />
               </VCol>
 
@@ -491,9 +649,14 @@ onMounted(async() => {
                 md="6"
               >
                 <AppAutocomplete
+                  v-model="callingCode"
                   label="Calling Code*"
-                  :items="['test', 'test2']"
-                  placeholder="SELECT"
+                  :items="countries"
+                  :item-title="item => `${item.emoji} ${item.phone_code}`"
+                  item-value="phone_code"
+                  placeholder="Select your Calling code"
+                  :rules="[requiredValidator]"
+                  required
                 />
               </VCol>
 
@@ -502,7 +665,14 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="Phone Number*" />
+                <AppTextField 
+                  v-model="phoneNumber"
+                  type="tel"
+                  label="Phone Number*"
+                  placeholder="3447431371"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Business Title* -->
@@ -510,7 +680,12 @@ onMounted(async() => {
                 cols="6"
                 md="6"
               >
-                <AppTextField label="Business Title*" />
+                <AppTextField 
+                  v-model="businessTitle"
+                  label="Business Title*"
+                  :rules="[requiredValidator]"
+                  required
+                />
               </VCol>
 
               <!-- 👉 Form Actions -->
@@ -518,7 +693,11 @@ onMounted(async() => {
                 cols="12"
                 class="d-flex justify-center flex-wrap"
               >
-                <VBtn type="submit">
+                <VBtn
+                  :disabled="isDisabled"
+                  :loading="isLoading"
+                  @click="submitProfile"
+                >
                   Submit
                 </VBtn>
               </VCol>

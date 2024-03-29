@@ -49,11 +49,6 @@ Route::middleware('auth:sanctum')->post('broadcasting/auth', function (Request $
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('register', [AuthController::class, 'register']);
-
-    Route::post('create/profile/ten-dlc', [AuthController::class, 'create_ten_dlc']);
-
-    Route::post('delete/profile/ten-dlc', [AuthController::class, 'delete_ten_dlc']);
-    
     Route::post('/forgot/password', [AuthController::class, 'forgotPassword']);
 
     Route::post('/verify-reset-link', [AuthController::class, 'verifyResetLink']);
@@ -62,6 +57,10 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('invitation/verify', [MembersController::class, 'verifyToken']);
 
     Route::group(['middleware' => ['auth:sanctum']], function () {
+
+        //twilio secondary profile
+        Route::post('create/profile/ten-dlc', [AuthController::class, 'create_ten_dlc']);
+        Route::post('delete/profile/ten-dlc', [AuthController::class, 'delete_ten_dlc']);
 
         //Auth routes
         Route::post('/email/resend', [VerificationController::class, 'resend']);

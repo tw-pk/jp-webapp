@@ -80,22 +80,37 @@ class AuthController extends Controller
     public function create_ten_dlc(Request $request)
     {
         $request->validate([
-            'firstname' => 'required|string',
-            'email' => 'required|string|unique:users',
+            'registerBusiness' => 'required|string',
+            'friendlyName' => 'required|string',
+            'businessName' => 'required|string',
+            'addressLine1' => 'required|string',
+            'city' => 'required|string',
+            'regionState' => 'required|string',
+            'country' => 'required|string',
+            'zipcode' => 'required|string',
+            'businessType' => 'required|string',
+            'businessIndustry' => 'required|string',
+            'businessRegistrationId' => 'required|string',
+            'businessRegistrationNumber' => 'required|string',
+            'businessIdentity' => 'required|string',
+            'websiteLink' => 'required|string',
+            'socialMediaProfileUrls' => 'required|string',
+            'businessRegionsOfOperation' => 'required|string',
+            'companyStatus' => 'required|string',
+            'firstName' => 'required|string',
+            'lastName' => 'required|string',
+            'jobPosition' => 'required|string',
+            'email' => 'required|string|email',
+            'callingCode' => 'required|string',
+            'phoneNumber' => 'required|string',
+            'businessTitle' => 'required|string',
         ]);
 
         $user = $request->all();
         $twilioServices = new TwilioServices();
         $response = $twilioServices->createTwilioTenDLC($user);
 
-        $message = 'Profile not created! There is some problem.';
-        if($response ==true){
-            $message = 'Successfully created profile 10DLC!';
-        }
-        return response()->json([
-            'response' => $response,
-            'message' => $message
-        ], 201);
+        return response()->json($response, 201);
     }
 
     public function delete_ten_dlc(Request $request)
@@ -108,7 +123,7 @@ class AuthController extends Controller
         $twilioServices = new TwilioServices();
         $response = $twilioServices->deleteTwilioTenDLC($user);
 
-        $message = 'Profile not deleted! There is some problem.';
+        $message = 'Profile not deleted! There are some problem.';
         if($response ==true){
             $message = 'Successfully deleted profile 10DLC!';
         }
