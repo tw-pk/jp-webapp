@@ -1,8 +1,8 @@
 <script setup>
-import axiosIns from "@axios";
+import axiosIns from "@axios"
+import avatar from "@images/avatars/avatar-0.png"
 import UserProfileHeaderBg from '@images/pages/user-profile-header-bg.png'
 import { useRoute } from "vue-router"
-import avatar from "@images/avatars/avatar-0.png"
 
 const profileHeaderData = ref()
 const route = useRoute()
@@ -56,16 +56,18 @@ fetchHeaderData()
               </span>
             </span>
 
-            <span class="d-flex align-center">
+            <!--
+              <span class="d-flex align-center">
               <VIcon
-                size="20"
-                icon="tabler-map-pin"
-                class="me-2"
+              size="20"
+              icon="tabler-map-pin"
+              class="me-2"
               />
               <span class="text-body-1">
-                {{ profileHeaderData?.address_home }}
+              {{ profileHeaderData?.address_home }}
               </span>
-            </span>
+              </span>
+            -->
 
             <span class="d-flex align-center">
               <VIcon
@@ -78,8 +80,6 @@ fetchHeaderData()
               </span>
             </span>
           </div>
-
-
         </div>
       </div>
     </VCardText>
