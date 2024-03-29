@@ -48,6 +48,10 @@ const headers = [
     key: 'phone',
   },
   {
+    title: 'Company',
+    key: 'company_name',
+  },
+  {
     title: 'ACTION',
     key: 'actions',
     sortable: false,
