@@ -11,7 +11,7 @@ const lastName = ref()
 const businessName = ref()
 const socialMediaProfileUrls = ref()
 const websiteLink = ref()
-const businessRegionsOfOperation = ref(null)
+const regionOfOperations = ref(null)
 const companyStatus = ref()
 const businessType = ref()
 const businessRegistrationId = ref()
@@ -21,7 +21,6 @@ const businessRegistrationNumber = ref()
 const jobPosition = ref()
 const phoneNumber = ref()
 const email = ref()
-const callingCode = ref()
 const businessTitle = ref()
 const addressLine1 = ref()
 const addressLine2 = ref()
@@ -180,14 +179,13 @@ const addProfile = () => {
     businessName: businessName.value,
     socialMediaProfileUrls: socialMediaProfileUrls.value,
     websiteLink: websiteLink.value,
-    businessRegionsOfOperation: businessRegionsOfOperation.value,
+    regionOfOperations: regionOfOperations.value,
     businessType: businessType.value,
-    businessRegistrationId: businessRegistrationId.value,
+    businessRegistrationIdentifer: businessRegistrationId.value,
     businessIdentity: businessIdentity.value,
     businessIndustry: businessIndustry.value,
     businessRegistrationNumber: businessRegistrationNumber.value,
     jobPosition: jobPosition.value,
-    callingCode: callingCode.value,
     phoneNumber: phoneNumber.value,
     businessTitle: businessTitle.value,
     addressLine1: addressLine1.value,
@@ -200,17 +198,15 @@ const addProfile = () => {
     companyStatus: companyStatus.value,
 
   }).then(response => {
-    console.log('response')
-    console.log(response)
+    responseMessage.value = response.data.message
+    isError.value = false
+    apiResponse.value = true
+    
     isDisabled.value = false
     isLoading.value = false
     
-    isError.value = false
-    apiResponse.value = true
-    responseMessage.value = response.data.message
-
     // Clear input fields
-    //form.value.reset()
+    form.value.reset()
   })
     .catch(error => {
       isDisabled.value = false
@@ -233,13 +229,12 @@ const addProfile = () => {
 }
 
 const submitProfile = () => {
-  // form.value.validate().then(isValid => {
-  //   if(isValid.valid === true) {
-  //     form.value.resetValidation()
-  addProfile()
-
-  //   }
-  // })
+  form.value.validate().then(isValid => {
+    if(isValid.valid === true) {
+      form.value.resetValidation()
+      addProfile()
+    }
+  })
 }
 </script>
 
@@ -256,7 +251,7 @@ const submitProfile = () => {
           variant="tonal"
           closable
         >
-          <span v-html="responseMessage" />
+          {{ responseMessage }}
         </VAlert>
       </div>
       <VCard>
@@ -522,6 +517,7 @@ const submitProfile = () => {
                   v-model="websiteLink"
                   type="url"
                   label="Website Link*"
+                  placeholder="https://www.acme.com"
                   :rules="[requiredValidator]"
                   required
                 />
@@ -534,7 +530,8 @@ const submitProfile = () => {
               >
                 <AppTextField
                   v-model="socialMediaProfileUrls"
-                  label="Social Media Profile Url*"
+                  label="Social Media Profile*"
+                  placeholder="@acme_biz"
                   :rules="[requiredValidator]"
                   required
                 />
@@ -554,7 +551,7 @@ const submitProfile = () => {
                 cols="2"
               >
                 <VCheckbox
-                  v-model="businessRegionsOfOperation"
+                  v-model="regionOfOperations"
                   :label="region.label"
                   :value="region.value"
                   :rules="[requiredValidator]"
@@ -572,6 +569,8 @@ const submitProfile = () => {
                   label="Company Status*"
                   :items="['PRIVATE', 'PUBLIC']"
                   placeholder="Select Company Status"
+                  :rules="[requiredValidator]"
+                  required
                 />
               </VCol>
 
@@ -643,23 +642,6 @@ const submitProfile = () => {
                 />
               </VCol>
 
-              <!-- 👉 Calling Code* -->
-              <VCol
-                cols="6"
-                md="6"
-              >
-                <AppAutocomplete
-                  v-model="callingCode"
-                  label="Calling Code*"
-                  :items="countries"
-                  :item-title="item => `${item.emoji} ${item.phone_code}`"
-                  item-value="phone_code"
-                  placeholder="Select your Calling code"
-                  :rules="[requiredValidator]"
-                  required
-                />
-              </VCol>
-
               <!-- 👉 Phone Number* -->
               <VCol
                 cols="6"
@@ -669,7 +651,7 @@ const submitProfile = () => {
                   v-model="phoneNumber"
                   type="tel"
                   label="Phone Number*"
-                  placeholder="3447431371"
+                  placeholder="+11234567890"
                   :rules="[requiredValidator]"
                   required
                 />

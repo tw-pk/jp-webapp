@@ -40,14 +40,14 @@ class TwilioServices
         $businessName = $user['businessName'];
         $socialMediaProfileUrls = $user['socialMediaProfileUrls'];
         $websiteLink = $user['websiteLink'];
-        $businessRegionsOfOperation = $user['businessRegionsOfOperation'];
+        $regionOfOperations = $user['regionOfOperations'];
         $businessType = $user['businessType'];
-        $businessRegistrationId = $user['businessRegistrationId'];
+        $businessRegistrationIdentifer = $user['businessRegistrationIdentifer'];
         $businessIdentity = $user['businessIdentity'];
         $businessIndustry = $user['businessIndustry'];
         $businessRegistrationNumber = $user['businessRegistrationNumber'];
         $jobPosition = $user['jobPosition'];
-        $phoneNumber = $user['callingCode'].$user['phoneNumber'];
+        $phoneNumber = $user['phoneNumber'];
         $businessTitle = $user['businessTitle'];
         $full_address = !empty($user['addressLine2']) ? $user['addressLine1'].' '.$user['addressLine2']:$user['addressLine1'];
         $city = $user['city'];
@@ -57,7 +57,7 @@ class TwilioServices
 
         $registerBusiness = $user['registerBusiness'];
         $status_callback_webhook = 'https://3e3e-72-255-3-126.ngrok-free.app/webhook/ten/dlc';
-
+        
         try {
 
             $customerProfile = $this->twilio->trusthub->v1->customerProfiles->create(
@@ -83,9 +83,9 @@ class TwilioServices
                             "business_name" => $businessName,
                             "social_media_profile_urls" => $socialMediaProfileUrls,
                             "website_url" => $websiteLink,
-                            "business_regions_of_operation" => $businessRegionsOfOperation,
+                            "business_regions_of_operation" => $regionOfOperations,
                             "business_type" => $businessType,
-                            "business_registration_identifier" => $businessRegistrationId,
+                            "business_registration_identifier" => $businessRegistrationIdentifer,
                             "business_identity" => $businessIdentity, 
                             "business_industry" => $businessIndustry, 
                             "business_registration_number" => $businessRegistrationNumber

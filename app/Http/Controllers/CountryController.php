@@ -62,7 +62,7 @@ class CountryController extends Controller
 
     public function fetch_countries()
     {
-        $countries  = Country::select('id', 'name', 'code_2','phone_code','emoji')->get()->toArray();
+        $countries  = Country::select('id', 'name', 'code_2','emoji')->get()->toArray();
         return response()->json([
             'message' => 'Countries fetched successfully',
             'countries' => $countries
