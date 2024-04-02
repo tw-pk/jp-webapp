@@ -26,12 +26,12 @@ class PopulateRolesTable extends Command
      */
     public function handle()
     {
-        $role = new Role();
-        $role->name = 'Admin';
-        $role->guard_name = 'api';
-        $role->created_by = 'admin';
-        $role->last_updated_by = 'admin';
-        $role->save();
+        // $role = new Role();
+        // $role->name = 'Admin';
+        // $role->guard_name = 'api';
+        // $role->created_by = 'admin';
+        // $role->last_updated_by = 'admin';
+        // $role->save();
 
         $memberRole = new Role();
         $memberRole->name = 'Member';
