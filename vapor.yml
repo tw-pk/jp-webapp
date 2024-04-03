@@ -1,7 +1,7 @@
 id: 52147
 name: jdiadev
 environments:
-        :
+    development:
         database: jotphone
         domain: beta.jotphone.com
         memory: 1024
