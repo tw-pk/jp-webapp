@@ -37,11 +37,26 @@ const form = ref()
 const countries = ref([])
 
 const busTypeOpt = [
-  'Partnership', 
-  'Limited Liability Corporation', 
-  'Co-operative', 
-  'Non-profit Corporation',
-  'Corporation',
+  {
+    title: 'Co-operative',
+    value: 'co_operative',
+  },
+  {
+    title: 'Corporation',
+    value: 'corporation',
+  },
+  {
+    title: 'Limited Liability Corporation',
+    value: 'limited_liability_corporation',
+  },
+  {
+    title: 'Non-profit Corporation',
+    value: 'non_profit_corporation',
+  },
+  {
+    title: 'Partnership',
+    value: 'partnership',
+  },
 ]
 
 
@@ -59,39 +74,138 @@ onMountedFunction()
 
 
 const busIndustryOpt = [
-  'AUTOMOTIVE',
-  'AGRICULTURE',
-  'BANKING',
-  'CONSTRUCTION',
-  'CONSUMER',
-  'EDUCATION',
-  'ENGINEERING',
-  'ENERGY',
-  'OIL_AND_GAS',
-  'FAST_MOVING_CONSUMER_GOODS',
-  'FINANCIAL',
-  'FINTECH',
-  'FOOD_AND_BEVERAGE',
-  'GOVERNMENT',
-  'HEALTHCARE',
-  'HOSPITALITY',
-  'INSURANCE',
-  'LEGAL',
-  'MANUFACTURING',
-  'MEDIA',
-  'ONLINE',
-  'PROFESSIONAL_SERVICES',
-  'RAW_MATERIALS',
-  'REAL_ESTATE',
-  'RELIGION',
-  'RETAIL',
-  'JEWELRY',
-  'TECHNOLOGY',
-  'TELECOMMUNICATIONS',
-  'TRANSPORTATION',
-  'TRAVEL',
-  'ELECTRONICS',
-  'NOT_FOR_PROFIT',
+  {
+    title: 'AUTOMOTIVE',
+    value: 'automotive',
+  },
+  {
+    title: 'AGRICULTURE',
+    value: 'agriculture',
+  },
+  {
+    title: 'BANKING',
+    value: 'banking',
+  },
+  {
+    title: 'CONSUMER',
+    value: 'consumer',
+  },
+  {
+    title: 'CONSTRUCTION',
+    value: 'construction',
+  },
+  {
+    title: 'EDUCATION',
+    value: 'education',
+  },
+  {
+    title: 'ENGINEERING',
+    value: 'engineering',
+  },
+  {
+    title: 'ENERGY',
+    value: 'energy',
+  },
+  {
+    title: 'OIL AND GAS',
+    value: 'oil_and_gas',
+  },
+  {
+    title: 'FAST MOVING CONSUMER GOODS',
+    value: 'fast_moving_consumer_goods',
+  },
+  {
+    title: 'FINANCIAL',
+    value: 'financial',
+  },
+  {
+    title: 'FINTECH',
+    value: 'fintech',
+  },
+  {
+    title: 'FOOD AND BEVERAGE',
+    value: 'food_and_beverage',
+  },
+  {
+    title: 'GOVERNMENT',
+    value: 'government',
+  },
+  {
+    title: 'HEALTHCARE',
+    value: 'healthcare',
+  },
+  {
+    title: 'HOSPITALITY',
+    value: 'hospitality',
+  },
+  {
+    title: 'INSURANCE',
+    value: 'insurance',
+  },
+  {
+    title: 'LEGAL',
+    value: 'legal',
+  },
+  {
+    title: 'MANUFACTURING',
+    value: 'manufacturing',
+  },
+  {
+    title: 'MEDIA',
+    value: 'media',
+  },
+  {
+    title: 'ONLINE',
+    value: 'online',
+  },
+  {
+    title: 'PROFESSIONAL SERVICES',
+    value: 'professional_services',
+  },
+  {
+    title: 'RAW MATERIALS',
+    value: 'raw_materials',
+  },
+  {
+    title: 'REAL ESTATE',
+    value: 'real_estate',
+  },
+  {
+    title: 'RELIGION',
+    value: 'religion',
+  },
+  {
+    title: 'RETAIL',
+    value: 'retail',
+  },
+  {
+    title: 'JEWELRY',
+    value: 'jewelry',
+  },
+  {
+    title: 'TECHNOLOGY',
+    value: 'technology',
+  },
+  {
+    title: 'TELECOMMUNICATIONS',
+    value: 'telecommunications',
+  },
+  {
+    title: 'TRANSPORTATION',
+    value: 'transportation',
+  },
+  {
+    title: 'TRAVEL',
+    value: 'travel',
+  },
+  {
+    title: 'ELECTRONICS',
+    value: 'electronics',
+  },
+  {
+    title: 'NOT FOR PROFIT',
+    value: 'not_for_profit',
+  },
 ]
 
 const busRegistrationIdOpt = [
@@ -100,36 +214,33 @@ const busRegistrationIdOpt = [
     value: 'EIN',
   },
   {
-    title: 'DUNS Number (Non-US Businesses Only)',
-    value: 'DUNS',
-  },
-  {
     title: 'Canada: Canadian Business Number (CBN)',
     value: 'CBN',
   },
   {
-    title: 'CN Great Britain: Company Number',
-    value: 'CN',
+    title: 'Great Britain: Company Number',
+    value: 'CompanyNumber',
   },
+  
   {
     title: 'Australia: Company Number from ASIC (ACN)',
     value: 'ACN',
   },
   {
-    title: 'CIN India: Corporate Identity Number',
-    value: 'CIN',
+    title: 'India: Corporate Identity Number',
+    value: 'CorporateIdentityNumber',
   },
   {
-    title: 'VAT Estonia: VAT Number',
-    value: 'VAT',
+    title: 'VAT Number',
+    value: 'VATNumber',
   },
   {
-    title: 'VATRN Romania: VAT Registration Number',
-    value: 'VATRN',
+    title: 'Israel: Registration Number',
+    value: 'RegistrationNumber',
   },
   {
-    title: 'RN Israel: Registration Number',
-    value: 'RN',
+    title: 'DUNS Number (Non-US Businesses Only)',
+    value: 'DUNS',
   },
   {
     title: 'Other',
@@ -164,6 +275,37 @@ const regions = [
   { 
     label: 'USA And Canada', 
     value: 'USA_AND_CANADA', 
+  },
+]
+
+const jobPositionOpt = [
+  {
+    title: 'Director',
+    value: 'director',
+  },
+  {
+    title: 'GM',
+    value: 'gm',
+  },
+  {
+    title: 'VP',
+    value: 'vp',
+  },
+  {
+    title: 'CEO',
+    value: 'ceo',
+  },
+  {
+    title: 'CFO',
+    value: 'cfo',
+  },
+  {
+    title: 'General Counsel',
+    value: 'general_counsel',
+  },
+  {
+    title: 'Other',
+    value: 'other',
   },
 ]
 
@@ -438,6 +580,8 @@ const submitProfile = () => {
                   v-model="businessType"
                   label="Business Type*"
                   :items="busTypeOpt"
+                  item-titl="title"
+                  item-value="value"
                   placeholder="Select your business type"
                   :rules="[requiredValidator]"
                   required
@@ -453,6 +597,8 @@ const submitProfile = () => {
                   v-model="businessIndustry"
                   label="Business Industry*"
                   :items="busIndustryOpt"
+                  item-titl="title"
+                  item-value="value"
                   placeholder="Select your business industry"
                   :rules="[requiredValidator]"
                   required
@@ -621,7 +767,9 @@ const submitProfile = () => {
                 <AppAutocomplete
                   v-model="jobPosition"
                   label="Job Position*"
-                  :items="['Director','GM','VP','CEO','CFO','General Counsel','Other']"
+                  :items="jobPositionOpt"
+                  item-title="title"
+                  item-value="value"
                   placeholder="Job Position"
                   :rules="[requiredValidator]"
                   required
