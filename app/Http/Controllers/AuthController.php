@@ -23,7 +23,6 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 
 class AuthController extends Controller
 {
-
     /**
      * Create user
      *
@@ -75,7 +74,6 @@ class AuthController extends Controller
             return response()->json(['error' => 'Provide proper details']);
         }
     }
-
 
     public function create_ten_dlc(Request $request)
     {
@@ -254,7 +252,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     /**
      * Get the authenticated User
      *
@@ -303,6 +300,23 @@ class AuthController extends Controller
         ];
 
         return response()->json($user);
+    }
+
+    public function accountDeactivate()
+    {
+        if (!\auth()->check()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated User'
+            ], 403);
+        }
+
+        $user = Auth::user();
+        $user->delete(); // Soft delete the user
+
+        return response()->json([
+            'status' => true,
+        ]);
     }
 
     public function updateProfile(Request $request)
@@ -458,7 +472,6 @@ class AuthController extends Controller
             'message' => 'Password updated successfully'
         ]);
     }
-
 
     public function fetch_total()
     {

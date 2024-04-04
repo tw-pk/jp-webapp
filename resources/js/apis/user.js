@@ -77,6 +77,12 @@ export default {
     return axiosIns.post('api/auth/user/profile/data')
   },
 
+  async accountDeactivate() {
+    await Csrf.getCookie()
+
+    return axiosIns.post('api/auth/user/account/deactivate')
+  },
+
   async profileCountries() {
     await Csrf.getCookie()
 

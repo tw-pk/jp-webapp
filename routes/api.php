@@ -73,6 +73,7 @@ Route::group(['prefix' => 'auth'], function () {
 
         //profile data api
         Route::post('/user/profile/data', [AuthController::class, 'userProfileData']);
+        Route::post('user/account/deactivate', [AuthController::class, 'accountDeactivate']);
         Route::post('/user/profile/update', [AuthController::class, 'updateProfile']);
         Route::post('/user/role', [AuthController::class, 'isAdmin']);
 

@@ -2,38 +2,7 @@
 import User from "@/apis/user"
 import axiosIns from "@axios"
 import avatar from '@images/avatars/avatar-0.png'
-import { defineEmits, onMounted, ref } from "vue"
-
-
-const emits = defineEmits(['update:isDialogVisible', 'confirmed']);
-
-console.log('deactivateAccount123')
-console.log(emits)
-
-const confirmAction = () => {
-  console.log('deactivateAccount12355555')
-  emits('confirmed')
-}
-
-
-const handleConfirmation = () => {
-  console.log('Account deactivation confirmed')
-
-  // Perform further actions here, such as calling the deactivateAccount function
-  deactivateAccount()
-}
-
-const deactivateAccount = async () => {
-  console.log('deactivateAccount')
-  try {
-    console.log('deactivateAccount')
-
-    // await axios.post('/api/deactivate-account');
-    // this.isAccountDeactivated = true;
-  } catch (error) {
-    console.error('Error deactivating account:', error)
-  }
-}
+import { onMounted, ref } from "vue"
 
 const accountData = {
   avatar: avatar,
@@ -53,8 +22,8 @@ const accountData = {
 
 const refInputEl = ref(null)
 const isConfirmDialogOpen = ref(false)
-
 const isAccountDeactivated = ref(false)
+const deactivated = ref(false)
 const validateAccountDeactivation = [v => !!v || 'Please confirm account deactivation']
 
 const accountDataLocal = ref(structuredClone(accountData))
@@ -127,6 +96,20 @@ const countries = ref([])
 
 const resetForm = () => {
   accountDataLocal.value = structuredClone(accountData)
+}
+
+const handleConfirmation = async action => {
+  if(action===true){
+    try {
+      const accountResponse = await User.accountDeactivate()
+      if(accountResponse.data.status){
+        deactivated.value = true
+        isAccountDeactivated.value = false
+      }
+    } catch (error) {
+      console.error('Error deactivating account:', error)
+    }
+  }
 }
 
 const onSubmit = () => {
@@ -471,10 +454,19 @@ onMounted(async() => {
       <!-- 👉 Delete Account -->
       <VCard title="Delete Account">
         <VCardText>
+          <VAlert
+            v-if="deactivated"
+            type="error"
+          >
+            Your account has been deactivated successfully.
+          </VAlert>
+        </VCardText>
+        <VCardText>
           <!-- 👉 Checkbox and Button  -->
           <div>
             <VCheckbox
               v-model="isAccountDeactivated"
+              :disabled="deactivated"
               :rules="validateAccountDeactivation"
               label="I confirm my account deactivation"
             />
@@ -495,13 +487,13 @@ onMounted(async() => {
 
   <!-- Confirm Dialog -->
   <ConfirmDialog
-      v-model:isDialogVisible="isConfirmDialogOpen"
-      @confirmed="handleConfirmation"
-      confirmation-question="Are you sure you want to deactivate your account?"
-      confirm-title="Deactivated!"
-      confirm-msg="Your account has been deactivated successfully."
-      cancel-title="Cancelled"
-      cancel-msg="Account Deactivation Cancelled!"
-    />
+    v-model:isDialogVisible="isConfirmDialogOpen"
+    confirmation-question="Are you sure you want to deactivate your account?"
+    confirm-title="Deactivated!"
+    confirm-msg="Your account has been deactivated successfully."
+    cancel-title="Cancelled"
+    cancel-msg="Account Deactivation Cancelled!"
+    @confirm="handleConfirmation"
+  />
 </template>
 
