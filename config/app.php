@@ -207,7 +207,8 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\VaporUiServiceProvider::class,
         Stevebauman\Location\LocationServiceProvider::class,
-        \App\Providers\TwilioServiceProvider::class
+        \App\Providers\TwilioServiceProvider::class,
+        Jenssegers\Agent\AgentServiceProvider::class,
     ])->toArray(),
 
     /*

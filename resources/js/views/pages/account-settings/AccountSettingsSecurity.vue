@@ -1,9 +1,9 @@
 <script setup>
-import { VDataTable } from 'vuetify/labs/VDataTable'
+import twoFactor from "@/apis/twoFactor"
 import User from "@/apis/user"
 import laptopGirl from '@images/illustrations/laptop-girl.png'
 import { confirmedValidator, passwordValidator, requiredValidator } from "@validators"
-import twoFactor from "@/apis/twoFactor"
+import { VDataTable } from 'vuetify/labs/VDataTable'
 
 const isCurrentPasswordVisible = ref(false)
 const isNewPasswordVisible = ref(false)
@@ -52,18 +52,7 @@ const recentDevicesHeaders = [
   },
 ]
 
-const recentDevices = [
-  {
-    browser: 'Chrome on Windows',
-    device: 'HP Spectre 360',
-    location: 'New York, NY',
-    recentActivity: '28 Apr 2022, 18:20',
-    deviceIcon: {
-      icon: 'tabler-brand-windows',
-      color: 'primary',
-    },
-  },
-]
+const recentDevices = ref([])
 
 const isOneTimePasswordDialogVisible = ref(false)
 
@@ -115,6 +104,11 @@ const disableTwoFactorAuth = async () => {
 onMounted(async() => {
   await twoFactor.isEnabled()
     .then(res => {
+      console.log('twoFactor')
+      console.log(res.data.recentDevices)
+      console.log(res.data.recentDevices)
+
+      recentDevices.value = res.data.recentDevices
       if(res.data.status){
         twoFactorEnabled.value = true
         defaultMessage2FA.value = res.data.message
@@ -249,10 +243,16 @@ onMounted(async() => {
     <VCol cols="12">
       <VCard title="Two-steps verification">
         <VCardText>
-          <h6 v-if="!twoFactorEnabled" class="text-base font-weight-medium mb-3">
+          <h6
+            v-if="!twoFactorEnabled"
+            class="text-base font-weight-medium mb-3"
+          >
             {{ defaultMessage2FA }}
           </h6>
-          <h6 v-else class="text-base font-weight-medium mb-3">
+          <h6
+            v-else
+            class="text-base font-weight-medium mb-3"
+          >
             {{ defaultMessage2FA }}
           </h6>
           <p>
@@ -264,18 +264,26 @@ onMounted(async() => {
               class="text-decoration-none"
             >Learn more.</a>
           </p>
+          <VRow no-gutters>
+            <VCol
+              cols="3"
+              md="3"
+            >
+              <VBtn @click="isOneTimePasswordDialogVisible = true">
+                Enable 2FA
+              </VBtn>
+            </VCol>
 
-          <div v-if="!twoFactorEnabled">
-            <VBtn @click="isOneTimePasswordDialogVisible = true">
-              Enable 2FA
-            </VBtn>
-          </div>
-
-          <div v-else>
-            <VBtn @click="disableTwoFactorAuth">
-              Disable 2FA
-            </VBtn>
-          </div>
+            <VCol
+              v-if="twoFactorEnabled"
+              cols="3"
+              md="3"
+            >
+              <VBtn @click="disableTwoFactorAuth">
+                Disable 2FA
+              </VBtn>
+            </VCol>
+          </VRow>
         </VCardText>
       </VCard>
     </VCol>

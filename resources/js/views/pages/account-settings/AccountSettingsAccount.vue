@@ -383,7 +383,7 @@ onMounted(async() => {
                   v-model="accountDataLocal.country"
                   label="Country"
                   :items="countries"
-                  item-title="name"
+                  :item-title="item => `${item.emoji} ${item.name}`"
                   item-value="name"
                 />
               </VCol>

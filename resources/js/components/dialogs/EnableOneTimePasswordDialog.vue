@@ -1,8 +1,6 @@
 <script setup>
 import twoFactor from "@/apis/twoFactor"
-import { emailValidator, requiredValidator } from "@validators"
-
-const otpGenerated = ref(false)
+import { requiredValidator } from "@validators"
 
 const props = defineProps({
   mobileNumber: {
@@ -19,6 +17,8 @@ const emit = defineEmits([
   'update:isDialogVisible',
   'submit',
 ])
+
+const otpGenerated = ref(false)
 
 const phoneNumber = ref(structuredClone(toRaw(props.mobileNumber)))
 const otp = ref(null)
@@ -91,7 +91,7 @@ const changeNumber = () => {
     @update:model-value="dialogModelValueUpdate"
   >
     <!-- Dialog close btn -->
-    <DialogCloseBtn @click="dialogModelValueUpdate(false)"/>
+    <DialogCloseBtn @click="dialogModelValueUpdate(false)" />
 
     <VCard class="pa-5 pa-sm-8">
       <VCardItem class="text-start">
@@ -100,7 +100,7 @@ const changeNumber = () => {
         </VCardTitle>
         <VCardSubtitle>
           <span class="text-base">
-            Enter your mobile phone number with country code and  we will send you a verification code.
+            Enter your mobile phone number with country code and we will send you a verification code.
           </span>
         </VCardSubtitle>
       </VCardItem>
@@ -123,9 +123,9 @@ const changeNumber = () => {
             class="d-flex flex-wrap justify-end mb-2"
           >
             <a
-              @click="changeNumber"
               href="javascript:void(0)"
               class="text-decoration-none"
+              @click="changeNumber"
             >Change number</a>
           </div>
           <div
