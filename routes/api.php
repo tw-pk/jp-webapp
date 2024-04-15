@@ -87,6 +87,7 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('/2fa/verify-session', [TwoFactorAuthController::class, 'verifySession']);
         Route::post('/2fa/profile', [TwoFactorAuthController::class, 'twoFactorProfile']);
         Route::post('/2fa/generate-code', [TwoFactorAuthController::class, 'generateCode']);
+        Route::post('/2fa/resend-code', [TwoFactorAuthController::class, 'resendCode']);
         Route::post('/2fa/is-enabled', [TwoFactorAuthController::class, 'isEnabled']);
         Route::post('/2fa/disable', [TwoFactorAuthController::class, 'disable']);
 

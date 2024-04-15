@@ -99,6 +99,10 @@ class TwoFactorAuthController extends Controller
         }
     }
 
+    public function resendCode(Request $request){
+        return $this->twoFactorAuthenticationService->resendCode();
+    }
+
     public function verifyOtp(Request $request){
         $request->validate([
             'to' => 'required',

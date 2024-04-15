@@ -84,13 +84,57 @@ class TwoFactorAuthenticationService implements TwoFactorAuthenticationInterface
                 'expiry_at' => Carbon::now()->addMinutes(10),
                 'channel' => $verification->channel
             ]);
-
+            
             $this->setCodeExpiry(10);
 
             return response()->json([
                 'status' => true,
                 'message' => 'OTP has been generated successfully'
             ]);
+        } catch (TwilioException $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ]);
+        }
+    }
+
+    public function resendCode(): JsonResponse
+    {
+        try {
+            $service = TwilioVerifyService::first();
+            $user = \Auth::user();
+            $profile = $user->twoFactorProfile;
+        
+            if (!$service || !$profile) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Two-factor authentication is not enabled yet.'
+                ]);
+            }
+        
+            $verificationRecord = TwilioPasswordVerification::where('user_id', $user->id)
+                ->orderByDesc('created_at')
+                ->first();
+
+            if (!$verificationRecord) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Verification record not found'
+                ]);
+            }
+            
+            $verification = $this->twilio->verify->v2->services($service->sid)
+            ->verifications
+            ->create($profile->phone, $profile->channel);    
+
+            $verificationRecord->update(['expiry_at' => Carbon::now()->addMinutes(10)]);
+        
+            return response()->json([
+                'status' => true,
+                'message' => 'OTP resent successfully'
+            ]);
+
         } catch (TwilioException $exception) {
             return response()->json([
                 'status' => false,

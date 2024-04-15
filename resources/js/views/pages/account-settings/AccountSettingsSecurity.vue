@@ -104,10 +104,6 @@ const disableTwoFactorAuth = async () => {
 onMounted(async() => {
   await twoFactor.isEnabled()
     .then(res => {
-      console.log('twoFactor')
-      console.log(res.data.recentDevices)
-      console.log(res.data.recentDevices)
-
       recentDevices.value = res.data.recentDevices
       if(res.data.status){
         twoFactorEnabled.value = true
