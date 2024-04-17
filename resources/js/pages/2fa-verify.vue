@@ -248,7 +248,7 @@ onMounted(async() => {
               <VCol cols="12">
                 <div class="d-flex justify-center align-center flex-wrap">
                   <VRow
-                   
+                    v-if="phoneProvided"
                     justify="center"
                     style="align-items: center;"
                   >

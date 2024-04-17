@@ -262,6 +262,7 @@ onMounted(async() => {
           </p>
           <VRow no-gutters>
             <VCol
+              v-if="!twoFactorEnabled"
               cols="3"
               md="3"
             >
@@ -275,7 +276,10 @@ onMounted(async() => {
               cols="3"
               md="3"
             >
-              <VBtn @click="disableTwoFactorAuth">
+              <VBtn
+                color="error"
+                @click="disableTwoFactorAuth"
+              >
                 Disable 2FA
               </VBtn>
             </VCol>

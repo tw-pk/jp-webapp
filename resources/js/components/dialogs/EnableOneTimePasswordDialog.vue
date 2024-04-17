@@ -19,9 +19,11 @@ const emit = defineEmits([
 ])
 
 const otpGenerated = ref(false)
-
 const phoneNumber = ref(structuredClone(toRaw(props.mobileNumber)))
 const otp = ref(null)
+const isSnackbarVisible = ref(false)
+const snackbarMessage = ref('')
+const snackbarActionColor = ref(' ')
 
 const error = ref({
   phoneNumber: undefined,
@@ -32,20 +34,32 @@ const error = ref({
 const formSubmit = async () => {
   if (phoneNumber.value) {
     emit('submit', phoneNumber.value)
-
     if(otpGenerated.value){
+      console.log('otp.value')
+      console.log(otp.value)
+      if (otp.value ==null || otp.value =='' ) {
+        error.value = {
+          otp: 'Please enter a valid otp',
+        }
+      }  
       await twoFactor.verifyCode({
         'to': phoneNumber.value,
         'code': otp.value,
       })
         .then(res => {
+          console.log('res res res')
+          console.log(res.data.message)
           if (res.data.status) {
             otpGenerated.value = false
             emit('update:isDialogVisible', false)
+
+            snackbarMessage.value = res.data.message
+            snackbarActionColor.value = `success`
+            isSnackbarVisible.value = true
           }
         }).catch(error => {
-          console.log(error)
           error.value = error.response.data.errors
+          
         })
     }else{
       await twoFactor.enableTwoFactor({
@@ -57,6 +71,7 @@ const formSubmit = async () => {
             otpGenerated.value = true
           }
         }).catch(error => {
+          console.log(error)
           error.value = error.response.data.errors
         })
     }
@@ -169,4 +184,20 @@ const changeNumber = () => {
       </VCardText>
     </VCard>
   </VDialog>
+  <!-- Snackbar -->
+  <VSnackbar
+    v-model="isSnackbarVisible"
+    multi-line
+  >
+    {{ snackbarMessage }}
+
+    <template #actions>
+      <VBtn
+        :color="snackbarActionColor"
+        @click="isSnackbarVisible = false"
+      >
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
 </template>
