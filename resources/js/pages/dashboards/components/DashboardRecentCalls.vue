@@ -38,7 +38,7 @@ const options = ref({
 // headers
 const headers = [
   {
-    title: 'TEAMDIALER NUMBER',
+    title: 'JOTPHONE NUMBER',
     key: 'teamdialer_number',
     sortable: false,
   },
@@ -265,7 +265,7 @@ const editItem = callSid => {
       class="text-no-wrap"
       show-select
     >
-      <!-- TeamDialer Number -->
+      <!-- JotPhone Number -->
       <template #item.teamdialer_number="{ item }">
         <div class="d-flex align-center gap-4">
           <VIcon

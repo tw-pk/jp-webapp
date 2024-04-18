@@ -26,7 +26,7 @@ const calls = ref([])
 // headers
 const headers = [
   {
-    title: 'TEAMDIALER NUMBER',
+    title: 'JOTPHONE NUMBER',
     key: 'teamdialer_number',
   },
   {
@@ -153,7 +153,7 @@ const props = defineProps({
               class="text-no-wrap"
               @update:options="options = $event"
             >
-              <!-- TeamDialer Number -->
+              <!-- JotPhone Number -->
               <template #item.teamdialer_number="{ item }">
                 <div class="d-flex align-center gap-4">
                   <VIcon
