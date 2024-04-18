@@ -121,9 +121,8 @@ const fetchRecentCalls = () => {
       }
     })
     .catch(error => {
-      console.log(error)
       error.value = true
-      errorMessage.value = error.response
+      errorMessage.value = error.response.data.message ? error.response.data.message : error.response
       isProcessing.value = false
     })
 }
@@ -199,6 +198,19 @@ const editItem = callSid => {
 </script>
 
 <template>
+  <div
+    v-if="errorMessage"
+    class="my-3"
+  >
+    <VAlert
+      density="compact"
+      color="error"
+      variant="tonal"
+      closable
+    >
+      {{ errorMessage }}
+    </VAlert>
+  </div>
   <VCard>
     <div class="__dashboard__recent-calls-header pa-4 __border-bottom-light">
       <div class="__dashboard__header-title">
@@ -206,19 +218,7 @@ const editItem = callSid => {
           Recent Calls
         </h5>
       </div>
-      <div
-        v-if="errorMessage"
-        class="my-3"
-      >
-        <VAlert
-          density="compact"
-          color="error"
-          variant="tonal"
-          closable
-        >
-          {{ errorMessage }}
-        </VAlert>
-      </div>
+      
       <div class="__dashboard__header-tabs">
         <VTabs
           v-model="currentTab"
