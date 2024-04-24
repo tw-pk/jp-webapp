@@ -166,10 +166,14 @@ class AuthController extends Controller
                 [
                     'action' => 'manage',
                     'subject' => 'all'
-                ]
+                ],
             ];
         } else {
             $userAbilities = [
+                [
+                    'action' => 'read',
+                    'subject' => 'Member'
+                ],
                 [
                     'action' => 'read',
                     'subject' => 'dashboard-analytics'

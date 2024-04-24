@@ -4,13 +4,11 @@ import AccountSettingsBillingAndPlans from '@/views/pages/account-settings/Accou
 import AccountSettingsNotification from '@/views/pages/account-settings/AccountSettingsNotification.vue'
 import AccountSettingsSecurity from '@/views/pages/account-settings/AccountSettingsSecurity.vue'
 import BusinessProfile from '@/views/pages/account-settings/BusinessProfile.vue'
-
-import { useAppAbility } from '@/plugins/casl/useAppAbility'
+import { can } from '@layouts/plugins/casl'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const { can } = useAppAbility()
 
 // tabs
 const tabs = [

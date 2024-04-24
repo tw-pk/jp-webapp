@@ -13,10 +13,7 @@ export const useChatStore = defineStore('chat', {
       const { data } = await axiosIns.get('/api/auth/chat/chats-and-contacts', {
         params: { q },
       })
-
-      console.log('data data data')
-      console.log(data)
-
+      
       const { chatsContacts, contacts, profileUser } = data.data
 
       this.chatsContacts = chatsContacts
