@@ -75,7 +75,7 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('/user/profile/data', [AuthController::class, 'userProfileData']);
         Route::post('user/account/deactivate', [AuthController::class, 'accountDeactivate']);
         Route::post('/user/profile/update', [AuthController::class, 'updateProfile']);
-        Route::post('/user/role', [AuthController::class, 'isAdmin']);
+        Route::post('/user/role', [AuthController::class, 'isRole']);
 
         // update password api
         Route::patch('/password/update', [AuthController::class, 'updatePassword']);

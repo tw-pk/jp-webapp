@@ -107,7 +107,7 @@ export default {
     return axiosIns.patch('api/auth/password/update', data)
   },
 
-  async isAdmin(){
+  async isRole(){
     await Csrf.getCookie()
 
     return axiosIns.post('api/auth/user/role')

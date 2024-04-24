@@ -4,16 +4,18 @@ import AccountSettingsBillingAndPlans from '@/views/pages/account-settings/Accou
 import AccountSettingsNotification from '@/views/pages/account-settings/AccountSettingsNotification.vue'
 import AccountSettingsSecurity from '@/views/pages/account-settings/AccountSettingsSecurity.vue'
 import BusinessProfile from '@/views/pages/account-settings/BusinessProfile.vue'
+
+import { useAppAbility } from '@/plugins/casl/useAppAbility'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const activeTab = ref(route.params.tab)
-
+const { can } = useAppAbility()
 
 // tabs
 const tabs = [
   {
-    title: 'Company Profile',
+    title: 'Profile',
     icon: 'tabler-users',
     tab: 'account',
   },
@@ -38,6 +40,12 @@ const tabs = [
     tab: 'business-profile',
   },
 ]
+
+const filteredTabs = computed(() => {
+  return tabs.filter(item => can('read', item.tab))
+})
+
+const activeTab = ref(route.params.tab)
 </script>
 
 <template>
@@ -47,7 +55,7 @@ const tabs = [
       class="v-tabs-pill"
     >
       <VTab
-        v-for="item in tabs"
+        v-for="item in filteredTabs"
         :key="item.icon"
         :value="item.tab"
         :to="{ name: 'pages-account-settings-tab', params: { tab: item.tab } }"
@@ -102,4 +110,7 @@ const tabs = [
 <route lang="yaml">
 meta:
   navActiveLink: pages-account-settings-tab
+  action: read
+  subject: pages-account-settings-tab
 </route>
+

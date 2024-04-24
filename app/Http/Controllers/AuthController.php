@@ -193,6 +193,18 @@ class AuthController extends Controller
                 [
                     'action' => 'read',
                     'subject' => 'phone-numbers'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'pages-account-settings-tab'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'account'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'security'
                 ]
             ];
         }
@@ -340,7 +352,7 @@ class AuthController extends Controller
         $user->save();
 
         $profile = Auth::user()->profile;
-
+        
         if (!$profile) {
             $profile = new UserProfile();
             $profile->user_id = Auth::user()->id;
@@ -348,7 +360,6 @@ class AuthController extends Controller
         } else {
             $this->updatedUserProfile($request, $profile);
         }
-
         return response()->json([
             'status' => true,
             'message' => 'Profile updated successfully'
@@ -427,8 +438,8 @@ class AuthController extends Controller
         $profile->phone_number = $request->phoneNumber;
         $profile->bio = $request->bio;
         $profile->save();
-
-        if ($request->has('avatar')) {
+        
+        if (!empty($request->avatar) && $request->has('avatar')) {
             // Get filename with the extension
             $filenameWithExt = $request->file('avatar')->getClientOriginalName();
             //Get just filename
@@ -496,11 +507,20 @@ class AuthController extends Controller
         ]);
     }
 
-    public function isAdmin()
+    public function isRole()
     {
+        $roleName = Auth::user()->getRoleNames()->first();
+        if(!$roleName){
+            return response()->json([
+                'status' => false,
+                'message' => 'Roll has been not exist.'
+            ]);  
+        }
         return response()->json([
             'status' => true,
-            'isAdmin' => Auth::user()->hasRole(['Admin'])
+            'is'.$roleName => Auth::user()->hasRole([$roleName])
         ]);
     }
+
+
 }
