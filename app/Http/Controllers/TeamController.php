@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Team;
 use App\Models\UserNumber;
 use App\Models\Invitation;
+use App\Models\TeamMember;
 use App\Models\UserProfile;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
@@ -52,9 +53,19 @@ class TeamController extends Controller
                 $query->select('team_id', 'phone_number');
             }
         ])
-            ->select('teams.id', 'name', 'description', 'status')
-            ->where('user_id', Auth::user()->id);
+            ->select('teams.id', 'name', 'description', 'status');
 
+        $roleName = Auth::user()->getRoleNames()->first();
+
+        if($roleName =='Admin'){
+            $query->where('user_id', Auth::user()->id);
+        }else{
+            $userEmail = Auth::user()->email;
+            $teamId = TeamMember::whereHas('invitation', function ($query) use ($userEmail) {
+                $query->where('email', $userEmail);
+            })->pluck('team_id')->toArray();
+            $query->whereIn('id', $teamId);
+        }
         if ($searchQuery) {
             $query->where('name', 'like', '%' . $searchQuery . '%');
         }
@@ -87,6 +98,7 @@ class TeamController extends Controller
             $team['phone_number'] = $team?->assignedNumbers?->pluck('phone_number')->implode(', ');
             return $team;
         });
+
         return response()->json([
             'teams' => $teams,
             'totalPage' => $totalPage,
@@ -118,7 +130,8 @@ class TeamController extends Controller
 
     public function fetch_teams()
     {
-        $teams = Team::select('id', 'name')->get();
+
+        $teams = Team::select('id', 'name')->where('user_id', Auth::user()->id)->get();
         return response()->json([
             'message' => 'Teams fetched successfully',
             'teams' => $teams

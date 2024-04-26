@@ -44,14 +44,17 @@ const headers = [
   {
     title: 'Team NAME',
     key: 'name',
+    tab: 'Member',
   },
   {
     title: 'PHONE',
     key: 'phone_number',
+    tab: 'Member',
   },
   {
     title: 'MEMBERS',
     key: 'members',
+    tab: 'Member',
   },
   {
     title: 'ACTION',
@@ -59,6 +62,10 @@ const headers = [
     sortable: false,
   },
 ]
+
+const filteredHeaders = computed(() => {
+  return headers.filter(item => can('read', item.tab))
+})
 
 const resolveStatusVariant = status => {
   if (status === 1)
@@ -134,8 +141,10 @@ const deleteTeam = id => {
 
 onMounted(() => {
   fetchMembers()
-  fetchTeams()
+
+  //fetchTeams()
 })
+
 watchEffect(fetchTeams)
 
 const submitTeam = () => {
@@ -394,7 +403,7 @@ const onCloseDialog = () => {
             v-model:page="options.page"
             :items="teams"
             :items-length="totalUsers"
-            :headers="headers"
+            :headers="filteredHeaders"
             class="text-no-wrap"
             show-select
             @update:options="options = $event"

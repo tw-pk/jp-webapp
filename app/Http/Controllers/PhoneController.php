@@ -37,7 +37,20 @@ class PhoneController extends Controller
                 })
                 ->select(['user_id', 'phone_number', 'country']);
         }
-
+         
+        $roleName = Auth::user()->getRoleNames()->first();
+        if($roleName =='Member'){
+            $userEmail = Auth::user()->email; 
+            $userPhoneNumbers = AssignNumber::whereHas('invitation', function ($query) use ($userEmail) {
+                $query->where('email', $userEmail);
+            })->pluck('phone_number')->unique()->toArray();
+            $userNumbersQuery = UserNumber::select('user_id', 'phone_number', 'country')
+                ->whereIn('phone_number', $userPhoneNumbers);
+            if(!empty($userNumbersQuery)){
+                $query->union($userNumbersQuery)->distinct();
+            }
+        }
+        
         $totalRecord = $query->count();
         $numbers = $query->paginate($perPage, ['*'], 'page', $currentPage);
         $totalPage = ceil($totalRecord / $perPage);

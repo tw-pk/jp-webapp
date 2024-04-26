@@ -166,7 +166,7 @@ class AuthController extends Controller
                 [
                     'action' => 'manage',
                     'subject' => 'all'
-                ],
+                ]
             ];
         } else {
             $userAbilities = [
