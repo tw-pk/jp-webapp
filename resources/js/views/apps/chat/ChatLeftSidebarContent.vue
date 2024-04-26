@@ -2,7 +2,6 @@
 import ChatContact from '@/views/apps/chat/ChatContact.vue'
 import { useChatStore } from '@/views/apps/chat/useChatStore'
 import { useContactStore } from "@/views/apps/contact/useContactStore"
-import { can } from '@layouts/plugins/casl'
 import { emailValidator, requiredValidator } from "@validators"
 import { onMounted, ref } from 'vue'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
@@ -133,10 +132,7 @@ onMounted(() => {
       class="v-dialog-sm"
     >
       <!-- Dialog Activator -->
-      <template
-        v-if="can('manage', 'all')"
-        #activator="{ props }"
-      >
+      <template #activator="{ props }">
         <VBtn
           size="38"
           color="primary"

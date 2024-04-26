@@ -197,6 +197,14 @@ class AuthController extends Controller
                 ],
                 [
                     'action' => 'read',
+                    'subject' => 'contact'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'contact-details'
+                ],
+                [
+                    'action' => 'read',
                     'subject' => 'reports'
                 ],
                 [

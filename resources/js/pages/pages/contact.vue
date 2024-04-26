@@ -596,3 +596,9 @@ const onCloseDialog = () => {
 <style scoped lang="scss">
 @use "@core-scss/template/pages/page-auth.scss";
 </style>
+
+<route lang="yaml">
+meta:
+  action: read
+  subject: contact
+</route>
