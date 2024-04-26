@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Contact;
+use App\Models\Invitation;
 use App\Models\Conversation;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -26,17 +27,29 @@ class ConversationRepository
      */
     public function getConversations($query, $perPage=10): array
     {
-        $contacts = Auth::user()->contacts->map(function ($contact) {
-            $contact->fullName = $contact->firstname . ' ' . $contact->lastname;
-            return $contact;
-        })
-        ->sortByDesc('id');
+        $user = Auth::user();
+        $roleName = $user->getRoleNames()->first();
+        $contacts = [];
+        if($roleName =='Admin'){
+            $contacts = $user->contacts->map(function ($contact) {
+                $contact->fullName = $contact->firstname . ' ' . $contact->lastname;
+                return $contact;
+            })
+            ->sortByDesc('id');
+        }else{
+            $ownerId = $user->invitationsMember()->pluck('user_id')->first();
+            $contacts = Contact::where('user_id', $ownerId)->get();
+            $contacts->transform(function ($contact) {
+                $contact->fullName = $contact->firstname . ' ' . $contact->lastname; 
+                return $contact;
+            });
+        }
         
         $chats = [];
         $filteredContacts = [];
         
         if ($query) {
-            $conversations = Auth::user()->conversations()
+            $conversations = $user->conversations()
                 ->whereHas('contact', function ($q) use ($query) {
                     $q->whereRaw("CONCAT(firstname, ' ', lastname) = ?", [$query])
                         ->orWhere('phone_number', 'iLIKE', '%' . $query . '%');
@@ -46,7 +59,7 @@ class ConversationRepository
                 ->orWhere('phone_number', 'iLIKE', '%' . $query . '%');
         }
 
-        $conversations = Auth::user()->conversations;
+        $conversations = $user->conversations;
         
         // Count unread messages
         $unreadCount = 0;
@@ -63,14 +76,14 @@ class ConversationRepository
                 $senderId = null;
                 if ($lastMessage->direction === 'incoming') {
                     // Do something when the condition is met
-                    $contactId = Auth::user()->contacts->where('phone', $lastMessage->from)->first()?->id;
+                    $contactId = $user->contacts->where('phone', $lastMessage->from)->first()?->id;
                     if($contactId){
                         $senderId = $contactId;
                     }else{
                         $senderId = \Str::random('6');
                     }
                 }else{
-                    $senderId = Auth::user()->id;
+                    $senderId = $user->id;
                 }
 
                 $chat = [
@@ -106,14 +119,14 @@ class ConversationRepository
             'chatContacts' => $chats,
             'contacts' => $contacts,
             'profileUser' => [
-                'id' => Auth::user()->id,
-                'avatar' => Auth::user()->profile?->avatar,
-                'fullName' => Auth::user()->fullName(),
-                'role' => Auth::user()->getRoleNames()->first(),
-                'about' => Auth::user()->profile?->bio,
+                'id' => $user->id,
+                'avatar' => $user->profile?->avatar,
+                'fullName' => $user->fullName(),
+                'role' => $user->getRoleNames()->first(),
+                'about' => $user->profile?->bio,
                 'status' => 'online',
                 'settings' => [
-                    'isTwoStepAuthVerificationEnabled' => Auth::user()->twoFactorProfile?->enabled,
+                    'isTwoStepAuthVerificationEnabled' => $user->twoFactorProfile?->enabled,
                     'isNotificationsOn' => true,
                 ]
             ]

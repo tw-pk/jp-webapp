@@ -16,6 +16,8 @@ class Invitation extends Model
         'lastname',
         'email',
         'role',
+        'member_id',
+        'registered',
         'number',
         'user_id'
     ];
@@ -38,7 +40,7 @@ class Invitation extends Model
 
     public function invitationAccept()
     {
-        return $this->belongsTo(User::class, 'email', 'email');
+        return $this->belongsTo(User::class, 'member_id', 'id');
     }
 
     public function userAvatar()

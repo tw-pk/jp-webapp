@@ -297,7 +297,7 @@ class VoiceController extends Controller
                 $perPage = $options['itemsPerPage'];
                 $currentPage = $options['page'] ?? 1;
 
-                $from = Invitation::where('email', Auth::user()->email)->first()?->number;
+                $from = Invitation::where('member_id', Auth::user()->id)->first()?->number;
                 
                 if (!empty($searchQuery)) {
                     $twilioCalls = Auth::user()->calls()

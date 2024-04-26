@@ -61,7 +61,7 @@ const fetchMembers = async () => {
       options.value.page = data.page
     }
   }catch (error){
-    console.log(error.response)
+    //console.log(error.response)
     isProcessing.value = false
   }
 }

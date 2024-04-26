@@ -119,7 +119,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function invitations(): HasMany
     {
-        return $this->hasMany(UserInvitation::class, 'owner_id');
+        return $this->hasMany(Invitation::class, 'user_id');
+    }
+
+    public function invitationsMember(): hasOne
+    {
+        return $this->hasOne(Invitation::class, 'member_id');
     }
 
     public function calls(): HasMany

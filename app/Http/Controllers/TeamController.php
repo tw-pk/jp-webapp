@@ -60,9 +60,9 @@ class TeamController extends Controller
         if($roleName =='Admin'){
             $query->where('user_id', Auth::user()->id);
         }else{
-            $userEmail = Auth::user()->email;
-            $teamId = TeamMember::whereHas('invitation', function ($query) use ($userEmail) {
-                $query->where('email', $userEmail);
+            $userId = Auth::user()->id;
+            $teamId = TeamMember::whereHas('invitation', function ($query) use ($userId) {
+                $query->where('member_id', $userId);
             })->pluck('team_id')->toArray();
             $query->whereIn('id', $teamId);
         }

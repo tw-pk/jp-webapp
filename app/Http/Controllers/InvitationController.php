@@ -6,7 +6,6 @@ use App\Jobs\SendInvitationLink;
 use App\Jobs\SendInvitationsToUsers;
 use App\Models\Invitation;
 use App\Models\Member;
-use App\Models\UserInvitation;
 use Egulias\EmailValidator\EmailValidator;
 use Egulias\EmailValidator\Validation\RFCValidation;
 use Illuminate\Http\Request;
@@ -43,15 +42,9 @@ class InvitationController extends Controller
                 'lastname' => $member['lastName'],
                 'email' => $member['emailAddress'],
                 'role' => Role::where('name', 'Member')->first()?->id,
+                'registered' => false,
                 'number' => $member['existingNumber'],
                 'can_have_new_number' => $member['allowNewNumber']
-            ]);
-
-
-            UserInvitation::create([
-                'owner_id' => Auth::user()->id,
-                'member_email' => $member['emailAddress'],
-                'registered' => false
             ]);
 
             dispatch(new SendInvitationLink($invitation));

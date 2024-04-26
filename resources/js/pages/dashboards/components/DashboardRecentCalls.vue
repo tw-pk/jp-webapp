@@ -120,9 +120,9 @@ const fetchRecentCalls = () => {
         options.value.page = res.data.page
       }
     })
-    .catch(error => {
+    .catch(errors => {
       error.value = true
-      errorMessage.value = error.response.data.message ? error.response.data.message : error.response
+      errorMessage.value = errors.response.data.message ? errors.response.data.message : errors.message
       isProcessing.value = false
     })
 }
