@@ -165,6 +165,7 @@ Route::group(['prefix' => 'auth'], function () {
         Route::delete('contact/delete/{id}', [ContactController::class, 'delete_contact']);
         Route::post('contact/details', [ContactController::class, 'details']);
         Route::post('contact/fetch', [ContactController::class, 'findContact']);
+        Route::post('shared/contact', [ContactController::class, 'sharedContact']);
 
         // Conversations routes
         Route::get('chat/chats-and-contacts', [ChatController::class, 'fetch_chats_and_contacts']);

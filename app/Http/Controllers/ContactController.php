@@ -19,7 +19,7 @@ class ContactController extends Controller
         $options = $request->input('options');
 
         $query = Contact::with('userProfile:contact_id,avatar')
-            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'phone', 'company_name')
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'phone', 'company_name','shared')
             ->where('user_id', Auth::user()->id);
 
         if ($searchQuery) {
@@ -51,6 +51,7 @@ class ContactController extends Controller
         foreach ($contacts as &$contact) {
             $contact->contactId = encrypt($contact->id);
             $contact->fullname = $contact->fullName();
+            $contact->shared = $contact->shared==1? true:false;
             $contact->avatar = optional($contact->userProfile)->avatar;
             $contact->avatarPath = $contact->avatar ? asset('storage/' . $contact->avatar) : '';
         }
@@ -115,6 +116,26 @@ class ContactController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred while adding data'], 500);
+        }
+    }
+
+    public function sharedContact(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer',
+            'shared' => 'required|boolean',
+        ]);
+
+        try {
+            $shared = $request->shared;
+            Contact::where('id', $request->id)->update([
+                'shared' => $shared,
+            ]);
+
+            $message = $shared == 1 ? 'Contact has been successfully shared.' : 'Contact is no longer shared.';
+            return response()->json(['message' => $message]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred while sharing the contact.'], 500);
         }
     }
 

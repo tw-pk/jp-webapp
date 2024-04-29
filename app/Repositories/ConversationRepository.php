@@ -30,19 +30,23 @@ class ConversationRepository
         $user = Auth::user();
         $roleName = $user->getRoleNames()->first();
         $contacts = [];
-        if($roleName =='Admin'){
-            $contacts = $user->contacts->map(function ($contact) {
-                $contact->fullName = $contact->firstname . ' ' . $contact->lastname;
-                return $contact;
-            })
-            ->sortByDesc('id');
-        }else{
+
+        $contacts = $user->contacts->map(function ($contact) {
+            $contact->fullName = $contact->firstname . ' ' . $contact->lastname;
+            return $contact;
+        })
+        ->sortByDesc('id');
+
+        if($roleName =='Member'){
             $ownerId = $user->invitationsMember()->pluck('user_id')->first();
-            $contacts = Contact::where('user_id', $ownerId)->get();
-            $contacts->transform(function ($contact) {
+            $additionalContacts = Contact::where(['shared' => 1,'user_id' => $ownerId])->orderByDesc('id')->get();
+            $additionalContacts->transform(function ($contact) {
                 $contact->fullName = $contact->firstname . ' ' . $contact->lastname; 
                 return $contact;
             });
+            if (!empty($additionalContacts)) {
+                $contacts = $contacts->merge($additionalContacts)->unique('id');
+            }
         }
         
         $chats = [];

@@ -52,6 +52,10 @@ const headers = [
     key: 'company_name',
   },
   {
+    title: 'Shared',
+    key: 'shared',
+  },
+  {
     title: 'ACTION',
     key: 'actions',
     sortable: false,
@@ -96,13 +100,11 @@ const fetchContacts = () => {
     q: searchQuery.value,
     options: options.value,
   }).then(response => {
-    
     contacts.value = response.data.contacts.data
     totalPage.value = response.data.totalPage
     totalRecord.value = response.data.totalRecord
     options.value.page = response.data.page
     isProcessing.value = false
-
   }).catch(error => {
     isProcessing.value = false
     console.log(error)
@@ -131,7 +133,7 @@ watchEffect(fetchContacts)
 const addContact = () => {
   isDisabled.value = true
   isLoading.value = true
-
+  
   const formData = new FormData()
 
   formData.append('id', id.value)
@@ -150,6 +152,7 @@ const addContact = () => {
     isSnackbarVisible.value = true
 
     // Clear input fields
+    id.value = ''
     form.value.reset()
 
     // refetch Team
@@ -209,6 +212,20 @@ const deleteItem = item => {
   deleteDialog.value = true
 }
 
+const sharedContact = item => {
+  contactStore.sharedContact({ id: item.id, shared: item.shared })
+    .then(response => {
+      snackbarMessage.value = response.data.message
+      snackbarActionColor.value = `success`
+      isSnackbarVisible.value = true
+    })
+    .catch(error => {
+      snackbarMessage.value = error.data.message
+      snackbarActionColor.value = `error`
+      isSnackbarVisible.value = true
+    })
+}
+
 const deleteItemConfirm = () => {
   contacts.value.splice(editedIndex.value, 1)
   deleteContact(deleteId.value)
@@ -221,11 +238,11 @@ const closeDelete = () => {
 }
 
 const onCloseDialog = () => {
-  form.value.reset()
-  isDialogVisible.value = false
+  id.value = ''
   defaultTitle.value = 'Add New Contact'
   defaultButton.value = 'Add To Contact'
- 
+  form.value.reset()
+  isDialogVisible.value = false
 }
 </script>
 
@@ -474,6 +491,15 @@ const onCloseDialog = () => {
               </div>
             </template>
         
+            <!-- shared contact -->
+            <template #item.shared="{ item }">
+              <div class="d-flex align-center">
+                <VSwitch
+                  v-model="item.raw.shared"
+                  @change="sharedContact(item.raw)"
+                />
+              </div>
+            </template>
             <template #item.actions="{ item }">
               <VBtn
                 variant="outlined"
