@@ -131,8 +131,10 @@ class ContactController extends Controller
             Contact::where('id', $request->id)->update([
                 'shared' => $shared,
             ]);
-
-            $message = $shared == 1 ? 'Contact has been successfully shared.' : 'Contact is no longer shared.';
+            
+            $roleName = Auth::user()->getRoleNames()->first();
+            $role = $roleName == 'Admin' ? 'member' : 'admin';
+            $message = $shared == 1 ? "Contact has been successfully shared with $role." : "Contact is no longer shared with $role.";
             return response()->json(['message' => $message]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred while sharing the contact.'], 500);

@@ -36,6 +36,17 @@ class ConversationRepository
             return $contact;
         })
         ->sortByDesc('id');
+        if($roleName =='Admin'){
+            $memberIds = $user->invitations->pluck('member_id')->toArray();
+            $additionalContacts = Contact::where(['shared' => 1, 'user_id' => $memberIds])->orderByDesc('id')->get();
+            $additionalContacts->transform(function ($contact) {
+                $contact->fullName = $contact->firstname . ' ' . $contact->lastname; 
+                return $contact;
+            });
+            if ($additionalContacts->isNotEmpty()) {
+                $contacts = $contacts->merge($additionalContacts)->unique('id');
+            }
+        }
 
         if($roleName =='Member'){
             $ownerId = $user->invitationsMember()->pluck('user_id')->first();
