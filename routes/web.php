@@ -25,8 +25,6 @@ Route::get('{any?}', function () {
 
 Route::get('/reset-password/{token}', [AuthController::class, 'resetPasswordToken'])->middleware('guest')->name('password.reset');
 
-Route::stripeWebhooks('stripe/webhook');
-
 Route::post('voice/dial', [TwilioController::class, 'dial']);
 Route::post('voice/incoming-{number}', [TwilioController::class, 'incomingCall'])->name('voice.incoming');
 
