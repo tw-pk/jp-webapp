@@ -58,6 +58,10 @@ Route::group(['prefix' => 'auth'], function () {
 
     Route::group(['middleware' => ['auth:sanctum']], function () {
 
+        //twilio secondary profile
+        Route::post('create/profile/ten-dlc', [AuthController::class, 'create_ten_dlc']);
+        Route::post('delete/profile/ten-dlc', [AuthController::class, 'delete_ten_dlc']);
+
         //Auth routes
         Route::post('/email/resend', [VerificationController::class, 'resend']);
         Route::post('/email/verify', [VerificationController::class, 'verify']);
@@ -69,8 +73,9 @@ Route::group(['prefix' => 'auth'], function () {
 
         //profile data api
         Route::post('/user/profile/data', [AuthController::class, 'userProfileData']);
+        Route::post('user/account/deactivate', [AuthController::class, 'accountDeactivate']);
         Route::post('/user/profile/update', [AuthController::class, 'updateProfile']);
-        Route::post('/user/role', [AuthController::class, 'isAdmin']);
+        Route::post('/user/role', [AuthController::class, 'isRole']);
 
         // update password api
         Route::patch('/password/update', [AuthController::class, 'updatePassword']);
@@ -82,6 +87,7 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('/2fa/verify-session', [TwoFactorAuthController::class, 'verifySession']);
         Route::post('/2fa/profile', [TwoFactorAuthController::class, 'twoFactorProfile']);
         Route::post('/2fa/generate-code', [TwoFactorAuthController::class, 'generateCode']);
+        Route::post('/2fa/resend-code', [TwoFactorAuthController::class, 'resendCode']);
         Route::post('/2fa/is-enabled', [TwoFactorAuthController::class, 'isEnabled']);
         Route::post('/2fa/disable', [TwoFactorAuthController::class, 'disable']);
 
@@ -159,6 +165,7 @@ Route::group(['prefix' => 'auth'], function () {
         Route::delete('contact/delete/{id}', [ContactController::class, 'delete_contact']);
         Route::post('contact/details', [ContactController::class, 'details']);
         Route::post('contact/fetch', [ContactController::class, 'findContact']);
+        Route::post('shared/contact', [ContactController::class, 'sharedContact']);
 
         // Conversations routes
         Route::get('chat/chats-and-contacts', [ChatController::class, 'fetch_chats_and_contacts']);

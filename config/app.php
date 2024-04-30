@@ -71,10 +71,10 @@ return [
     */
 
     'TWILIO_CLIENT_ID' => env('TWILIO_CLIENT_ID'),
-
     'TWILIO_AUTH_TOKEN' => env('TWILIO_AUTH_TOKEN'),
-
     'TWILIO_VOICE_APP_SID' => env('TWILIO_VOICE_APP_SID'),
+    'TWILIO_POLICY_SID' => env('TWILIO_POLICY_SID'),
+    'TWILIO_PRIMARY_USER_SID' => env('TWILIO_PRIMARY_USER_SID'),
 
     /*
     |--------------------------------------------------------------------------
@@ -207,7 +207,8 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\VaporUiServiceProvider::class,
         Stevebauman\Location\LocationServiceProvider::class,
-        \App\Providers\TwilioServiceProvider::class
+        \App\Providers\TwilioServiceProvider::class,
+        Jenssegers\Agent\AgentServiceProvider::class,
     ])->toArray(),
 
     /*

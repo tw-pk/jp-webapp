@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->unsignedBigInteger('role')->nullable();
             $table->string('number')->nullable();
-            $table->boolean('can_have_new_number')->default(false);
+            $table->boolean('cam_have_new_number')->default(false);
             $table->timestamps();
         });
     }

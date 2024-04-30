@@ -1,19 +1,19 @@
 <script setup>
 import AccountSettingsAccount from '@/views/pages/account-settings/AccountSettingsAccount.vue'
 import AccountSettingsBillingAndPlans from '@/views/pages/account-settings/AccountSettingsBillingAndPlans.vue'
-import AccountSettingsConnections from '@/views/pages/account-settings/AccountSettingsConnections.vue'
 import AccountSettingsNotification from '@/views/pages/account-settings/AccountSettingsNotification.vue'
 import AccountSettingsSecurity from '@/views/pages/account-settings/AccountSettingsSecurity.vue'
+import BusinessProfile from '@/views/pages/account-settings/BusinessProfile.vue'
+import { can } from '@layouts/plugins/casl'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const activeTab = ref(route.params.tab)
-
 
 // tabs
 const tabs = [
   {
-    title: 'Company Profile',
+    title: 'Profile',
     icon: 'tabler-users',
     tab: 'account',
   },
@@ -31,8 +31,19 @@ const tabs = [
     title: 'Notifications',
     icon: 'tabler-bell',
     tab: 'notification',
-  }
+  },
+  {
+    title: 'Business Profile',
+    icon: 'tabler-building-skyscraper',
+    tab: 'business-profile',
+  },
 ]
+
+const filteredTabs = computed(() => {
+  return tabs.filter(item => can('read', item.tab))
+})
+
+const activeTab = ref(route.params.tab)
 </script>
 
 <template>
@@ -42,7 +53,7 @@ const tabs = [
       class="v-tabs-pill"
     >
       <VTab
-        v-for="item in tabs"
+        v-for="item in filteredTabs"
         :key="item.icon"
         :value="item.tab"
         :to="{ name: 'pages-account-settings-tab', params: { tab: item.tab } }"
@@ -81,10 +92,15 @@ const tabs = [
         <AccountSettingsNotification />
       </VWindowItem>
 
+      <!-- Business Profile -->
+      <VWindowItem value="business-profile">
+        <BusinessProfile />
+      </VWindowItem>
+
       <!-- Connections -->
-<!--      <VWindowItem value="connection">-->
-<!--        <AccountSettingsConnections />-->
-<!--      </VWindowItem>-->
+      <!--      <VWindowItem value="connection"> -->
+      <!--        <AccountSettingsConnections /> -->
+      <!--      </VWindowItem> -->
     </VWindow>
   </div>
 </template>
@@ -92,4 +108,7 @@ const tabs = [
 <route lang="yaml">
 meta:
   navActiveLink: pages-account-settings-tab
+  action: read
+  subject: pages-account-settings-tab
 </route>
+

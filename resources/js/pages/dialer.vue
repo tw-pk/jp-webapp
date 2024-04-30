@@ -4,19 +4,27 @@ import { useDialerStore } from "@/views/apps/dialer/useDialerStore"
 import { isEmpty } from "@core/utils"
 import defaultAvatar from "@images/avatars/avatar-0.png"
 import defaultAudio from "@images/default-audio-3s.mp3"
-import DialerLoader from "./dialerLoader.vue"
-
+import defaultRingtone from "@images/default-ringtone.mp3"
 import "flag-icons/css/flag-icons.min.css"
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import { onMounted, ref } from 'vue'
 import { PerfectScrollbar } from "vue3-perfect-scrollbar"
 import { useTheme } from 'vuetify'
+import DialerLoader from "./dialerLoader.vue"
 
-let incomingCallSound
+//import ChatLog from '@/views/apps/chat/ChatLog.vue'
+import { useChatStore } from '@/views/apps/chat/useChatStore'
+import DialerSettings from "@/views/apps/dialer/components/DialerSettings.vue"
+import { avatarText } from '@core/utils/formatters'
+
+const incomingCallSound = ref(null)
 let isCallAccepted = false
 const vuetifyTheme = useTheme()
 const dialerStore = useDialerStore()
 const showNotification = ref(false)
+const showNotificationMenu = ref(false)
 const callerId = ref("") // Replace with the actual caller ID
+const calledId = ref("")
 const twilioDevice = computed(() => dialerStore.twilioDevice)
 const currentNumber = ref('')
 const muted = ref(false)
@@ -56,6 +64,16 @@ const loading = ref(false)
 const searchLogs = ref('')
 const searchContact = ref('')
 const activeTabName = ref('home')
+const incomingCall = ref(null)
+
+// Chat message
+const msg = ref('')
+
+// file input
+const refInputEl = ref()
+const isLeftSidebarOpen = ref(true)
+
+const store = useChatStore()
 
 const outputDeviceError = ref({
   cls: '',
@@ -260,7 +278,6 @@ const validPhone = computed(() => {
 })
     
 const handleSuccessfulRegistration = device => {
-  console.log(device)
   log.value = 'Connected'
   connected.value = true
   console.log('The device is ready to receive incoming calls.')
@@ -316,27 +333,14 @@ const toggleCall = async () => {
 }
     
 const playIncomingCallSound = connection => {
-  const device = dialerStore.twilioDevice
-    
-  // Create an audio element
-  const audioElement = document.createElement('audio')
-    
-  // Ensure that device.audio.incoming.stream and audioElement.srcObject are defined
-  if (device.audio.incoming && device.audio.incoming.stream && audioElement.srcObject) {
-    // Connect the audio element to the incoming audio stream
-    device.audio.incoming.stream.pipe(audioElement.srcObject)
-    
-    // Play the audio element
-    audioElement.play()
-  }
-    
-  return audioElement
+  incomingCallSound.value = new Audio(defaultRingtone)
+  incomingCallSound.value.play()
 }
     
 const stopIncomingCallSound = () => {
-  if (incomingCallSound) {
-    incomingCallSound.pause()
-    incomingCallSound = null
+  if (incomingCallSound.value) {
+    incomingCallSound.value.pause()
+    incomingCallSound.value = null
   }
 }
     
@@ -360,33 +364,39 @@ const setInputDevice = async () => {
 }
     
 const handleIncomingCall = incomingCall => {
-    
+ 
   const device = dialerStore.twilioDevice
-    
-  console.log('Incoming connection from ' + incomingCall.parameters.From)
-    
-  // Event listener for call answered
-  device.on('connect', connection => {
-    log.value = 'Call connected.'
-  })
-    
+
+  console.log('incomingCall')
+  console.log(device)
   try {
-    callerId.value = incomingCall.parameters.From
+    calledId.value = incomingCall.From
+    callerId.value = incomingCall.To
+    call.value = incomingCall
+
+    // Play incoming call sound
+    playIncomingCallSound(device)
     triggerIncomingCall()
     
-    call.value = incomingCall
-    
+    // Event listener for call answered
+    device.on('connect', connection => {
+      log.value = 'Call connected.'
+    })
+
     // Event listener for call disconnect
-    // incomingCall.on('disconnect', () => {
-    //   callerId.value = ''
-    // })
-    
-    // Event listener for call reject
-    // incomingCall.on('reject', () => {
-    //   // Stop the incoming call sound when the call is rejected
-    //   // stopIncomingCallSound();
-    //   callerId.value = ''
-    // })
+    device.on('disconnect', () => {
+      stopIncomingCallSound()
+      log.value = 'Call disconnected.'
+      callerId.value = ''
+    })
+
+    // // Event listener for call reject
+    device.on('reject', () => {
+      // Stop the incoming call sound when the call is rejected
+      stopIncomingCallSound()
+      log.value = 'Call rejected.'
+      callerId.value = ''
+    })
     
   } catch (error) {
     console.log(error)
@@ -400,6 +410,10 @@ const initializeTwilio = async () => {
   
   // Get Twilio Device from Store (Pinia)
   const device = dialerStore.twilioDevice
+  
+  device.on("ready", function (device) {
+    log("Twilio.Device Ready!")
+  })
 
   // add event Listener to check if device is registered and ready
   device.on('registered', handleSuccessfulRegistration)
@@ -410,8 +424,10 @@ const initializeTwilio = async () => {
   }
   
   device.on('incoming', conn => {
+    alert('incoming')
     handleIncomingCall(conn)
   })
+
 }
     
 const triggerIncomingCall = () => {
@@ -420,18 +436,48 @@ const triggerIncomingCall = () => {
 }
     
 const acceptCall = () => {
-  // Handle call acceptance logic here
-  showNotification.value = true
-    
-  call.value.accept()
+  
+  stopIncomingCallSound()
+  showNotification.value = false
+  showNotificationMenu.value = true
+
+  // Handle call acceptance logic here  
+  //call.value.accept()
+  
+  const device = dialerStore.twilioDevice
+
+  if (device && call) {
+    try {
+      // Connect the call using Twilio Voice SDK
+      device.connect()
+
+      //const connection = device.connect({ CallSid: call.value.CallSid })
+
+      //device.connect({ parameters: { CallSid: incomingCall.CallSid } });
+      console.log('Call connected')
+    } catch (error) {
+      console.error('Error accepting call:', error)
+    }
+  } else {
+    console.error('Device or call not available')
+  }
 }
     
 const rejectCall = () => {
-  // Handle call rejection logic here
-  // Instead of immediately hiding the notification, you can add a fade-out effect
-    
-  call.value.reject()
+
+  stopIncomingCallSound()
   showNotification.value = false
+  showNotificationMenu.value = false
+  
+  // Instead of immediately hiding the notification, you can add a fade-out effect
+
+  const device = dialerStore.twilioDevice
+
+  console.log('rejectedCall')
+  console.log(device.audio.incoming.stream)
+  console.log(call.value.CallSid)
+  
+  device.disconnectAll()
 }
     
 initializeTwilio()
@@ -449,7 +495,16 @@ const phoneNumber = ref('')
 const clearInput = () => {
   currentNumber.value = currentNumber.value.slice(0, -1)
 }
-    
+   
+onMounted(() => {
+  window.Echo.channel('incoming-calls')
+    .listen('IncomingCallEvent', event => {
+      if(event.CallStatus =='ringing'){
+        handleIncomingCall(event)
+      }
+    })
+})
+
 watch(currentNumber, number => {
   for (const country of countries.value) {
     const cleanedNumber = number.replace(/^\+/, '')
@@ -463,7 +518,7 @@ watch(currentNumber, number => {
 watch(selectedCountryCode, newCode => {
   phoneNumber.value = newCode + phoneNumber.value
 })
-    
+ 
 const isDropdownOpen = ref(false)
     
 const selectedCountry = ref({
@@ -701,18 +756,6 @@ const closeInbox = () => {
   inboxIsOpened.value = false
 }
 
-
-//import ChatLog from '@/views/apps/chat/ChatLog.vue'
-import { useChatStore } from '@/views/apps/chat/useChatStore'
-import DialerSettings from "@/views/apps/dialer/components/DialerSettings.vue"
-import { avatarText } from '@core/utils/formatters'
-
-const isLeftSidebarOpen = ref(true)
-const store = useChatStore()
-
-// Chat message
-const msg = ref('')
-
 const sendMessage = async () => {
   if (!msg.value)
     return
@@ -726,11 +769,6 @@ const sendMessage = async () => {
   //   scrollToBottomInChatLog()
   // })
 }
-
-
-
-// file input
-const refInputEl = ref()
 
 const moreList = [
   {
@@ -766,7 +804,7 @@ const moreList = [
       sm="6"
       md="4"
       lg="3"
-      style="z-index: 1000;"
+      style="z-index: 2;"
     >
       <VCard class="bg-surface">
         <VCardItem>
@@ -777,11 +815,15 @@ const moreList = [
               icon="tabler-phone-incoming"
             />
           </template>
-          <VCardTitle class="text-white">
-            {{ callerId }}
-          </VCardTitle>
+          <div class="status-container">
+            <div class="d-flex flex-row justify-center">
+              <VCardTitle class="mr-7">
+                {{ calledId }}
+              </VCardTitle>
+            </div>
+          </div>
         </VCardItem>
-
+        
         <VCardText class="d-flex justify-space-between align-center flex-wrap">
           <IconBtn
             icon="tabler-phone"
@@ -801,13 +843,156 @@ const moreList = [
         </VCardText>
       </VCard>
     </VCol>
-    <!--    <div v-if="showNotification" class="incoming-call-notification"> -->
-    <!--      <div class="caller-id">{{ callerId }}</div> -->
-    <!--      <div class="action-buttons"> -->
-    <!--        <button @click="acceptCall">Accept</button> -->
-    <!--        <button @click="rejectCall">Reject</button> -->
-    <!--      </div> -->
-    <!--    </div> -->
+  </Transition>
+  <!-- The notification menu will show when the notification is ture -->
+  <Transition name="slide-fade">
+    <VRow
+      v-if="showNotificationMenu"
+      key="tabler-phone-incoming"
+      class="incoming-call-notification-menu dialer-notification"
+      justify="center"
+      style="z-index: 1;"
+    >
+      <VCard class="dialer-container bg-surface">
+        <div class="dialer-header">
+          <p class="mb-auto mt-auto">
+            {{ activeTab }}
+          </p>
+        </div>
+
+        <div class="status-container mt-10">
+          <div class="d-flex flex-row justify-center">
+            <h2>
+              Usman Ghani
+            </h2>
+          </div>
+          <div class="d-flex flex-row justify-center mt-2">
+            <h3>
+              Calling via (230) 768-6032 - NYC
+            </h3>
+          </div>
+  
+          <div class="d-flex flex-row justify-center mt-2">
+            <h3 class="text-success">
+              Connecting...
+            </h3>
+          </div>
+        </div>
+
+        <div class="input-container-time d-flex flex-row justify-center mt-10">
+          It’s 10:30 PM there
+        </div>
+
+        <div class="dialer-grid mt-12">
+          <div class="dialer-row">
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-microphone-off"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Mute</small>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-dialpad-filled"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Keypad</small>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-volume"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Speaker</small>
+            </div>
+          </div>
+          <div class="dialer-row-second">
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-arrow-forward-up"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Transfer</small>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-player-pause-filled"
+                  size="30"
+                />
+              </IconBtn>
+              <small class="btn-name-notification">Hold</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialer-grid mt-15">
+          <div class="dialer-row mt-10">
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-note"
+                  size="30"
+                  color="warning"
+                />
+              </IconBtn>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+                color="error"
+                @click="rejectCall"
+              >
+                <VIcon
+                  icon="tabler-phone-off"
+                  size="30"
+                />
+              </IconBtn>
+            </div>
+            <div class="dialer-button-notification">
+              <IconBtn
+                variant="tonal"
+                size="4.5rem"
+              >
+                <VIcon
+                  icon="tabler-record-mail"
+                  size="30"
+                  color="error"
+                />
+              </IconBtn>
+            </div>
+          </div>
+        </div>
+      </VCard>
+    </VRow>
   </Transition>
 
   <VRow

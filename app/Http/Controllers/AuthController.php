@@ -7,6 +7,7 @@ use App\Models\PasswordReset;
 use App\Models\Plans;
 use App\Models\UserProfile;
 use App\Services\EmailVerificationService;
+use App\Services\TwilioServices;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,6 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 
 class AuthController extends Controller
 {
-
     /**
      * Create user
      *
@@ -57,6 +57,11 @@ class AuthController extends Controller
                 ->where('email', $user->email)
                 ->select('role')
                 ->first();
+            if ($invitationRole) {
+                $invitationRole->member_id = $user->id;
+                $invitationRole->registered = true;
+                $invitationRole->save();
+            }
             $role = $invitationRole?->roleInfo;
             if (empty($role)) {
                 $role = Role::where('name', 'Admin')->first();
@@ -75,6 +80,60 @@ class AuthController extends Controller
         }
     }
 
+    public function create_ten_dlc(Request $request)
+    {
+        $request->validate([
+            'registerBusiness' => 'required|string',
+            'friendlyName' => 'required|string',
+            'businessName' => 'required|string',
+            'addressLine1' => 'required|string',
+            'city' => 'required|string',
+            'regionState' => 'required|string',
+            'country' => 'required|string',
+            'zipcode' => 'required|string',
+            'businessType' => 'required|string',
+            'businessIndustry' => 'required|string',
+            'businessRegistrationIdentifer' => 'required|string',
+            'businessRegistrationNumber' => 'required|string',
+            'businessIdentity' => 'required|string',
+            'websiteLink' => 'required|string',
+            'socialMediaProfileUrls' => 'required|string',
+            'regionOfOperations' => 'required|string',
+            'companyStatus' => 'required|string',
+            'firstName' => 'required|string',
+            'lastName' => 'required|string',
+            'jobPosition' => 'required|string',
+            'email' => 'required|string|email',
+            'phoneNumber' => 'required|string',
+            'businessTitle' => 'required|string',
+        ]);
+
+        $user = $request->all();
+        $twilioServices = new TwilioServices();
+        $response = $twilioServices->createTwilioTenDLC($user);
+
+        return response()->json($response, 201);
+    }
+
+    public function delete_ten_dlc(Request $request)
+    {
+        $request->validate([
+            'sid' => 'required|string',
+        ]);
+        
+        $user = $request->all();
+        $twilioServices = new TwilioServices();
+        $response = $twilioServices->deleteTwilioTenDLC($user);
+
+        $message = 'Profile not deleted! There are some problem.';
+        if($response ==true){
+            $message = 'Successfully deleted profile 10DLC!';
+        }
+        return response()->json([
+            'response' => $response,
+            'message' => $message
+        ], 201);
+    }
 
     /**
      * Login user and create token
@@ -118,6 +177,10 @@ class AuthController extends Controller
             $userAbilities = [
                 [
                     'action' => 'read',
+                    'subject' => 'Member'
+                ],
+                [
+                    'action' => 'read',
                     'subject' => 'dashboard-analytics'
                 ],
                 [
@@ -134,11 +197,31 @@ class AuthController extends Controller
                 ],
                 [
                     'action' => 'read',
+                    'subject' => 'contact'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'contact-details'
+                ],
+                [
+                    'action' => 'read',
                     'subject' => 'reports'
                 ],
                 [
                     'action' => 'read',
                     'subject' => 'phone-numbers'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'pages-account-settings-tab'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'account'
+                ],
+                [
+                    'action' => 'read',
+                    'subject' => 'security'
                 ]
             ];
         }
@@ -198,7 +281,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     /**
      * Get the authenticated User
      *
@@ -249,6 +331,23 @@ class AuthController extends Controller
         return response()->json($user);
     }
 
+    public function accountDeactivate()
+    {
+        if (!\auth()->check()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated User'
+            ], 403);
+        }
+
+        $user = Auth::user();
+        $user->delete(); // Soft delete the user
+
+        return response()->json([
+            'status' => true,
+        ]);
+    }
+
     public function updateProfile(Request $request)
     {
         $request->validate([
@@ -270,7 +369,7 @@ class AuthController extends Controller
         $user->save();
 
         $profile = Auth::user()->profile;
-
+        
         if (!$profile) {
             $profile = new UserProfile();
             $profile->user_id = Auth::user()->id;
@@ -278,7 +377,6 @@ class AuthController extends Controller
         } else {
             $this->updatedUserProfile($request, $profile);
         }
-
         return response()->json([
             'status' => true,
             'message' => 'Profile updated successfully'
@@ -357,8 +455,8 @@ class AuthController extends Controller
         $profile->phone_number = $request->phoneNumber;
         $profile->bio = $request->bio;
         $profile->save();
-
-        if ($request->has('avatar')) {
+        
+        if (!empty($request->avatar) && $request->has('avatar')) {
             // Get filename with the extension
             $filenameWithExt = $request->file('avatar')->getClientOriginalName();
             //Get just filename
@@ -403,7 +501,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     public function fetch_total()
     {
 
@@ -427,11 +524,20 @@ class AuthController extends Controller
         ]);
     }
 
-    public function isAdmin()
+    public function isRole()
     {
+        $roleName = Auth::user()->getRoleNames()->first();
+        if(!$roleName){
+            return response()->json([
+                'status' => false,
+                'message' => 'Roll has been not exist.'
+            ]);  
+        }
         return response()->json([
             'status' => true,
-            'isAdmin' => Auth::user()->hasRole(['Admin'])
+            'is'.$roleName => Auth::user()->hasRole([$roleName])
         ]);
     }
+
+
 }

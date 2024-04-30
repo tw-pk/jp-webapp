@@ -1,4 +1,6 @@
 <script setup>
+import twoFactor from "@/apis/twoFactor"
+import AppOtpInput from "@core/components/app-form-elements/AppOtpInput.vue"
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import authV2ForgotPasswordIllustrationDark from '@images/pages/auth-v2-verify-email-illustration-dark.png'
 import authV2ForgotPasswordIllustrationLight from '@images/pages/auth-v2-verify-email-illustration-light.png'
@@ -6,12 +8,9 @@ import authV2MaskDark from '@images/pages/misc-mask-dark.png'
 import authV2MaskLight from '@images/pages/misc-mask-light.png'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import User from "@/apis/user"
-import { watch, ref, nextTick } from 'vue'
-import { useTheme } from 'vuetify'
-import AppOtpInput from "@core/components/app-form-elements/AppOtpInput.vue"
-import twoFactor from "@/apis/twoFactor"
 import { requiredValidator } from "@validators"
+import { ref } from 'vue'
+import { useTheme } from 'vuetify'
 
 
 const authThemeImg = useGenerateImageVariant(authV2ForgotPasswordIllustrationLight, authV2ForgotPasswordIllustrationDark)
@@ -37,16 +36,6 @@ const channel = ref('')
 
 vuetifyTheme.themes.value[currentThemeName].colors.primary = '#38A6E3'
 
-const resendCode = () => {
-  defaultValue.value = ''
-  User.resendEmail().then(response => {
-    isResendDisabled.value = true
-    isSnackbarVisible.value = true
-    snackbarMessage.value = response.data.message
-    snackbarActionColor.value = 'success'
-    timer(180)
-  })
-}
 
 const timerOn = ref(true)
 
@@ -123,6 +112,17 @@ const sendCode = async() => {
     })
 }
 
+const resendCode = () => {
+  defaultValue.value = ''
+  twoFactor.resendCode().then(response => {
+    isResendDisabled.value = true
+    isSnackbarVisible.value = true
+    snackbarMessage.value = response.data.message
+    snackbarActionColor.value = 'success'
+    timer(180)
+  })
+}
+
 onMounted(async() => {
   await twoFactor.profile()
     .then(res => {
@@ -145,36 +145,38 @@ onMounted(async() => {
     class="auth-wrapper bg-surface with_rectangles"
     no-gutters
   >
-
     <VCol
       cols="12"
       md="12"
       class="auth-card-v2 d-flex align-center justify-center"
     >
-
       <VCard
         :max-width="500"
         class="mt-12 mt-sm-0 pa-4"
       >
         <VCardText>
           <VRow class="pa-5 justify-center mb-3 __align-items-center">
-
             <VNodeRenderer
               :nodes="themeConfig.app.logo"
               class=""
             />
 
-            <h3 class="text-h3 ml-1" style="font-weight: 700">
-              TeamDialer
+            <h3
+              class="text-h3 ml-1"
+              style="font-weight: 700;"
+            >
+              JotPhone
             </h3>
-
           </VRow>
 
-          <h4 class="text-h4 mb-3" style="font-weight: 600">
+          <h4
+            class="text-h4 mb-3"
+            style="font-weight: 600;"
+          >
             Account Verification
           </h4>
           <p class="mb-2">
-            A 6-digit code has been sent to your phone number {{ phoneNumber }}. Please enter the code below
+            A 6-digit verification code has been sent to your phone number ending in {{ phoneNumber }}. Please enter the phone number associated with your account to complete the identity verification process.
           </p>
         </VCardText>
 
@@ -203,7 +205,11 @@ onMounted(async() => {
                 v-if="phoneProvided"
                 cols="12"
               >
-                <AppOtpInput :default="defaultValue" :total-input="6" @updateOtp="otp = $event" />
+                <AppOtpInput
+                  :default="defaultValue"
+                  :total-input="6"
+                  @updateOtp="otp = $event"
+                />
               </VCol>
 
               <!-- reset password -->
@@ -241,15 +247,33 @@ onMounted(async() => {
               <!-- back to login -->
               <VCol cols="12">
                 <div class="d-flex justify-center align-center flex-wrap">
-                  <VRow justify="center" style="align-items: center">
+                  <VRow
+                    v-if="phoneProvided"
+                    justify="center"
+                    style="align-items: center;"
+                  >
                     <span class="me-1 pa-0 ma-0">Didn't get the code?</span>
-                    <VBtn color="primary" variant="plain" class="pa-0 ma-0" @click.prevent="resendEmail" :disabled="isResendDisabled">Resend</VBtn>
+                    <VBtn
+                      color="primary"
+                      variant="plain"
+                      class="pa-0 ma-0"
+                      :disabled="isResendDisabled"
+                      @click.prevent="resendCode"
+                    >
+                      Resend
+                    </VBtn>
                   </VRow>
                 </div>
               </VCol>
-              <VCol cols="12" v-if="isResendDisabled">
+              <VCol
+                v-if="isResendDisabled"
+                cols="12"
+              >
                 <VRow justify="center">
-                  <span v-if="isResendDisabled" class="me-1">OTP will expire in {{ otp_timer }}</span>
+                  <span
+                    v-if="isResendDisabled"
+                    class="me-1"
+                  >OTP will expire in {{ otp_timer }}</span>
                 </VRow>
               </VCol>
             </VRow>

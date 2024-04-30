@@ -38,7 +38,7 @@ const options = ref({
 // headers
 const headers = [
   {
-    title: 'TEAMDIALER NUMBER',
+    title: 'JOTPHONE NUMBER',
     key: 'teamdialer_number',
     sortable: false,
   },
@@ -120,10 +120,9 @@ const fetchRecentCalls = () => {
         options.value.page = res.data.page
       }
     })
-    .catch(error => {
-      console.log(error)
+    .catch(errors => {
       error.value = true
-      errorMessage.value = error.response
+      errorMessage.value = errors.response.data.message ? errors.response.data.message : errors.message
       isProcessing.value = false
     })
 }
@@ -199,6 +198,19 @@ const editItem = callSid => {
 </script>
 
 <template>
+  <div
+    v-if="errorMessage"
+    class="my-3"
+  >
+    <VAlert
+      density="compact"
+      color="error"
+      variant="tonal"
+      closable
+    >
+      {{ errorMessage }}
+    </VAlert>
+  </div>
   <VCard>
     <div class="__dashboard__recent-calls-header pa-4 __border-bottom-light">
       <div class="__dashboard__header-title">
@@ -206,19 +218,7 @@ const editItem = callSid => {
           Recent Calls
         </h5>
       </div>
-      <div
-        v-if="errorMessage"
-        class="my-3"
-      >
-        <VAlert
-          density="compact"
-          color="error"
-          variant="tonal"
-          closable
-        >
-          {{ errorMessage }}
-        </VAlert>
-      </div>
+      
       <div class="__dashboard__header-tabs">
         <VTabs
           v-model="currentTab"
@@ -265,7 +265,7 @@ const editItem = callSid => {
       class="text-no-wrap"
       show-select
     >
-      <!-- TeamDialer Number -->
+      <!-- JotPhone Number -->
       <template #item.teamdialer_number="{ item }">
         <div class="d-flex align-center gap-4">
           <VIcon

@@ -21,10 +21,11 @@ use Twilio\Exceptions\ConfigurationException;
 use Twilio\Exceptions\TwilioException;
 use Twilio\Rest\Client;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, Billable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, Billable, HasRoles, SoftDeletes;
 
     protected $gaurd_name = 'api';
     /**
@@ -63,6 +64,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function userPaymentMethods(): HasMany
@@ -117,7 +119,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function invitations(): HasMany
     {
-        return $this->hasMany(UserInvitation::class, 'owner_id');
+        return $this->hasMany(Invitation::class, 'user_id');
+    }
+
+    public function invitationsMember(): hasOne
+    {
+        return $this->hasOne(Invitation::class, 'member_id');
     }
 
     public function calls(): HasMany

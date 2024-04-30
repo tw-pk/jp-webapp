@@ -33,6 +33,12 @@ export default {
     return axiosIns.post('/api/auth/2fa/generate-code', data)
   },
 
+  async resendCode() {
+    await Csrf.getCookie()
+
+    return axiosIns.post('api/auth/2fa/resend-code')
+  },
+
   async isEnabled(){
     await Csrf.getCookie()
 

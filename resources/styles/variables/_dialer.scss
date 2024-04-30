@@ -110,6 +110,18 @@
   margin-block-start: auto;
 }
 
+.input-container-time {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 20px;
+  background: var(--dark-opacity-color-gray-gray-8, rgba(134, 146, 208, 8%));
+  margin-block: 0;
+  margin-inline: 52px;
+}
+
 .input-container {
   display: flex;
   flex-direction: row;
@@ -157,13 +169,18 @@
   display: flex;
 }
 
+.dialer-row-second {
+  display: flex;
+  margin-block-start: 18px;
+}
+
 .dialer-button {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  block-size: 70px;
+  block-size: 60px;
   color: var(--light-typography-color-heading-text, #4b465c);
   cursor: pointer;
   font-feature-settings: "clig" off, "liga" off;
@@ -173,6 +190,29 @@
   inline-size: 132.333px;
   line-height: 44px; /* 137.5% */
   text-align: center;
+}
+
+.dialer-button-notification {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  block-size: 95px;
+  color: var(--light-typography-color-heading-text, #4b465c);
+  cursor: pointer;
+  font-feature-settings: "clig" off, "liga" off;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 600;
+  inline-size: 132.333px;
+  line-height: 44px; /* 137.5% */
+  text-align: center;
+}
+
+.btn-name-notification {
+  font-size: 12px; /* Adjust the size as needed */
+  margin-block-start: -12px;
 }
 
 .dialer-grid-button {
@@ -290,6 +330,16 @@
   inset-block-start: 0; /* Initially, hide the notification above the viewport */
   inset-inline-start: 50%; /* Horizontal centering */
   transform: translateX(-50%);
+  transition: inset-block-start 0.5s ease-in-out; /* Use CSS transition for the slide-in animation */
+}
+
+.incoming-call-notification-menu {
+  position: fixed;
+  z-index: 1000;
+  padding: 16px;
+  inset-block-start: 0; /* Initially, hide the notification above the viewport */
+  inset-inline-start: 50%; /* Horizontal centering */
+  transform: translateX(-47.7%);
   transition: inset-block-start 0.5s ease-in-out; /* Use CSS transition for the slide-in animation */
 }
 

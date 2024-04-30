@@ -3,102 +3,114 @@ import axiosIns from "@axios"
 
 export default {
 
-    async register(formData) {
-        await Csrf.getCookie()
+  async register(formData) {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/register', formData)
-    },
+    return axiosIns.post('api/auth/register', formData)
+  },
 
-    async login(formData) {
-        await Csrf.getCookie()
+  async login(formData) {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/login', formData)
-    },
+    return axiosIns.post('api/auth/login', formData)
+  },
 
-    async resendEmail() {
-        await Csrf.getCookie()
+  async resendEmail() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/email/resend')
-    },
+    return axiosIns.post('api/auth/email/resend')
+  },
 
 
-    async verifyEmail(data) {
-        await Csrf.getCookie()
-        console.log(data)
+  async verifyEmail(data) {
+    await Csrf.getCookie()
+    console.log(data)
 
-        return axiosIns.post('api/auth/email/verify', data)
-    },
+    return axiosIns.post('api/auth/email/verify', data)
+  },
 
-    async logout() {
-        await Csrf.getCookie()
+  async logout() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/logout')
-    },
+    return axiosIns.post('api/auth/logout')
+  },
 
-    async sendForgotPasswordMail(data) {
-        await Csrf.getCookie()
+  async sendForgotPasswordMail(data) {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/forgot/password', data)
-    },
+    return axiosIns.post('api/auth/forgot/password', data)
+  },
 
-    async verifyResetLink(data) {
-        await Csrf.getCookie()
+  async verifyResetLink(data) {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/verify-reset-link', data)
-    },
+    return axiosIns.post('api/auth/verify-reset-link', data)
+  },
 
-    async resetPassword(data) {
-        await Csrf.getCookie()
+  async resetPassword(data) {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/reset-password', data)
-    },
+    return axiosIns.post('api/auth/reset-password', data)
+  },
 
-    async isUserSubscribed() {
-        await Csrf.getCookie()
+  async isUserSubscribed() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/subscription/check')
-    },
+    return axiosIns.post('api/auth/subscription/check')
+  },
 
-    async apiCallToGeneratePaymentIntent() {
-        await Csrf.getCookie()
+  async apiCallToGeneratePaymentIntent() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/stripe/payment-intent/create')
-    },
+    return axiosIns.post('api/auth/stripe/payment-intent/create')
+  },
 
-    async auth() {
-        await Csrf.getCookie()
+  async auth() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/user')
-    },
+    return axiosIns.post('api/auth/user')
+  },
 
-    async profileData() {
-        await Csrf.getCookie()
+  async profileData() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/user/profile/data')
-    },
+    return axiosIns.post('api/auth/user/profile/data')
+  },
 
-    async inviteMember(data) {
-        await Csrf.getCookie()
+  async accountDeactivate() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/members/add', data)
-    },
+    return axiosIns.post('api/auth/user/account/deactivate')
+  },
 
-    async verifyInvitationLink(data) {
-        await Csrf.getCookie()
+  async profileCountries() {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/invitation/verify', data)
-    },
+    return axiosIns.post('api/auth/fetch/countries')
+  },
 
-    async updatePassword(data) {
-        await Csrf.getCookie()
+  async inviteMember(data) {
+    await Csrf.getCookie()
 
-        return axiosIns.patch('api/auth/password/update', data)
-    },
+    return axiosIns.post('api/auth/members/add', data)
+  },
 
-    async isAdmin(){
-        await Csrf.getCookie()
+  async verifyInvitationLink(data) {
+    await Csrf.getCookie()
 
-        return axiosIns.post('api/auth/user/role')
-    },
+    return axiosIns.post('api/auth/invitation/verify', data)
+  },
+
+  async updatePassword(data) {
+    await Csrf.getCookie()
+
+    return axiosIns.patch('api/auth/password/update', data)
+  },
+
+  async isRole(){
+    await Csrf.getCookie()
+
+    return axiosIns.post('api/auth/user/role')
+  },
 
 }

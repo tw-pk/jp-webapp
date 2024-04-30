@@ -14,8 +14,7 @@ onMounted(() => {
       { property: 'Full Name', value: props.data.fullName, icon: 'tabler-user' },
       { property: 'Status', value: 'active', icon: 'tabler-check' },
       { property: 'Role', value: 'Contact', icon: 'tabler-star' },
-      { property: 'Country', value: props.data.country ?? 'None', icon: 'tabler-flag' },
-      { property: 'Language', value: 'English', icon: 'tabler-language' },
+      { property: 'Company', value: props.data.company_name, icon: 'tabler-user' },
     ],
     contacts: [
       { property: 'Contact', value: props.data.phone, icon: 'tabler-phone' },
@@ -85,58 +84,63 @@ onMounted(() => {
         </VListItem>
       </VList>
 
-      <p class="text-xs mt-5">
+      <!--
+        <p class="text-xs mt-5">
         TEAMS
-      </p>
+        </p>
 
-      <VList class="card-list text-medium-emphasis">
+      
+        <VList class="card-list text-medium-emphasis">
         <VListItem
-          v-for="item in dataProperties['teams']"
-          :key="item.property"
+        v-for="item in dataProperties['teams']"
+        :key="item.property"
         >
-          <template #prepend>
-            <VIcon
-              :icon="item.icon"
-              size="20"
-              :color="item.color"
-              class="me-2"
-            />
-          </template>
-          <VListItemTitle>
-            <span class="font-weight-medium me-1">{{ item.property }}:</span>
-            <span>{{ item.value }}</span>
-          </VListItemTitle>
+        <template #prepend>
+        <VIcon
+        :icon="item.icon"
+        size="20"
+        :color="item.color"
+        class="me-2"
+        />
+        </template>
+        <VListItemTitle>
+        <span class="font-weight-medium me-1">{{ item.property }}:</span>
+        <span>{{ item.value }}</span>
+        </VListItemTitle>
         </VListItem>
-      </VList>
+        </VList>
+      -->
     </VCardText>
   </VCard>
 
-  <VCard>
+  <!--
+    <VCard>
     <VCardText>
-      <p class="text-xs">
-        OVERVIEW
-      </p>
+    <p class="text-xs">
+    OVERVIEW
+    </p>
 
-      <VList class="card-list text-medium-emphasis">
-        <VListItem
-          v-for="item in dataProperties['overview']"
-          :key="item.property"
-        >
-          <template #prepend>
-            <VIcon
-              :icon="item.icon"
-              size="20"
-              class="me-2"
-            />
-          </template>
-          <VListItemTitle>
-            <span class="font-weight-medium me-1">{{ item.property }}:</span>
-            <span>{{ item.value }}</span>
-          </VListItemTitle>
-        </VListItem>
-      </VList>
+    <VList class="card-list text-medium-emphasis">
+    <VListItem
+    v-for="item in dataProperties['overview']"
+    :key="item.property"
+    >
+    <template #prepend>
+    <VIcon
+    :icon="item.icon"
+    size="20"
+    class="me-2"
+    />
+    </template>
+    <VListItemTitle>
+    <span class="font-weight-medium me-1">{{ item.property }}:</span>
+    <span>{{ item.value }}</span>
+    </VListItemTitle>
+    </VListItem>
+    </VList>
     </VCardText>
-  </VCard>
+    </VCard>
+  -->
 </template>
 
 <style lang="scss" scoped>
