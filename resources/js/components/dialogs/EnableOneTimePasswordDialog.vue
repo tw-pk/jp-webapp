@@ -1,8 +1,6 @@
 <script setup>
 import twoFactor from "@/apis/twoFactor"
-import { emailValidator, requiredValidator } from "@validators"
-
-const otpGenerated = ref(false)
+import { requiredValidator } from "@validators"
 
 const props = defineProps({
   mobileNumber: {
@@ -20,8 +18,12 @@ const emit = defineEmits([
   'submit',
 ])
 
+const otpGenerated = ref(false)
 const phoneNumber = ref(structuredClone(toRaw(props.mobileNumber)))
 const otp = ref(null)
+const isSnackbarVisible = ref(false)
+const snackbarMessage = ref('')
+const snackbarActionColor = ref(' ')
 
 const error = ref({
   phoneNumber: undefined,
@@ -32,20 +34,32 @@ const error = ref({
 const formSubmit = async () => {
   if (phoneNumber.value) {
     emit('submit', phoneNumber.value)
-
     if(otpGenerated.value){
+      console.log('otp.value')
+      console.log(otp.value)
+      if (otp.value ==null || otp.value =='' ) {
+        error.value = {
+          otp: 'Please enter a valid otp',
+        }
+      }  
       await twoFactor.verifyCode({
         'to': phoneNumber.value,
         'code': otp.value,
       })
         .then(res => {
+          console.log('res res res')
+          console.log(res.data.message)
           if (res.data.status) {
             otpGenerated.value = false
             emit('update:isDialogVisible', false)
+
+            snackbarMessage.value = res.data.message
+            snackbarActionColor.value = `success`
+            isSnackbarVisible.value = true
           }
         }).catch(error => {
-          console.log(error)
           error.value = error.response.data.errors
+          
         })
     }else{
       await twoFactor.enableTwoFactor({
@@ -57,6 +71,7 @@ const formSubmit = async () => {
             otpGenerated.value = true
           }
         }).catch(error => {
+          console.log(error)
           error.value = error.response.data.errors
         })
     }
@@ -91,7 +106,7 @@ const changeNumber = () => {
     @update:model-value="dialogModelValueUpdate"
   >
     <!-- Dialog close btn -->
-    <DialogCloseBtn @click="dialogModelValueUpdate(false)"/>
+    <DialogCloseBtn @click="dialogModelValueUpdate(false)" />
 
     <VCard class="pa-5 pa-sm-8">
       <VCardItem class="text-start">
@@ -100,7 +115,7 @@ const changeNumber = () => {
         </VCardTitle>
         <VCardSubtitle>
           <span class="text-base">
-            Enter your mobile phone number with country code and  we will send you a verification code.
+            Enter your mobile phone number with country code and we will send you a verification code.
           </span>
         </VCardSubtitle>
       </VCardItem>
@@ -123,9 +138,9 @@ const changeNumber = () => {
             class="d-flex flex-wrap justify-end mb-2"
           >
             <a
-              @click="changeNumber"
               href="javascript:void(0)"
               class="text-decoration-none"
+              @click="changeNumber"
             >Change number</a>
           </div>
           <div
@@ -169,4 +184,20 @@ const changeNumber = () => {
       </VCardText>
     </VCard>
   </VDialog>
+  <!-- Snackbar -->
+  <VSnackbar
+    v-model="isSnackbarVisible"
+    multi-line
+  >
+    {{ snackbarMessage }}
+
+    <template #actions>
+      <VBtn
+        :color="snackbarActionColor"
+        @click="isSnackbarVisible = false"
+      >
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
 </template>

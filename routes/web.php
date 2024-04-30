@@ -30,6 +30,8 @@ Route::stripeWebhooks('stripe/webhook');
 Route::post('voice/dial', [TwilioController::class, 'dial']);
 Route::post('voice/incoming-{number}', [TwilioController::class, 'incomingCall'])->name('voice.incoming');
 
+Route::post('webhook/ten/dlc', [TwilioController::class, 'webhook_ten_dlc'])->name('webhook.ten.dlc');
+
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
 //These urls are passed to twilio and they cannot be changed 

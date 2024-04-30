@@ -1,8 +1,8 @@
 <script setup>
-import { useContactStore } from "@/views/apps/contact/useContactStore"
-import { useRoute } from "vue-router"
 import Profile from "@/pages/pages/contact-details/components/Profile.vue"
 import ProfileHeader from "@/pages/pages/contact-details/components/ProfileHeader.vue"
+import { useContactStore } from "@/views/apps/contact/useContactStore"
+import { useRoute } from "vue-router"
 
 const contactStore = useContactStore()
 const route = useRoute()
@@ -30,9 +30,13 @@ onMounted(async () => {
 <template>
   <div v-if="contactData">
     <ProfileHeader class="mb-5" />
-    <Profile :contact-data="contactData"/>
+    <Profile :contact-data="contactData" />
   </div>
 </template>
 
-<style scoped lang="scss">
-</style>
+<route lang="yaml">
+meta:
+  action: read
+  subject: contact-details
+</route>
+

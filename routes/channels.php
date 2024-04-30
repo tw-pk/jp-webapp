@@ -31,3 +31,7 @@ Broadcast::channel("NewNotificationEvent", function () {
         "isSeen" => $this->isSeen
     ];
 });
+
+Broadcast::channel('incoming-calls', function ($callData) {
+    return true; // Allow all users to subscribe to the channel
+});

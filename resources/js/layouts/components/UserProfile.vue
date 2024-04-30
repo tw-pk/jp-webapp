@@ -28,15 +28,16 @@ const logout = () => {
 
 const userProfileList = [
   { type: 'divider' },
-  {
-    type: 'navItem',
-    icon: 'tabler-user',
-    title: 'Profile',
-    to: {
-      name: 'apps-user-view-id',
-      params: { id: 21 },
-    },
-  },
+
+  // {
+  //   type: 'navItem',
+  //   icon: 'tabler-user',
+  //   title: 'Business Profile',
+  //   to: {
+  //     name: 'apps-user-view-id',
+  //     params: { id: 21 },
+  //   },
+  // },
   {
     type: 'navItem',
     icon: 'tabler-settings',

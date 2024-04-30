@@ -36,7 +36,7 @@ const requestData = ref(null)
 // headers
 const headers = [
   {
-    title: 'TEAMDIALER NUMBER',
+    title: 'JOTPHONE NUMBER',
     key: 'teamdialer_number',
   },
   {
@@ -312,7 +312,7 @@ const editItem = callSid => {
             show-select
             @update:options="options = $event"
           >
-            <!-- TeamDialer Number -->
+            <!-- JotPhone Number -->
             <template #item.teamdialer_number="{ item }">
               <div class="d-flex align-center gap-4">
                 <VIcon

@@ -224,17 +224,18 @@ class VoiceController extends Controller
 
     public function recent_calls_dash(Request $request)
     {
-        if ($this->isUserAdmin()) {
-            if (!Auth::user()->numbers->count()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => "You don't have any active number, please verify if you have an active number",
-                ], 404);
-            }
+        if (!Auth::user()->numbers->count()) {
+            return response()->json([
+                'status' => false,
+                'message' => "You don't have any active number, please verify if you have an active number",
+            ], 404);
+        }
 
-            $callType = $request->input('callType');
-            $searchQuery = $request->input('q');
-            $options = $request->input('options');
+        $callType = $request->input('callType');
+        $searchQuery = $request->input('q');
+        $options = $request->input('options');
+
+        if ($this->isUserAdmin()) {
             try {
 
                 $perPage = $options['itemsPerPage'];
@@ -291,54 +292,54 @@ class VoiceController extends Controller
                 ], 500);
             }
         } else {
-
-            $from = Invitation::where('email', Auth::user()->email)->first()?->number;
-            $callType = $request->input('callType');
-            $searchQuery = $request->input('q');
-            $options = $request->input('options');
             try {
+
                 $perPage = $options['itemsPerPage'];
                 $currentPage = $options['page'] ?? 1;
 
+                $from = Invitation::where('member_id', Auth::user()->id)->first()?->number;
+                
                 if (!empty($searchQuery)) {
-                    $callTypeTab = ["status" => ["completed", "busy"], "from" => $from, "to" => $searchQuery];
+                    $twilioCalls = Auth::user()->calls()
+                        ->where('to', 'LIKE', '%' . $searchQuery . '%')
+                        ->where('from', $from)
+                        ->paginate($perPage, ['*'], 'page', $currentPage);
                 } else {
-                    $callTypeTab = $this->getCallTypeCriteria($callType);
-                    $callTypeTab = array_merge($callTypeTab, ["from" => $from]);
-                    //$twilioCalls = Call::where('from', $from)->paginate($perPage);
+                    if ($callType !== 'all') {
+                        $twilioCalls = Auth::user()->calls()
+                            ->where(fn ($q) => $this->getCallTypeCriteria($q, $callType))
+                            ->where('from', $from)
+                            ->paginate($perPage, ['*'], 'page', $currentPage);
+                    } else {
+                        $twilioCalls = Auth::user()->calls()
+                            ->where('from', $from)
+                            ->paginate($perPage, ['*'], 'page', $currentPage);
+                    }
                 }
 
-                $twilioCalls = Call::where('from', $from)->paginate($perPage);
-                //dd($twilioCalls);
-                // $twilioCalls = $this->twilio->calls->read($callTypeTab, 100);
-                //$twilioCalls = $this->twilio->calls->read($callTypeTab, $perPage, ($currentPage - 1) * $perPage);
-
-                $totalRecord = count($twilioCalls->get());
+                $totalRecord = $twilioCalls->total();
                 $totalPage = ceil($totalRecord / $perPage);
-
                 $allCalls = [];
                 foreach ($twilioCalls as $call) {
-
-                    $allCalls[] = [
-                        'call_sid' => $call->sid,
-                        'teamdialer_number' => $call->from,
-                        'number' => $call->to,
-                        'status' => $call->status ?? '-',
-                        'direction' => $call->direction,
-                        'date' => $call->date_time,
-                        'duration' => $call->duration,
-                        'notes' => '',
-                        'rating' => '-',
-                        'disposition' => '-',
-                        'record' => '-'
-                    ];
+                    if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
+                        $allCalls[] = [
+                            'call_sid' => $call->sid,
+                            'teamdialer_number' => $this->getTeamsDialerNumber($call),
+                            'number' => $this->getNumber($call),
+                            'status' => $call->status ?? '-',
+                            'direction' => $call->direction,
+                            'date' => $call->date_time,
+                            'duration' => $call->duration . " seconds" ?? '-',
+                            'notes' => '',
+                            'rating' => '-',
+                            'disposition' => '-',
+                            'record' => '-'
+                        ];
+                    }
                 }
-
-                $startIndex = ($currentPage - 1) * $perPage;
-                $slicedCalls = array_slice($allCalls, $startIndex, $perPage);
                 return response()->json([
                     'status' => true,
-                    "calls" => $slicedCalls,
+                    "calls" => $allCalls,
                     'totalPage' => $totalPage,
                     'totalRecord' => $totalRecord,
                     'page' => $currentPage,
@@ -600,7 +601,7 @@ class VoiceController extends Controller
         }
     }
 
-    protected function getCallTypeCriteria($query, $callType)
+    protected function getCallTypeCriteria($query=null, $callType=null)
     {
         switch ($callType) {
             case 'outbound-dial':

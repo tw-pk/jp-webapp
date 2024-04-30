@@ -25,6 +25,7 @@ class MembersController extends Controller
         $invitation = Invitation::find($request->id);
         if (!$invitation) {
             $invitation = new Invitation();
+            $invitation->registered = false;
         }
         $invitation->user_id = Auth::user()->id;
         $invitation->firstname = $request->firstName;

@@ -12,6 +12,9 @@ use Twilio\Exceptions\TwilioException;
 use Twilio\Jwt\ClientToken;
 use Twilio\Rest\Client;
 use Twilio\TwiML\VoiceResponse;
+use Illuminate\Support\Facades\Broadcast;
+use App\Events\IncomingCallEvent;
+use App\Models\UserNumber;
 
 class TwilioController extends Controller
 {
@@ -32,7 +35,7 @@ class TwilioController extends Controller
 
     public function retrieveToken(){
         $capability = new ClientToken(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
-        $capability->allowClientOutgoing(env('TWILIO_VOICE_APP_SID'));
+        $capability->allowClientOutgoing(config('app.TWILIO_VOICE_APP_SID'));
         $client_name = Auth::user()->firstname ? Auth::user()->firstname :'Agent';
         $capability->allowClientIncoming($client_name);
         $token = $capability->generateToken();
@@ -46,7 +49,7 @@ class TwilioController extends Controller
         $dial = $response->dial('', ['callerId' => $request->From]);
         $to = $request->To;
         $number = Str::replaceFirst('+', '', $to);
-        Log::info('TO'. $request->To);
+        Log::info('Called'. $request->Called);
         $dial->number($number);
 
         // Return the XML response
@@ -55,31 +58,60 @@ class TwilioController extends Controller
 
     public function incomingCall(Request $request){
 
+        $response = new VoiceResponse();
         Log::info('Incoming Call Response: ');
         Log::info($request->all());
 
-         //To
-        $response = new VoiceResponse();
-        // Answer the incoming call
-        $response->say('Hello! Kindly wait you are being connected to the call....');
-        // Connect the call with your Twilio Device (replace 'your-device-identity' with your actual Device identity)
-        //$dial = $response->dial();
-       
-        //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
-        $client_name = 'Usman Ghani';
-        $number = Str::replaceFirst('+', '', '923447431371');
-        
-        $dial = $response->dial('', ['callerId' => $request->input('From')]);
-        $dial->client($client_name);
-        $dial->number($number);
 
+        $UserNumber = UserNumber::where('phone_number', $request->Called)->first();
+        if (!empty($UserNumber)) {
+           
+            //$authenticatedUserId = Auth::check() ? Auth::id();
+            $authenticatedUserId = UserNumber::where('active', true)->where('id', $UserNumber->id)->value('user_id');
+            
+            // Connect the call with your Twilio Device (replace 'your-device-identity' with your actual Device identity)
+            // Check if the user ID from the request matches the authenticated user's ID
+            
+            if ($UserNumber->user_id && $UserNumber->user_id === $authenticatedUserId) {
+
+                $response->say('Hello! Kindly wait you are being connected to the call....');
+                
+                // $data['broadcaster'] = $request->broadcaster;
+                // $data['receiver'] = $request->receiver;
+                // $data['offer'] = $request->offer;
+
+                // event(new StreamOffer($data));
+                $dial = $response->dial();
+                $dial->client('browser-client-identifier');
+                event(new IncomingCallEvent($request->all()));
+                //return response($response)->header('Content-Type', 'text/xml');
+            } else {
+
+                $response->say('Sorry! The user you are calling up is not present on the system.');
+            }
+        } else {
+    
+            $response->say('Hello! Kindly wait call is being forwarded to admin....');
+            //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
+            $client_name = 'Usman Ghani';
+            $number = Str::replaceFirst('+', '', '923447431371');
+            
+            $dial = $response->dial('', ['callerId' => $request->input('From')]);
+            $dial->client($client_name);
+            $dial->number($number);
+        }
         // Answer the incoming call
-        $response->say('Thanks! Call ended....');
+        $response->say('Call ended....');
 
         // Render the TwiML response
         echo $response;
     }
 
+    public function webhook_ten_dlc(Request $request){
+
+        Log::info('Status callback Webhook: ');
+        Log::info($request->all());
+    }
     public function get_countries()
     {
         $countryList = $this->fetchCountryList();

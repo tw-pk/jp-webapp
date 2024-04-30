@@ -20,12 +20,12 @@ const props = defineProps({
 const emit = defineEmits(['update:isDialogVisible'])
 
 const authMethods = [
-  {
-    icon: 'tabler-settings',
-    title: 'Authenticator Apps',
-    subtitle: 'Get code from an app like Google Authenticator or Microsoft Authenticator.',
-    method: 'authApp',
-  },
+  // {
+  //   icon: 'tabler-settings',
+  //   title: 'Authenticator Apps',
+  //   subtitle: 'Get code from an app like Google Authenticator or Microsoft Authenticator.',
+  //   method: 'authApp',
+  // },
   {
     icon: 'tabler-message',
     title: 'SMS',
@@ -34,7 +34,7 @@ const authMethods = [
   },
 ]
 
-const selectedMethod = ref(['authApp'])
+const selectedMethod = ref(['sms'])
 const isAuthAppDialogVisible = ref(false)
 const isSmsDialogVisible = ref(false)
 

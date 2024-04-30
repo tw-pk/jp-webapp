@@ -21,7 +21,7 @@ const router = createRouter({
       redirect: to => {
         const userData = JSON.parse(localStorage.getItem('userData') || '{}')
         const userRole = (userData && userData.role) ? userData.role : null
-        if (userRole === 'Admin' || "Team Member")
+        if (userRole === 'Admin' || "Member")
           return { name: 'dashboards' }
 
         return { name: 'login', query: to.query }
@@ -287,9 +287,8 @@ router.beforeEach(async (to, from, next) => {
       createStripeSession()
     }
 
-
-    const userRole = await User.isAdmin()
-
+    const userRole = await User.isRole()
+  
     if(to.name === 'dialer'){
       themeConfig.app.theme.value = 'light'
       localStorage.setItem('JotPhone-theme', 'light')
@@ -298,39 +297,7 @@ router.beforeEach(async (to, from, next) => {
       localStorage.setItem('JotPhone-theme', 'system')
     }
 
-    if (!userRole.data.isAdmin) {
-
-      if (
-        !sessionIsVerified.data.status &&
-                userData.data.email_verified &&
-                to.name !== '2fa-verify'
-      ) {
-        return to.redirectedFrom && to.redirectedFrom.path !== "2fa-verify" ? next({
-          name: '2fa-verify',
-          query: { to: to.redirectedFrom.path },
-        }) : next({ name: '2fa-verify', query: { to: "/" } })
-      }
-
-      if (
-        sessionIsVerified.data.status &&
-                userData.data.email_verified &&
-                to.name === '2fa-verify'
-      ) {
-        return next("/")
-      }
-
-      if (!userData.data.email_verified && to.name !== 'verify-email') {
-        return next({ name: 'verify-email' })
-      }
-
-      if (
-        userData.data.email_verified &&
-                to.name === 'verify-email'
-      ) {
-        return next("/")
-      }
-
-    } else {
+    if(userRole.data.isAdmin) {
       if (
         !sessionIsVerified.data.status &&
                 isSubscribed &&
@@ -419,6 +386,29 @@ router.beforeEach(async (to, from, next) => {
       }
     }
 
+    if (userRole.data.isMember) {
+      
+      if(!sessionIsVerified.data.status && userData.data.email_verified && to.name !== '2fa-verify') {
+        return to.redirectedFrom && to.redirectedFrom.path !== "2fa-verify" ? next({
+          name: '2fa-verify',
+          query: { to: to.redirectedFrom.path },
+        }) : next({ name: '2fa-verify', query: { to: "/" } })
+      }
+
+      if(sessionIsVerified.data.status && userData.data.email_verified && to.name === '2fa-verify') {
+        return next("/")
+      }
+
+      if(!userData.data.email_verified && to.name !== 'verify-email'){
+        return next({ name: 'verify-email' })
+      }
+
+      if(userData.data.email_verified && to.name === 'verify-email'){
+        return next("/")
+      }
+      
+    } 
+    
   }
 
   if (canNavigate(to)) {

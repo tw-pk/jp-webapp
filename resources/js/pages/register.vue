@@ -149,7 +149,7 @@ onMounted(() => {
               class="text-h3 ml-1"
               style="font-weight: 700;"
             >
-              TeamDialer
+              JotPhone
             </h3>
           </VRow>
           <h4

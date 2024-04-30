@@ -37,6 +37,15 @@ export const useContactStore = defineStore('ContactStore', {
           .catch(error => reject(error))
       })
     },
+
+    // 👉 Shared contact
+    sharedContact(data) {
+      return new Promise((resolve, reject) => {
+        axiosIns.post('api/auth/shared/contact', data)
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
       
   },
 })

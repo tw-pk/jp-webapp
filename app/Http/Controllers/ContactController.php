@@ -19,7 +19,7 @@ class ContactController extends Controller
         $options = $request->input('options');
 
         $query = Contact::with('userProfile:contact_id,avatar')
-            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'phone', 'address_home', 'address_office')
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'phone', 'company_name','shared')
             ->where('user_id', Auth::user()->id);
 
         if ($searchQuery) {
@@ -51,6 +51,7 @@ class ContactController extends Controller
         foreach ($contacts as &$contact) {
             $contact->contactId = encrypt($contact->id);
             $contact->fullname = $contact->fullName();
+            $contact->shared = $contact->shared==1? true:false;
             $contact->avatar = optional($contact->userProfile)->avatar;
             $contact->avatarPath = $contact->avatar ? asset('storage/' . $contact->avatar) : '';
         }
@@ -77,7 +78,7 @@ class ContactController extends Controller
             'lastname' => 'required|string',
             'email' => 'required|email|unique:contacts,email,' . ($request->all() ? $request->id : 'NULL') . ',id',
             'phone' => 'required',
-            'address_home' => 'required|string',
+            'company_name' => 'required|string',
         ]);
 
         $contact = Contact::find($request->id);
@@ -89,8 +90,7 @@ class ContactController extends Controller
         $contact->lastname = $request->lastname;
         $contact->email = $request->email;
         $contact->phone = $request->phone;
-        $contact->address_home = $request->address_home;
-        $contact->address_office = $request->address_office;
+        $contact->company_name = $request->company_name;
         try {
             $contact->save();
             if ($request->hasFile('avatar')) {
@@ -116,6 +116,28 @@ class ContactController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred while adding data'], 500);
+        }
+    }
+
+    public function sharedContact(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer',
+            'shared' => 'required|boolean',
+        ]);
+
+        try {
+            $shared = $request->shared;
+            Contact::where('id', $request->id)->update([
+                'shared' => $shared,
+            ]);
+            
+            $roleName = Auth::user()->getRoleNames()->first();
+            $role = $roleName == 'Admin' ? 'member' : 'admin';
+            $message = $shared == 1 ? "Contact has been successfully shared with $role." : "Contact is no longer shared with $role.";
+            return response()->json(['message' => $message]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred while sharing the contact.'], 500);
         }
     }
 
@@ -153,8 +175,7 @@ class ContactController extends Controller
             'fullName' => $contact->fullName(),
             'email' => $contact->email,
             'phone' => $contact->phone,
-            'address_home' => $contact->address_home,
-            'address_office' => $contact->address_office,
+            'company_name' => $contact->company_name,
             'joinedAt' => Carbon::parse($contact->created_at)->format('d M, Y'),
             'avatar' => $contact->userProfile ? ($contact->userProfile->avatar ? asset('storage/' . $contact->userProfile->avatar) : null) : null
         ];

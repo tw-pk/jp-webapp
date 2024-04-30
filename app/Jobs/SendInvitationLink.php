@@ -33,6 +33,6 @@ class SendInvitationLink implements ShouldQueue
     public function handle(): void
     {
         $invitation = $this->invitation;
-        Mail::to($invitation->email)->send(new InvitationEmail($invitation, 'JustDialer Invitation'));
+        Mail::to($invitation->email)->send(new InvitationEmail($invitation, 'JotPhone Invitation'));
     }
 }

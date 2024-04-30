@@ -21,8 +21,7 @@ const firstname = ref('')
 const lastname = ref('')
 const email = ref('')
 const phone = ref('')
-const address_home = ref('')
-const address_office = ref('')
+const company_name = ref('')
 const form = ref()
 const contacts = ref([])
 const avatarInput = ref(null)
@@ -47,6 +46,14 @@ const headers = [
   {
     title: 'Phone Number',
     key: 'phone',
+  },
+  {
+    title: 'Company',
+    key: 'company_name',
+  },
+  {
+    title: 'Shared',
+    key: 'shared',
   },
   {
     title: 'ACTION',
@@ -93,13 +100,11 @@ const fetchContacts = () => {
     q: searchQuery.value,
     options: options.value,
   }).then(response => {
-    
     contacts.value = response.data.contacts.data
     totalPage.value = response.data.totalPage
     totalRecord.value = response.data.totalRecord
     options.value.page = response.data.page
     isProcessing.value = false
-
   }).catch(error => {
     isProcessing.value = false
     console.log(error)
@@ -128,7 +133,7 @@ watchEffect(fetchContacts)
 const addContact = () => {
   isDisabled.value = true
   isLoading.value = true
-
+  
   const formData = new FormData()
 
   formData.append('id', id.value)
@@ -137,8 +142,7 @@ const addContact = () => {
   formData.append('lastname', lastname.value)
   formData.append('email', email.value)
   formData.append('phone', phone.value)
-  formData.append('address_home', address_home.value)
-  formData.append('address_office', address_office.value)
+  formData.append('company_name', company_name.value)
   contactStore.addContact(formData).then(response => {
     isDialogVisible.value = false
     isDisabled.value = false
@@ -148,6 +152,7 @@ const addContact = () => {
     isSnackbarVisible.value = true
 
     // Clear input fields
+    id.value = ''
     form.value.reset()
 
     // refetch Team
@@ -196,8 +201,7 @@ const editItem = item => {
   lastname.value = item.lastname,
   email.value = item.email,
   phone.value = item.phone,
-  address_home.value = item.address_home,
-  address_office.value = item.address_office,
+  company_name.value = item.company_name,
   
   isDialogVisible.value = true
 }
@@ -206,6 +210,20 @@ const deleteItem = item => {
   editedIndex.value = contacts.value.indexOf(item)
   deleteId.value = item.id
   deleteDialog.value = true
+}
+
+const sharedContact = item => {
+  contactStore.sharedContact({ id: item.id, shared: item.shared })
+    .then(response => {
+      snackbarMessage.value = response.data.message
+      snackbarActionColor.value = `success`
+      isSnackbarVisible.value = true
+    })
+    .catch(error => {
+      snackbarMessage.value = error.data.message
+      snackbarActionColor.value = `error`
+      isSnackbarVisible.value = true
+    })
 }
 
 const deleteItemConfirm = () => {
@@ -220,11 +238,11 @@ const closeDelete = () => {
 }
 
 const onCloseDialog = () => {
-  form.value.reset()
-  isDialogVisible.value = false
+  id.value = ''
   defaultTitle.value = 'Add New Contact'
   defaultButton.value = 'Add To Contact'
- 
+  form.value.reset()
+  isDialogVisible.value = false
 }
 </script>
 
@@ -388,22 +406,10 @@ const onCloseDialog = () => {
                             md="12"
                           >
                             <AppTextField
-                              v-model="address_home"
-                              label="Address Home"
+                              v-model="company_name"
+                              label="Company Name"
                               :rules="[requiredValidator]"
                               required
-                            />
-                          </VCol>
-                        </VRow>
-                        <VRow>
-                          <VCol
-                            cols="12"
-                            sm="12"
-                            md="12"
-                          >
-                            <AppTextField
-                              v-model="address_office"
-                              label="Address Office"
                             />
                             <input
                               v-model="id"
@@ -485,6 +491,15 @@ const onCloseDialog = () => {
               </div>
             </template>
         
+            <!-- shared contact -->
+            <template #item.shared="{ item }">
+              <div class="d-flex align-center">
+                <VSwitch
+                  v-model="item.raw.shared"
+                  @change="sharedContact(item.raw)"
+                />
+              </div>
+            </template>
             <template #item.actions="{ item }">
               <VBtn
                 variant="outlined"
@@ -607,3 +622,9 @@ const onCloseDialog = () => {
 <style scoped lang="scss">
 @use "@core-scss/template/pages/page-auth.scss";
 </style>
+
+<route lang="yaml">
+meta:
+  action: read
+  subject: contact
+</route>

@@ -1,4 +1,5 @@
 <script setup>
+import User from "@/apis/user"
 import vuetifyInitialThemes from '@/plugins/vuetify/theme'
 import ChatActiveChatUserProfileSidebarContent from '@/views/apps/chat/ChatActiveChatUserProfileSidebarContent.vue'
 import ChatLeftSidebarContent from '@/views/apps/chat/ChatLeftSidebarContent.vue'
@@ -8,13 +9,11 @@ import { useChat } from '@/views/apps/chat/useChat'
 import { useChatStore } from '@/views/apps/chat/useChatStore'
 import axiosIns from "@axios"
 import { useResponsiveLeftSidebar } from '@core/composable/useResponsiveSidebar'
-import { avatarText } from '@core/utils/formatters'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import {
   useDisplay,
   useTheme,
 } from 'vuetify'
-import User from "@/apis/user";
 
 const vuetifyDisplays = useDisplay()
 const store = useChatStore()
@@ -46,7 +45,7 @@ const startConversation = () => {
 const msg = ref('')
 
 const sendMessage = async () => {
-
+  
   if (!msg.value)
     return
   await store.sendMsg(msg.value)
@@ -60,14 +59,14 @@ const sendMessage = async () => {
   })
 }
 
-const openChatOfContact = async userId => {
-  await store.getChat(userId)
+const openChatOfContact = async contactId => {
+  await store.getChat(contactId)
 
   // Reset message input
   msg.value = ''
 
   // Set unseenMsgs to 0
-  const contact = store.chatsContacts.find(c => c.id === userId)
+  const contact = store.chatsContacts.find(c => c.id === contactId)
   if (contact)
     contact.chat.unseenMsgs = 0
 
@@ -92,24 +91,12 @@ const refInputEl = ref()
 
 const moreList = [
   {
-    title: 'View Contact',
-    value: 'View Contact',
+    title: 'Archive',
+    value: 'Archive',
   },
   {
-    title: 'Mute Notifications',
-    value: 'Mute Notifications',
-  },
-  {
-    title: 'Block Contact',
-    value: 'Block Contact',
-  },
-  {
-    title: 'Clear Chat',
-    value: 'Clear Chat',
-  },
-  {
-    title: 'Report',
-    value: 'Report',
+    title: 'Delete',
+    value: 'Delete',
   },
 ]
 
@@ -138,7 +125,7 @@ const makeCall = () => {
 onBeforeMount( () => {
   User.auth().then(res => {
     Echo.private('App.Models.User.'+res.data.id)
-      .notification((notification) => {
+      .notification(notification => {
         console.log(notification)
       })
   })
@@ -216,35 +203,9 @@ onBeforeMount( () => {
             class="d-flex align-center cursor-pointer"
             @click="isActiveChatUserProfileSidebarOpen = true"
           >
-            <VBadge
-              dot
-              location="bottom right"
-              offset-x="3"
-              offset-y="0"
-              :color="resolveAvatarBadgeVariant(store.activeChat.contact.status)"
-              bordered
-            >
-              <VAvatar
-                size="38"
-                :variant="!store.activeChat.contact.avatar ? 'tonal' : undefined"
-                :color="!store.activeChat.contact.avatar ? resolveAvatarBadgeVariant(store.activeChat.contact.status) : undefined"
-                class="cursor-pointer"
-              >
-                <VImg
-                  v-if="store.activeChat.contact.avatar"
-                  :src="store.activeChat.contact.avatar"
-                  :alt="store.activeChat.contact.fullName"
-                />
-                <span v-else>{{ avatarText(store.activeChat.contact.fullName) }}</span>
-              </VAvatar>
-            </VBadge>
-
             <div class="flex-grow-1 ms-4 overflow-hidden">
               <p class="text-h6 mb-0">
-                {{ store.activeChat.contact.fullName }}
-              </p>
-              <p class="text-truncate mb-0 text-disabled">
-                {{ store.activeChat.contact.role }}
+                {{ store.activeChat.contact.phone_number }}
               </p>
             </div>
           </div>
@@ -255,9 +216,6 @@ onBeforeMount( () => {
           <div class="d-sm-flex align-center d-none">
             <IconBtn @click.prevent="makeCall">
               <VIcon icon="tabler-phone-call" />
-            </IconBtn>
-            <IconBtn>
-              <VIcon icon="tabler-video" />
             </IconBtn>
             <IconBtn>
               <VIcon icon="tabler-search" />
@@ -293,7 +251,7 @@ onBeforeMount( () => {
             v-model="msg"
             variant="solo"
             class="chat-message-input"
-            placeholder="Type your message..."
+            placeholder="Type your message here..."
             density="default"
             autofocus
           >

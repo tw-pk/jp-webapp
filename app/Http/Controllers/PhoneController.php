@@ -37,7 +37,20 @@ class PhoneController extends Controller
                 })
                 ->select(['user_id', 'phone_number', 'country']);
         }
-
+         
+        $roleName = Auth::user()->getRoleNames()->first();
+        if($roleName =='Member'){
+            $userId = Auth::user()->id; 
+            $userPhoneNumbers = AssignNumber::whereHas('invitation', function ($query) use ($userId) {
+                $query->where('member_id', $userId);
+            })->pluck('phone_number')->unique()->toArray();
+            $userNumbersQuery = UserNumber::select('user_id', 'phone_number', 'country')
+                ->whereIn('phone_number', $userPhoneNumbers);
+            if(!empty($userNumbersQuery)){
+                $query->union($userNumbersQuery)->distinct();
+            }
+        }
+        
         $totalRecord = $query->count();
         $numbers = $query->paginate($perPage, ['*'], 'page', $currentPage);
         $totalPage = ceil($totalRecord / $perPage);
@@ -57,7 +70,7 @@ class PhoneController extends Controller
             $shareWith = [];
             foreach ($invitations as $key => $invitation) {
                
-                $user = User::where('email', $invitation->email)
+                $user = User::where('id', $invitation->member_id)
                     ->select(['id', 'email', 'firstname', 'lastname'])
                     ->first();
 

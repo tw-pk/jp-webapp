@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Contact;
+use App\Models\Invitation;
 use App\Models\Conversation;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -26,13 +27,44 @@ class ConversationRepository
      */
     public function getConversations($query, $perPage=10): array
     {
-        $contacts = Auth::user()->contacts;
+        $user = Auth::user();
+        $roleName = $user->getRoleNames()->first();
+        $contacts = [];
 
+        $contacts = $user->contacts->map(function ($contact) {
+            $contact->fullName = $contact->firstname . ' ' . $contact->lastname;
+            return $contact;
+        })
+        ->sortByDesc('id');
+        if($roleName =='Admin'){
+            $memberIds = $user->invitations->pluck('member_id')->toArray();
+            $additionalContacts = Contact::where(['shared' => 1, 'user_id' => $memberIds])->orderByDesc('id')->get();
+            $additionalContacts->transform(function ($contact) {
+                $contact->fullName = $contact->firstname . ' ' . $contact->lastname; 
+                return $contact;
+            });
+            if ($additionalContacts->isNotEmpty()) {
+                $contacts = $contacts->merge($additionalContacts)->unique('id');
+            }
+        }
+
+        if($roleName =='Member'){
+            $ownerId = $user->invitationsMember()->pluck('user_id')->first();
+            $additionalContacts = Contact::where(['shared' => 1,'user_id' => $ownerId])->orderByDesc('id')->get();
+            $additionalContacts->transform(function ($contact) {
+                $contact->fullName = $contact->firstname . ' ' . $contact->lastname; 
+                return $contact;
+            });
+            if (!empty($additionalContacts)) {
+                $contacts = $contacts->merge($additionalContacts)->unique('id');
+            }
+        }
+        
         $chats = [];
         $filteredContacts = [];
-
+        
         if ($query) {
-            $conversations = Auth::user()->conversations()
+            $conversations = $user->conversations()
                 ->whereHas('contact', function ($q) use ($query) {
                     $q->whereRaw("CONCAT(firstname, ' ', lastname) = ?", [$query])
                         ->orWhere('phone_number', 'iLIKE', '%' . $query . '%');
@@ -42,14 +74,13 @@ class ConversationRepository
                 ->orWhere('phone_number', 'iLIKE', '%' . $query . '%');
         }
 
-        $conversations = Auth::user()->conversations;
-
+        $conversations = $user->conversations;
+        
         // Count unread messages
         $unreadCount = 0;
         $chat = [];
-
+        
         foreach ($conversations as $conversation) {
-
             if ($conversation->messages->count()) {
                 $lastMessage = $conversation->messages()->orderBy('created_at', 'desc')->first();
 
@@ -60,14 +91,14 @@ class ConversationRepository
                 $senderId = null;
                 if ($lastMessage->direction === 'incoming') {
                     // Do something when the condition is met
-                    $contactId = Auth::user()->contacts->where('phone', $lastMessage->from)->first()?->id;
+                    $contactId = $user->contacts->where('phone', $lastMessage->from)->first()?->id;
                     if($contactId){
                         $senderId = $contactId;
                     }else{
                         $senderId = \Str::random('6');
                     }
                 }else{
-                    $senderId = Auth::user()->id;
+                    $senderId = $user->id;
                 }
 
                 $chat = [
@@ -101,16 +132,16 @@ class ConversationRepository
 
         return [
             'chatContacts' => $chats,
-            'contacts' => [],
+            'contacts' => $contacts,
             'profileUser' => [
-                'id' => Auth::user()->id,
-                'avatar' => Auth::user()->profile?->avatar,
-                'fullName' => Auth::user()->fullName(),
-                'role' => Auth::user()->getRoleNames()->first(),
-                'about' => Auth::user()->profile?->bio,
+                'id' => $user->id,
+                'avatar' => $user->profile?->avatar,
+                'fullName' => $user->fullName(),
+                'role' => $user->getRoleNames()->first(),
+                'about' => $user->profile?->bio,
                 'status' => 'online',
                 'settings' => [
-                    'isTwoStepAuthVerificationEnabled' => Auth::user()->twoFactorProfile?->enabled,
+                    'isTwoStepAuthVerificationEnabled' => $user->twoFactorProfile?->enabled,
                     'isNotificationsOn' => true,
                 ]
             ]
@@ -136,16 +167,24 @@ class ConversationRepository
     }
 
 
-    public function getConversationMessages($conversationId, $perPage=10)
+    public function getConversationMessages($contactId, $perPage=10)
     {
-        $conversation = Auth::user()->conversations->where('id', $conversationId)->first();
+        $conversation = Auth::user()->conversations->where('contact_id', $contactId)->first();
         if(!$conversation){
+            $contact = Auth::user()->contacts->where('id', $contactId)->first();
             return [
                 'chat' => "",
-                'contact' => [],
+                'contact' => [
+                    'id' => $contact->id,
+                    'phone_number' => $contact->phone,
+                    'fullName' => $contact?->fullName(),
+                    'about' => $contact->address_home,
+                    'role' => 'contact',
+                    'avatar' => '',
+                    'status' => 'online',
+                ],
             ];
         }
-
 
         $chat_messages = [];
 

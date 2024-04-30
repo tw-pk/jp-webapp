@@ -13,7 +13,7 @@ export const useChatStore = defineStore('chat', {
       const { data } = await axiosIns.get('/api/auth/chat/chats-and-contacts', {
         params: { q },
       })
-
+      
       const { chatsContacts, contacts, profileUser } = data.data
 
       this.chatsContacts = chatsContacts
@@ -21,8 +21,9 @@ export const useChatStore = defineStore('chat', {
       this.profileUser = profileUser
     },
     async getChat(contactId) {
+ 
       const { data } = await axiosIns.get(`/api/auth/chats/${contactId}`)
-
+  
       this.activeChat = data.data
     },
     async sendMsg(message) {
@@ -33,7 +34,7 @@ export const useChatStore = defineStore('chat', {
         message,
         senderId,
       }
-
+ 
       const { data } = await axiosIns.post(`/api/auth/chats/send/message`, requestData)
       const { msg, chat } = data
 
