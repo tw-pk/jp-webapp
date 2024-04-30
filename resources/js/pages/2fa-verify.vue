@@ -176,7 +176,7 @@ onMounted(async() => {
             Account Verification
           </h4>
           <p class="mb-2">
-            A 6-digit code has been sent to your phone number {{ phoneNumber }}. Please enter the code below
+            A 6-digit code has been sent to your phone number {{ phoneNumber }}. Please enter the phone number below for phone number verififcation
           </p>
         </VCardText>
 

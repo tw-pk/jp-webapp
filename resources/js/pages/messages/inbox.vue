@@ -59,14 +59,14 @@ const sendMessage = async () => {
   })
 }
 
-const openChatOfContact = async userId => {
-  await store.getChat(userId)
+const openChatOfContact = async contactId => {
+  await store.getChat(contactId)
 
   // Reset message input
   msg.value = ''
 
   // Set unseenMsgs to 0
-  const contact = store.chatsContacts.find(c => c.id === userId)
+  const contact = store.chatsContacts.find(c => c.id === contactId)
   if (contact)
     contact.chat.unseenMsgs = 0
 
