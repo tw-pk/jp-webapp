@@ -1,14 +1,14 @@
 <script setup>
 import { useAssignStore } from "@/views/apps/number/useAssignStore"
-import { defineProps, ref } from 'vue'
+import { defineProps, ref, watch } from 'vue'
 
 const props = defineProps(['phoneNumber'])
 const assignStore = useAssignStore()
 
 const member = ref(null)
-const members = ref([])
+const memberList = ref([])
 const team = ref(null)
-const teams = ref([])
+const teamList = ref([])
 const assignVForm = ref()
 const isDisabled = ref(false)
 const isLoading = ref(false)
@@ -17,29 +17,68 @@ const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
 const errorMemberMsg = ref('')
 const errorTeamMsg = ref('')
+const isMemberDisabled = ref(false)
+const isTeamDisabled = ref(false)
 
-// 👉 Fetching Members
-const fetchMembers = () => {
-  assignStore.fetchMembers().then(response => {
-    members.value = response.data.inviteMembers
+watch(member, newValue => {
+  if (newValue && newValue.length > 0) {
+    team.value = null
+    isTeamDisabled.value = true
+  }else{
+    isTeamDisabled.value = false
+  }
+})
+
+watch(team, newValue => {
+  if (newValue && newValue.length > 0) {
+    member.value = null
+    isMemberDisabled.value = true
+  }else{
+    isMemberDisabled.value = false
+  }
+})
+
+// 👉 Fetching Members And Teams
+const fetchMembersTeams = () => {
+  assignStore.fetchMembersTeams().then(response => {
+    memberList.value = response.data.inviteMembers
+    teamList.value = response.data.teams
   }).catch(error => {
     console.error(error)
   })
 }
 
-// 👉 Fetching teams
-const fetchTeams = () => {
-  assignStore.fetchTeams().then(response => {
-    teams.value = response.data.teams
+
+
+// 👉 Fetching assing number
+const fetchAssignNumber = () => {
+  assignStore.fetchAssignNumber({
+    number: props.phoneNumber,
+  }).then(response => {
+    member.value = response.data.assigned
+      .filter(item => item.invitation_id != null)
+      .map(item => {
+        const matchingMember = memberList.value.find(member => member.id === item.invitation_id)
+        
+        return matchingMember ? matchingMember : null
+      })
+
+    if (response.data.assigned.every(item => !item.invitation_id)) {
+      team.value = response.data.assigned.map(item => {
+        let matchingTeam = teamList.value.find(team => team.id === item.team_id)
+        
+        return matchingTeam ? matchingTeam : null
+      })
+    }
+    
   }).catch(error => {
     console.error(error)
   })
 }
 
 onMounted(() => {
-  fetchMembers()
-  fetchTeams()
-
+  fetchMembersTeams()
+  fetchAssignNumber()
 })
 
 const addAssignNumber = event => {
@@ -51,22 +90,28 @@ const addAssignNumber = event => {
     errorMemberMsg.value = ''
     errorTeamMsg.value = '' 
     
+    let memberIds = member.value !== null ? member.value.map(item => item.id) : []
+    let teamIds = team.value !== null ? team.value.map(item => item.id) : []
+
     assignStore.addAssignNumber({
       number: props.phoneNumber,
-      member: member.value,
-      team: team.value,
+      member: memberIds,
+      team: teamIds,
     }).then(response => {
       
       snackbarMessage.value = response.data.message
       snackbarActionColor.value = `success`
       isSnackbarVisible.value = true
 
-      // Clear input fields
-      member.value = null
-      team.value = null
+      // // Clear input fields
+      // member.value = null
+      // team.value = null
     })
       .catch(error => {
         console.log(error)
+        snackbarMessage.value = error.message
+        snackbarActionColor.value = `error`
+        isSnackbarVisible.value = true
        
       })
   } else {
@@ -97,29 +142,35 @@ const addAssignNumber = event => {
         >
           <div>
             <!-- 👉 Assign team member -->
-            <AppSelect
+            <VCombobox
               v-model="member"
-              label="Assign team member"
-              :items="members"
+              multiple
+              :items="memberList"
               item-title="fullname"
               item-value="id"
-              density="compact"
               clearable
               :error-messages="errorMemberMsg"
+              label="Assign to member"
+              placeholder="Assign to member"
+              variant="outlined"
+              :disabled="isMemberDisabled"
             />
           </div>
 
           <div class="mt-4">
             <!-- 👉 Or, Assign To Group -->
-            <AppSelect
+            <VCombobox
               v-model="team"
-              label="Or, Assign To Group"
-              :items="teams"
+              multiple
+              :items="teamList"
               item-title="name"
               item-value="id"
-              density="compact"
               clearable
               :error-messages="errorTeamMsg"
+              label="Or, Assign To Team"
+              placeholder="Or, Assign To Team"
+              variant="outlined"
+              :disabled="isTeamDisabled"
             />
           </div>
         </VCol>

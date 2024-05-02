@@ -137,9 +137,8 @@ Route::group(['prefix' => 'auth'], function () {
         //Manage Team
         Route::post('team/add', [TeamController::class, 'store']);
         Route::post('team/list', [TeamController::class, 'list']);
-        Route::post('team/fetch/members', [TeamController::class, 'fetch_members']);
+        Route::post('team/fetch/members/teams', [TeamController::class, 'membersTeams']);
         Route::delete('team/delete/{id}', [TeamController::class, 'delete_team']);
-        Route::post('team/fetch/teams', [TeamController::class, 'fetch_teams']);
 
         //fetch user phone number
         Route::post('fetch/user/numbers', [TeamController::class, 'fetch_numbers']);
@@ -149,7 +148,7 @@ Route::group(['prefix' => 'auth'], function () {
 
         //Manage db phone numbers
         Route::post('fetch/number/list', [PhoneController::class, 'list']);
-
+        Route::post('fetch/assign/number', [PhoneController::class, 'fetchAssignNumber']);
         Route::post('phone/assign', [PhoneController::class, 'phone_assign']);
 
         //Phone Setting
