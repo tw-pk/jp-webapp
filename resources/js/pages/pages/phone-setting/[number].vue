@@ -1,6 +1,6 @@
 <script setup>
 import Assign from '@/views/wizard/phone-listing/Assign.vue'
-import CallForwarding from '@/views/wizard/phone-listing/CallForwarding.vue'
+import CallRouting from '@/views/wizard/phone-listing/CallRouting.vue'
 import CallerId from '@/views/wizard/phone-listing/CallerId.vue'
 import VoiceMail from '@/views/wizard/phone-listing/VoiceMail.vue'
 
@@ -40,7 +40,7 @@ const phoneListingSteps = [
   },
   {
     title: 'Call Forwarding',
-    component: CallForwarding,
+    component: CallRouting,
     key: 'callRoutingDetails',
   },
   {
