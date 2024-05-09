@@ -1,11 +1,8 @@
 <script setup>
-import About from "./About.vue"
-import axiosIns from "@axios";
-import {paginationMeta} from "@/@fake-db/utils";
+import { paginationMeta } from "@/@fake-db/utils"
+import { useRecentCallsStore } from "@/views/apps/recent-calls/useRecentCallsStore"
+import { ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
-import {ref} from "vue";
-import {useRecentCallsStore} from "@/views/apps/recent-calls/useRecentCallsStore";
-
 
 const router = useRoute()
 const isProcessing = ref(false)
@@ -94,28 +91,11 @@ const resolveUserRoleVariant = direction => {
     icon: 'tabler-phone-off',
   }
 }
-
-const props = defineProps({
-  contactData: {
-    type: Object,
-    required: true,
-  },
-})
 </script>
 
 <template>
-  <VRow v-if="contactData">
-    <VCol
-      md="4"
-      cols="12"
-    >
-      <About :data="contactData" />
-    </VCol>
-
-    <VCol
-      cols="12"
-      md="8"
-    >
+  <VRow>
+    <VCol cols="12">
       <VRow>
         <div
           v-if="errorMessage"

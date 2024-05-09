@@ -8,7 +8,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <VCard class="mb-4">
+  <VCard class="mb-4 justify-end">
     <VCardText>
       <p class="text-xs">
         ABOUT

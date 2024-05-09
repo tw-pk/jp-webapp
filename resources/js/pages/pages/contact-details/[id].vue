@@ -29,8 +29,11 @@ onMounted(async () => {
 
 <template>
   <div v-if="contactData">
-    <ProfileHeader class="mb-5" />
-    <Profile :contact-data="contactData" />
+    <ProfileHeader
+      class="mb-5"
+      :contact-data="contactData"
+    />
+    <Profile />
   </div>
 </template>
 
