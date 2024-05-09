@@ -177,6 +177,7 @@ Route::group(['prefix' => 'auth'], function () {
         //recent calls
         Route::post('recent-calls/list', [VoiceController::class, 'recent_calls']);
         Route::post('recent-calls-dash/list', [VoiceController::class, 'recent_calls_dash']);
+        Route::post('recent-calls-contact/list', [VoiceController::class, 'recent_calls_contact']);
         Route::post('dashboard/number-list', [VoiceController::class, 'dash_number_list']);
         Route::post('dashboard/member-list', [VoiceController::class, 'dash_member_list']);
         Route::post('dashboard/live/calls', [VoiceController::class, 'dash_live_calls']);
