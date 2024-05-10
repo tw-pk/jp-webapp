@@ -130,6 +130,7 @@ Route::group(['prefix' => 'auth'], function () {
         //Manage Members
         Route::post('members/add', [MembersController::class, 'store']);
         Route::post('members/list', [MembersController::class, 'list']);
+        Route::post('fetch/members', [MembersController::class, 'fetchMembers']);
 
         //invite member routes
         Route::post('invitations/store', [InvitationController::class, 'store']);

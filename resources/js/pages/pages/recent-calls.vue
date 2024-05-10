@@ -23,12 +23,12 @@ const form = ref()
 const calls = ref([])
 const totalPage = ref(1)
 const totalRecord = ref(0)
-const items = ['Default']
+const items = ['Default', 'Outbound', 'Inbound', 'Missed', 'Voicemail']
 const selectedItem = ref(items[0])
 const callTrait = ref(null)
 const callTraits = ['Queued', 'ringing', 'in-progress', 'canceled', 'completed', 'failed', 'busy', 'no-answer']
 const dateRange = ref([new Date().toISOString(), new Date().toISOString()])
-const members = ref(['All members'])
+const members = ref([])
 const member = ref(null)
 const requestData = ref(null)
 
@@ -81,6 +81,25 @@ const options = ref({
   groupBy: [],
   search: undefined,
 })
+
+const fetchMemberList = async () => {
+  try {
+    const res = await recentCallsStore.fetchMemberList()
+    if (res.data.status) {
+      members.value = res.data.members
+    } else {
+      error.value = true
+      errorMessage.value = res.data.message
+      isProcessing.value = false
+    }
+  } catch (error) {
+    error.value = true
+    errorMessage.value = error.response?.data?.message || error.message
+    isProcessing.value = false
+  }
+}
+
+fetchMemberList()
 
 const fetchRecentCalls = () => {
   isProcessing.value = true
@@ -282,6 +301,8 @@ const editItem = callSid => {
                     v-model="member"
                     label="Select members"
                     :items="members"
+                    item-title="fullname"
+                    item-value="id"
                   />
                 </VCol>
                 <IconBtn @click.prevent="">

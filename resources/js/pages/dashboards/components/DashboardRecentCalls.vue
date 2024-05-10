@@ -26,6 +26,8 @@ const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
 const form = ref()
+const members = ['All members']
+const member = ref(null)
 
 const options = ref({
   page: 1,
@@ -231,6 +233,16 @@ const editItem = callSid => {
           <VTab>Voicemail</VTab>
         </VTabs>
       </div>
+      <VCol
+        cols="2"
+        md="2"
+      >
+        <VAutocomplete
+          v-model="member"
+          label="Select members"
+          :items="members"
+        />
+      </VCol>
       <div class="__dashboard__header-search">
         <AppTextField
           v-model="searchQuery"
