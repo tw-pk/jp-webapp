@@ -302,7 +302,7 @@ const editItem = callSid => {
                     label="Select members"
                     :items="members"
                     item-title="fullname"
-                    item-value="id"
+                    item-value="fullname"
                   />
                 </VCol>
                 <IconBtn @click.prevent="">

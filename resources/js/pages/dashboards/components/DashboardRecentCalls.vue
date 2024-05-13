@@ -26,7 +26,9 @@ const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
 const form = ref()
-const members = ['All members']
+
+//const members = ['All members']
+const members = ref([])
 const member = ref(null)
 
 const options = ref({
@@ -197,6 +199,19 @@ const editItem = callSid => {
   fetchNote(callSid)
   editDialog.value = true
 }
+
+onMounted(async () => {
+  await recentCallsDashStore.fetchMemberList()
+    .then(res => {
+      if(res.data.status){
+        members.value = res.data.members
+        console.log('members.value')
+        console.log(members.value)
+      }else{
+        console.log(res.data.message)
+      }
+    })
+})
 </script>
 
 <template>
@@ -241,6 +256,8 @@ const editItem = callSid => {
           v-model="member"
           label="Select members"
           :items="members"
+          item-title="fullname"
+          item-value="fullname"
         />
       </VCol>
       <div class="__dashboard__header-search">

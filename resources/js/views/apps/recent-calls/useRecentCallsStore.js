@@ -22,7 +22,7 @@ export const useRecentCallsStore = defineStore('RecentCallsStore', {
     },
 
     // 👉 Fetch Member List
-    fetchMemberList(data) {
+    fetchMemberList() {
       return new Promise((resolve, reject) => {
         axiosIns.post('/api/auth/fetch/members')
           .then(response => resolve(response))
