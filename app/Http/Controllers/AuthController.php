@@ -256,6 +256,7 @@ class AuthController extends Controller
 
         if (!$user || !$user->email) {
             return response()->json([
+                'status' => false,
                 'message' => 'No record found, Incorrect email address provided',
             ], 404);
         }
@@ -277,6 +278,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
+            'status' => true,
             'message' => 'A code has been sent to your email address'
         ]);
     }

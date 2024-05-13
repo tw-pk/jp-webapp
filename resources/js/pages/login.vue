@@ -47,9 +47,6 @@ const authStore = useAuthStore()
 
 const verificationMessage = ref(authStore.verificationMessage)
 
-console.log('verificationMessage')
-console.log(verificationMessage.value)
-
 const login = () => {
   axios.post('/api/auth/login', {
     email: email.value,
