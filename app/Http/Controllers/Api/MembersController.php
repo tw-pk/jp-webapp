@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendInvitationLink;
 use App\Models\Invitation;
 use App\Models\AssignNumber;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -112,5 +113,33 @@ class MembersController extends Controller
             'totalUsers' => $totalUsers,
             'page' => $currentPage,
         ]);
+    }
+
+    public function fetchMembers()
+    {
+        try {
+            $userId = Auth::user()->id;
+            $members = User::whereHas('invitationsMember', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->whereHas('invitationsMember', function ($query) {
+                $query->whereColumn('member_id', 'users.id');
+            })
+            ->select(['id',  \DB::raw("CONCAT(firstname, ' ', lastname) AS fullname")])
+            ->get();
+            
+            if(!$members){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ]);
+            }
+            return response()->json([
+                'status' => true,
+                'members' => $members
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

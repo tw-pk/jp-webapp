@@ -204,6 +204,133 @@ class VoiceController extends Controller
         }
     }
 
+    public function recent_calls_contact(Request $request)
+    {
+        $callType = $request->input('callType');
+        $searchQuery = $request->input('q');
+        $options = $request->input('options');
+
+        $perPage = $options['itemsPerPage'];
+        $currentPage = $options['page'] ?? 1;
+
+        if ($this->isUserAdmin()) {
+
+            if (!Auth::user()->numbers->count()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "You don't have any active number, please verify if you have an active number",
+                ], 404);
+            }
+
+            try {
+
+                if (!empty($searchQuery)) {
+                    $twilioCalls = Auth::user()->calls()
+                        ->where('to', 'LIKE', '%' . $searchQuery . '%')
+                        ->paginate($perPage, ['*'], 'page', $currentPage);
+                } else {
+                    if ($callType !== 'all') {
+                        $twilioCalls = Auth::user()->calls()
+                            ->where(fn ($q) => $this->getCallTypeCriteria($q, $callType))
+                            ->paginate($perPage, ['*'], 'page', $currentPage);
+                    } else {
+                        $twilioCalls = Auth::user()->calls()
+                            ->paginate($perPage, ['*'], 'page', $currentPage);
+                    }
+                }
+
+                $totalRecord = $twilioCalls->total();
+                $totalPage = ceil($totalRecord / $perPage);
+                $allCalls = [];
+                foreach ($twilioCalls as $call) {
+                    if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
+                        $allCalls[] = [
+                            'call_sid' => $call->sid,
+                            'teamdialer_number' => $this->getTeamsDialerNumber($call),
+                            'number' => $this->getNumber($call),
+                            'status' => $call->status ?? '-',
+                            'direction' => $call->direction,
+                            'date' => $call->date_time,
+                            'duration' => $call->duration . " seconds" ?? '-',
+                            'notes' => '',
+                            'rating' => '-',
+                            'disposition' => '-',
+                            'record' => '-'
+                        ];
+                    }
+                }
+                return response()->json([
+                    'status' => true,
+                    "calls" => $allCalls,
+                    'totalPage' => $totalPage,
+                    'totalRecord' => $totalRecord,
+                    'page' => $currentPage,
+                ]);
+            } catch (TwilioException $e) {
+                return response()->json([
+                    'status' => false,
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
+        } else {
+            try {
+                $from = Invitation::where('member_id', Auth::user()->id)->first()?->number;
+                
+                if (!empty($searchQuery)) {
+                    $twilioCalls = Auth::user()->calls()
+                        ->where('to', 'LIKE', '%' . $searchQuery . '%')
+                        ->where('from', $from)
+                        ->paginate($perPage, ['*'], 'page', $currentPage);
+                } else {
+                    if ($callType !== 'all') {
+                        $twilioCalls = Auth::user()->calls()
+                            ->where(fn ($q) => $this->getCallTypeCriteria($q, $callType))
+                            ->where('from', $from)
+                            ->paginate($perPage, ['*'], 'page', $currentPage);
+                    } else {
+                        $twilioCalls = Auth::user()->calls()
+                            ->where('from', $from)
+                            ->paginate($perPage, ['*'], 'page', $currentPage);
+                    }
+                }
+
+                $totalRecord = $twilioCalls->total();
+                $totalPage = ceil($totalRecord / $perPage);
+                $allCalls = [];
+                foreach ($twilioCalls as $call) {
+                    if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
+                        $allCalls[] = [
+                            'call_sid' => $call->sid,
+                            'teamdialer_number' => $this->getTeamsDialerNumber($call),
+                            'number' => $this->getNumber($call),
+                            'status' => $call->status ?? '-',
+                            'direction' => $call->direction,
+                            'date' => $call->date_time,
+                            'duration' => $call->duration . " seconds" ?? '-',
+                            'notes' => '',
+                            'rating' => '-',
+                            'disposition' => '-',
+                            'record' => '-'
+                        ];
+                    }
+                }
+                return response()->json([
+                    'status' => true,
+                    "calls" => $allCalls,
+                    'totalPage' => $totalPage,
+                    'totalRecord' => $totalRecord,
+                    'page' => $currentPage,
+                ]);
+            } catch (TwilioException $e) {
+                return response()->json([
+                    'status' => false,
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
+        }
+   
+    }
+
     private function getTeamsDialerNumber($call)
     {
         if ($call->direction === 'inbound') {

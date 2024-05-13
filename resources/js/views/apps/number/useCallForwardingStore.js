@@ -1,11 +1,11 @@
 import axiosIns from '@/plugins/axios'
 import { defineStore } from 'pinia'
 
-export const useCallRoutingStore = defineStore('CallRoutingStore', {
+export const useCallForwardingStore = defineStore('CallForwardingStore', {
   actions: {
     
-    // 👉 Fetch call Routing
-    fetchCallRouting(data) {
+    // 👉 Fetch call Forwarding
+    fetchCallForwarding(data) {
       return new Promise((resolve, reject) => {
         axiosIns.post('api/auth/fetch/setting', data)
           .then(response => resolve(response))
@@ -14,7 +14,7 @@ export const useCallRoutingStore = defineStore('CallRoutingStore', {
     },
 
     // 👉 Add call routing
-    addCallRouting(data) {
+    addCallForwarding(data) {
       return new Promise((resolve, reject) => {
         axiosIns.post('api/auth/add/callrouting', data)
           .then(response => resolve(response))

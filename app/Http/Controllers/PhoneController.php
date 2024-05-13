@@ -95,36 +95,58 @@ class PhoneController extends Controller
         ]);
     }
 
+    public function fetchAssignNumber(Request $request)
+    {
+        $assignNumber = AssignNumber::select('team_id', 'invitation_id')->where('phone_number', $request->number)->get();
+        return response()->json([
+            'message' => 'Assign phone fetched successfully',
+            'assigned' => $assignNumber
+        ]);
+    }
+
     public function phone_assign(Request $request)
     {
         $request->validate([
             'number' => 'required',
-            'member' => 'nullable|integer|required_without_all:team',
-            'team' => 'nullable|integer|required_without_all:member',
+            'member' => 'nullable|array|required_without_all:team',
+            'team' => 'nullable|array|required_without_all:member',
         ]);
 
         $phone_number = $request->number;
-        $team_id = $request->team ?? '';
-        $invitation_id = $request->member ?? '';
+        $invitation_ids = is_array($request->member) ? $request->member : [$request->member];
+        $team_ids = is_array($request->team) ? $request->team : [$request->team];
+       
+        if (!empty($invitation_ids) && is_array($invitation_ids)) {
+            foreach ($invitation_ids as $invitation_id) {
+                $assignment = AssignNumber::updateOrCreate(
+                    ['invitation_id' => $invitation_id],
+                    ['phone_number' => $phone_number]
+                );
+            }
+            AssignNumber::where('phone_number', $phone_number)
+            ->where(function ($query) use ($invitation_ids) {
+                $query->whereNotIn('invitation_id', $invitation_ids)
+                        ->orWhereNotNull('team_id'); 
+            })
+            ->delete();
 
-        $invitationAssignment = '';
-        $teamAssignment = '';
-
-        $invitationAssignment = AssignNumber::where(['phone_number' => $phone_number, 'invitation_id' => $invitation_id])->first();
-        if (empty($invitationAssignment) && !empty($invitation_id) && !empty($phone_number)) {
-            AssignNumber::create([
-                'invitation_id' => $invitation_id,
-                'phone_number' => $phone_number,
-            ]);
         }
 
-        $teamAssignment = AssignNumber::where(['phone_number' => $phone_number, 'team_id' => $team_id])->first();
-        if (empty($teamAssignment) && !empty($team_id) && !empty($phone_number)) {
-            AssignNumber::create([
-                'team_id' => $team_id,
-                'phone_number' => $phone_number,
-            ]);
+        if (!empty($team_ids) && is_array($team_ids)) {
+            foreach ($team_ids as $team_id) {
+                $assignment = AssignNumber::updateOrCreate(
+                    ['team_id' => $team_id],
+                    ['phone_number' => $phone_number]
+                );
+            }
+            AssignNumber::where('phone_number', $phone_number)
+                ->where(function ($query) use ($team_ids) {
+                $query->whereNotIn('team_id', $team_ids)
+                        ->orWhereNotNull('invitation_id'); 
+            })
+            ->delete();
         }
+
         return response()->json([
             'message' => 'The Phone Number has been successfully assigned.'
         ]);
