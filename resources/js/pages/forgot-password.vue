@@ -15,6 +15,7 @@ const resetPassword = () => {
   User.sendForgotPasswordMail({
     email: email.value,
   }).then(res => {
+    email.value = '';
     console.log(res.data.message)
   })
 }

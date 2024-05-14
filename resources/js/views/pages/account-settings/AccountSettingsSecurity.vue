@@ -12,6 +12,8 @@ const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
 
+const changePasswordForm = ref();
+
 const isError = ref(false)
 
 const apiResponse = ref(false)
@@ -137,7 +139,7 @@ onMounted(async() => {
         </VAlert>
       </div>
       <VCard title="Change Password">
-        <VForm @submit.prevent="updatePassword">
+        <VForm ref='changePasswordForm' @submit.prevent="updatePassword">
           <VCardText class="pt-0">
             <!-- 👉 Current Password -->
             <VRow>
