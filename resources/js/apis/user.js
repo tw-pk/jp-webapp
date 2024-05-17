@@ -9,6 +9,12 @@ export default {
     return axiosIns.post('api/auth/register', formData)
   },
 
+  async verifyPhoneNumber(formData) {
+    await Csrf.getCookie()
+
+    return axiosIns.post('api/auth/verify-phone-number', formData)
+  },
+
   async login(formData) {
     await Csrf.getCookie()
 

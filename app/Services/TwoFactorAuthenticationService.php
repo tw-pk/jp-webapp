@@ -99,6 +99,60 @@ class TwoFactorAuthenticationService implements TwoFactorAuthenticationInterface
         }
     }
 
+    public function VerifyGenerateCode(array $data, int $expiryTime = 30): JsonResponse
+    {
+        try {
+            $lastInsertedId = $data['lastInsertedId'];
+            $phoneNumber = $data['phoneNumber'];
+            $channel = $data['channel'];
+
+            $service = TwilioVerifyService::first();
+
+            if (!$service) {
+                $service = $this->twilio->verify->v2->services
+                    ->create("JustDial OTP");
+                TwilioVerifyService::create([
+                    'sid' => $service->sid
+                ]);
+            }
+
+            $profile = TwoFactorProfiles::where('user_id', $lastInsertedId)->first();
+            if (!$profile) {
+                TwoFactorProfiles::create([
+                    'user_id' => $lastInsertedId,
+                    'sid' => $service->sid,
+                    'channel' => $channel,
+                    'phone' => $phoneNumber,
+                    'enabled' => false
+                ]);
+            }
+
+            $verification = $this->twilio->verify->v2->services($service->sid)
+                ->verifications
+                ->create($phoneNumber, $channel);
+
+            TwilioPasswordVerification::create([
+                'user_id' => $lastInsertedId,
+                'sid' => $service->sid,
+                'expiry_at' => Carbon::now()->addMinutes(30),
+                'channel' => $verification->channel
+            ]);
+            
+            $this->setCodeExpiry(30);
+
+            return response()->json([
+                'status' => true,
+                'lastInsertedId' => $lastInsertedId,
+                'message' => 'OTP has been generated successfully'
+            ]);
+        } catch (TwilioException $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ]);
+        }
+    }
+
     public function resendCode(): JsonResponse
     {
         try {
@@ -173,6 +227,35 @@ class TwoFactorAuthenticationService implements TwoFactorAuthenticationInterface
             return response()->json([
                 'status' => $verification_check->status === "approved",
                 "message" => $verification_check->status === "approved" ? "Two factor authentication has been enabled on your account" : "Invalid OTP provided",
+            ]);
+        } catch (TwilioException $exception) {
+            return response()->json([
+                'status' => false,
+                "message" => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    public function registerVerifyCode(string $to, int $code, int $userId): JsonResponse
+    {
+        try {
+            $serviceSid = TwilioVerifyService::first()->sid;
+            $verification_check = $this->twilio->verify->v2->services($serviceSid)
+                ->verificationChecks
+                ->create([
+                    'to' => $to,
+                    'code' => $code
+                ]);
+
+            $profile = TwoFactorProfiles::where('user_id', $userId)->first();
+            if ($verification_check->status == 'approved') {
+                $profile->enabled = true;
+                $profile->save();
+            }
+
+            return response()->json([
+                'status' => $verification_check->status === "approved",
+                "message" => $verification_check->status === "approved" ? "Successfully created user and Two factor authentication has been enabled on your account" : "Successfully created user but invalid OTP provided",
             ]);
         } catch (TwilioException $exception) {
             return response()->json([
