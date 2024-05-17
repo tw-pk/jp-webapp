@@ -1,22 +1,56 @@
 <script setup>
+import User from "@/apis/user"
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
-import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
-import { themeConfig } from '@themeConfig'
 import authV2MaskDark from '@images/pages/misc-mask-dark.png'
 import authV2MaskLight from '@images/pages/misc-mask-light.png'
-import User from "@/apis/user"
+import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
+import { themeConfig } from '@themeConfig'
+import {
+  emailValidator,
+  requiredValidator,
+} from '@validators'
 
-
+const refVForm = ref()
 const email = ref('')
 const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
+const isAlertVisible = ref(false)
+const alertMessage = ref('')
+const alertActionColor = ref(' ')
+const isDisabled = ref(false)
 
+const errors = ref({
+  email: undefined,
+})
 
 const resetPassword = () => {
+  isDisabled.value = true
   User.sendForgotPasswordMail({
     email: email.value,
   }).then(res => {
-    email.value = '';
-    console.log(res.data.message)
+    email.value = ''
+    isDisabled.value = false
+    if(res.data.status){
+      alertMessage.value = 'Success! ' + res.data.message
+      alertActionColor.value = 'success'
+      isAlertVisible.value = true
+      refVForm.value.reset()
+    }else{
+      alertMessage.value = 'Error! ' + res.data.message
+      alertActionColor.value = 'error'
+      isAlertVisible.value = true
+    }
+  })
+}
+
+const submitResetPassword = () => {
+  isDisabled.value = true
+  event.preventDefault()
+  refVForm.value?.validate().then(({ valid: isValid }) => {
+    if (isValid){
+      resetPassword()
+    }else{
+      isDisabled.value = false
+    }
   })
 }
 </script>
@@ -26,7 +60,6 @@ const resetPassword = () => {
     class="auth-wrapper bg-surface"
     no-gutters
   >
-
     <VCol
       cols="12"
       lg="12"
@@ -38,27 +71,42 @@ const resetPassword = () => {
       >
         <VCardText>
           <VRow class="pa-5 justify-center mb-3 __align-items-center">
-
             <VNodeRenderer
               :nodes="themeConfig.app.logo"
               class=""
             />
 
-            <h3 class="text-h3 ml-1" style="font-weight: 700">
+            <h3
+              class="text-h3 ml-1"
+              style="font-weight: 700;"
+            >
               JotPhone
             </h3>
-
           </VRow>
-          <h4 class="text-h4 mb-3" style="font-weight: 600">
+          <h4
+            class="text-h4 mb-3"
+            style="font-weight: 600;"
+          >
             Forgot Password?
           </h4>
           <p class="mb-0">
             Enter your email, and we'll send you instructions to reset your password
           </p>
         </VCardText>
-
+        
         <VCardText>
-          <VForm @submit.prevent="resetPassword">
+          <VAlert
+            v-if="isAlertVisible"
+            border="start"
+            :color="alertActionColor"
+            variant="tonal"
+          >
+            {{ alertMessage }}
+          </VAlert>
+          <VForm
+            ref="refVForm"
+            @submit.prevent="submitResetPassword"
+          >
             <VRow>
               <!-- verify -->
               <VCol cols="12">
@@ -67,6 +115,8 @@ const resetPassword = () => {
                   autofocus
                   label="Email"
                   type="email"
+                  :rules="[requiredValidator, emailValidator]"
+                  :error-messages="errors.email"
                 />
               </VCol>
 
@@ -75,6 +125,8 @@ const resetPassword = () => {
                 <VBtn
                   block
                   type="submit"
+                  :disabled="isDisabled"
+                  :loading="isDisabled"
                 >
                   Send Reset Link
                 </VBtn>

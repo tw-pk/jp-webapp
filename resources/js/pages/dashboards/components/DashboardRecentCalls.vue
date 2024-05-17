@@ -205,8 +205,6 @@ onMounted(async () => {
     .then(res => {
       if(res.data.status){
         members.value = res.data.members
-        console.log('members.value')
-        console.log(members.value)
       }else{
         console.log(res.data.message)
       }

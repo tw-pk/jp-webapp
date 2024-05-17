@@ -35,8 +35,6 @@ const formSubmit = async () => {
   if (phoneNumber.value) {
     emit('submit', phoneNumber.value)
     if(otpGenerated.value){
-      console.log('otp.value')
-      console.log(otp.value)
       if (otp.value ==null || otp.value =='' ) {
         error.value = {
           otp: 'Please enter a valid otp',
@@ -47,8 +45,6 @@ const formSubmit = async () => {
         'code': otp.value,
       })
         .then(res => {
-          console.log('res res res')
-          console.log(res.data.message)
           if (res.data.status) {
             otpGenerated.value = false
             emit('update:isDialogVisible', false)

@@ -19,6 +19,20 @@ export const emailValidator = value => {
   return re.test(String(value)) || 'The Email field must be a valid verify'
 }
 
+// 👉 Phone Number Validator
+export const phoneValidator = value => {
+  if (isEmpty(value)) return true
+  
+  // Regular expression for phone number validation
+  const re = /^\+?(\d{1,4})?[-.\s]?(\(?\d{1,3}?\)?[-.\s]?)?(\d{1,4})[-.\s]?(\d{1,4})[-.\s]?(\d{1,9})$/
+
+  if (Array.isArray(value)) {
+    return value.every(val => re.test(String(val))) || 'The Phone Number field must be a valid phone number'
+  }
+
+  return re.test(String(value)) || 'The Phone Number field must be a valid phone number'
+}
+
 // 👉 Password Validator
 export const passwordValidator = password => {
   const regExp = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%&*()]).{8,}/
