@@ -81,11 +81,24 @@ class AuthController extends Controller
             $email_verification_service = new EmailVerificationService();
             $email_verification_service->generateOtp($user);
 
-            $twoFactorAuthenticationService = app(TwoFactorAuthenticationService::class);
-            return $twoFactorAuthenticationService->registerVerifyCode($request->phoneNumber, $request->otp, $user->id);
+            return response()->json([
+                'message' => 'Successfully created user!'
+            ], 201);
         } else {
             return response()->json(['error' => 'Provide proper details']);
         }
+    }
+
+    public function verifyCode(Request $request)
+    {
+        $request->validate([
+            'lastInsertedId' => 'required',
+            'to' => 'required',
+            'code' => 'required|min:6|max:6'
+        ]);
+        $lastInsertedId = $request->lastInsertedId;
+        $twoFactorAuthenticationService = app(TwoFactorAuthenticationService::class);
+        return $twoFactorAuthenticationService->registerVerifyCode($request->to, $request->code, $lastInsertedId);
     }
 
     public function verifyPhoneNumber(Request $request)

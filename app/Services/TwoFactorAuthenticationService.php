@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Interfaces\TwoFactorAuthenticationInterface;
 use App\Models\TwilioPasswordVerification;
 use App\Models\TwilioVerifyService;
+use App\Models\User;
 use App\Models\TwoFactorProfiles;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -246,16 +247,20 @@ class TwoFactorAuthenticationService implements TwoFactorAuthenticationInterface
                     'to' => $to,
                     'code' => $code
                 ]);
-
             $profile = TwoFactorProfiles::where('user_id', $userId)->first();
             if ($verification_check->status == 'approved') {
                 $profile->enabled = true;
                 $profile->save();
             }
-
+            
+            if($verification_check->status){
+                User::where('id', $userId)->update([
+                    'phone_number_verified' => true
+                ]);
+            }
             return response()->json([
                 'status' => $verification_check->status === "approved",
-                "message" => $verification_check->status === "approved" ? "Successfully created user and Two factor authentication has been enabled on your account" : "Successfully created user but invalid OTP provided",
+                "message" => $verification_check->status === "approved" ? "Phone number is verified" : "Invalid OTP Provided",
             ]);
         } catch (TwilioException $exception) {
             return response()->json([

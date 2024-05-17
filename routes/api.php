@@ -56,6 +56,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('invitation/verify', [MembersController::class, 'verifyToken']);
     
     Route::post('verify-phone-number', [AuthController::class, 'verifyPhoneNumber']);
+    Route::post('verify-code', [AuthController::class, 'verifyCode']);
 
     Route::group(['middleware' => ['auth:sanctum']], function () {
 
