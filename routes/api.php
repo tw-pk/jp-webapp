@@ -71,6 +71,9 @@ Route::group(['prefix' => 'auth'], function () {
         //checkout session generator for first checkout
         Route::post('/create-session-details', [StripeController::class, 'createCheckoutSession']);
 
+        // create checkout after subscription expired
+        Route::post('/create-subscription-checkout', [StripeController::class, 'createSubscriptionCheckout']);
+
         //profile data api
         Route::post('/user/profile/data', [AuthController::class, 'userProfileData']);
         Route::post('user/account/deactivate', [AuthController::class, 'accountDeactivate']);
@@ -130,6 +133,7 @@ Route::group(['prefix' => 'auth'], function () {
         //Manage Members
         Route::post('members/add', [MembersController::class, 'store']);
         Route::post('members/list', [MembersController::class, 'list']);
+        Route::post('fetch/members', [MembersController::class, 'fetchMembers']);
 
         //invite member routes
         Route::post('invitations/store', [InvitationController::class, 'store']);
@@ -137,9 +141,8 @@ Route::group(['prefix' => 'auth'], function () {
         //Manage Team
         Route::post('team/add', [TeamController::class, 'store']);
         Route::post('team/list', [TeamController::class, 'list']);
-        Route::post('team/fetch/members', [TeamController::class, 'fetch_members']);
+        Route::post('team/fetch/members/teams', [TeamController::class, 'membersTeams']);
         Route::delete('team/delete/{id}', [TeamController::class, 'delete_team']);
-        Route::post('team/fetch/teams', [TeamController::class, 'fetch_teams']);
 
         //fetch user phone number
         Route::post('fetch/user/numbers', [TeamController::class, 'fetch_numbers']);
@@ -149,7 +152,7 @@ Route::group(['prefix' => 'auth'], function () {
 
         //Manage db phone numbers
         Route::post('fetch/number/list', [PhoneController::class, 'list']);
-
+        Route::post('fetch/assign/number', [PhoneController::class, 'fetchAssignNumber']);
         Route::post('phone/assign', [PhoneController::class, 'phone_assign']);
 
         //Phone Setting
@@ -178,6 +181,7 @@ Route::group(['prefix' => 'auth'], function () {
         //recent calls
         Route::post('recent-calls/list', [VoiceController::class, 'recent_calls']);
         Route::post('recent-calls-dash/list', [VoiceController::class, 'recent_calls_dash']);
+        Route::post('recent-calls-contact/list', [VoiceController::class, 'recent_calls_contact']);
         Route::post('dashboard/number-list', [VoiceController::class, 'dash_number_list']);
         Route::post('dashboard/member-list', [VoiceController::class, 'dash_member_list']);
         Route::post('dashboard/live/calls', [VoiceController::class, 'dash_live_calls']);

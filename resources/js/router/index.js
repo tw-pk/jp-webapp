@@ -251,9 +251,12 @@ const handle2FA = async (to, from, next) => {
 }
 
 const createStripeSession = () => {
-  axiosIns.post('/api/auth/create-session-details')
+  axiosIns.post('/api/auth/create-subscription-checkout')
     .then(res => {
-      if (res.data){
+      if (!res.data) {
+        return
+      }
+      if (res.data.checkout_url) {
         window.location.href = res.data.checkout_url
       }
     })
@@ -277,8 +280,6 @@ router.beforeEach(async (to, from, next) => {
     ])
 
     const isSubscribed = await isUserSubscribed()
-
-    //const isSubscribed = true
 
     // Check if user is logged in and can navigate to the destination route
     const userData = await User.auth()

@@ -1,9 +1,9 @@
 <script setup>
-//import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
+import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
 import DashboardRecentCalls from "@/pages/dashboards/components/DashboardRecentCalls.vue"
 import DashboardStatistics from "@/pages/dashboards/components/DashboardStatistics.vue"
 
-//import DashboardTMAnalysis from "@/pages/dashboards/components/DashboardTMAnalysis.vue"
+import DashboardTMAnalysis from "@/pages/dashboards/components/DashboardTMAnalysis.vue"
 import { useLiveCallsStore } from "@/views/apps/dashboard/useLiveCallsStore"
 import ApexChartReportData from '@/views/charts/apex-chart/ApexChartReportData.vue'
 import { getCallsChartConfig } from '@core/libs/apex-chart/apexCharConfig'
@@ -59,29 +59,6 @@ const moreList = [
   },
 ]
 
-// 👉 Fetching live call
-const fetchLiveCalls = () => {
-
-  liveCallsStore.fetchLiveCalls()
-    .then (response => {
-      totalLiveCalls.value = response.data.totalLiveCalls
-      totalOutboundCalls.value = response.data.totalOutboundCalls
-      totalInboundCalls.value = response.data.totalInboundCalls
-      totalMissed.value = response.data.totalMissed
-
-      series.value = [
-        totalOutboundCalls.value, // outbound
-        totalInboundCalls.value,  // inbound
-        totalMissed.value,       // missed
-      ]
-    })
-    .catch(error => {
-      console.error(error)
-    })
-}
-
-onMounted(fetchLiveCalls)
-
 // headers
 const headers = [
   {
@@ -116,29 +93,46 @@ const options = ref({
   search: undefined,
 })
 
-// 👉 Fetching live/recent calls
-const fetchLiveCallsPast = () => {
-  
-  const selectedTabTitle = tabTitles[currentTab.value]
 
-  liveCallsStore.fetchLiveCallsPast({
-    callType: selectedTabTitle,
-    options: options.value,
-  })
-    .then(response => {
-      if(response.data.status){
-        liveCallsPast.value = response.data.liveCallsPast
-        totalPage.value = response.data.totalPage
-        totalRecord.value = response.data.totalRecord
-        options.value.page = response.data.page
-      }
-    })
-    .catch(error => {
-      console.log(error)
-    })
+const fetchData = async () => {
+  try {
+    const [liveCallsResponse, liveCallsPastResponse] = await Promise.all([
+      liveCallsStore.fetchLiveCalls(),
+      liveCallsStore.fetchLiveCallsPast({
+        callType: tabTitles[currentTab.value],
+        options: options.value,
+      }),
+    ])
+
+    // liveCallsResponse
+    if (liveCallsResponse.data) {
+      totalLiveCalls.value = liveCallsResponse.data.totalLiveCalls
+      totalOutboundCalls.value = liveCallsResponse.data.totalOutboundCalls
+      totalInboundCalls.value = liveCallsResponse.data.totalInboundCalls
+      totalMissed.value = liveCallsResponse.data.totalMissed
+
+      series.value = [
+        totalOutboundCalls.value, // outbound
+        totalInboundCalls.value,  // inbound
+        totalMissed.value,        // missed
+      ]
+    }
+
+    //liveCallsPastResponse
+    if (liveCallsPastResponse.data && liveCallsPastResponse.data.status) {
+      liveCallsPast.value = liveCallsPastResponse.data.liveCallsPast
+      totalPage.value = liveCallsPastResponse.data.totalPage
+      totalRecord.value = liveCallsPastResponse.data.totalRecord
+      options.value.page = liveCallsPastResponse.data.page
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  }
 }
 
-watchEffect(fetchLiveCallsPast)
+onMounted(fetchData)
+
+//watchEffect(fetchData)
 </script>
 
 <template>
@@ -299,15 +293,15 @@ watchEffect(fetchLiveCallsPast)
           </VCardText>
         </VCard>
       </VCol>
-      <!--
-        <VCol cols="6">
-        <DashboardNAnalysis class="h-100" />
-        </VCol>
       
-        <VCol cols="6">
+      <VCol cols="6">
+        <DashboardNAnalysis class="h-100" />
+      </VCol>
+      
+      <VCol cols="6">
         <DashboardTMAnalysis class="h-100" />
-        </VCol>
-      -->
+      </VCol>
+      
       <VCol cols="12">
         <DashboardRecentCalls class="h-100" />
       </VCol>

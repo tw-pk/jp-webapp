@@ -3,6 +3,16 @@ import { defineStore } from 'pinia'
 
 export const useRecentCallsDashStore = defineStore('RecentCallsDashStore', {
   actions: {
+
+    // 👉 Fetch Member List
+    fetchMemberList() {
+      return new Promise((resolve, reject) => {
+        axiosIns.post('/api/auth/fetch/members')
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
+    
     // 👉 Fetch Recent Calls
     fetchRecentCalls(data) {
       return new Promise((resolve, reject) => {

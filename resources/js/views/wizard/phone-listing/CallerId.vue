@@ -163,18 +163,20 @@ const remove = index => {
               v-if="index <= 0"
               class="d-flex justify-end mt-15"
             />
-            <div
+            <!--
+              <div
               v-if="index === callerIds.length - 1"
               class="d-flex mt-12"
-            >
-              <VBtn
-                color="success"
-                prepend-icon="tabler-plus"
-                @click="addCallerId"
               >
-                Add Caller ID
+              <VBtn
+              color="success"
+              prepend-icon="tabler-plus"
+              @click="addCallerId"
+              >
+              Add Caller ID
               </VBtn>
-            </div>
+              </div>
+            -->
           </VCol>
         </VRow>
       </VCol>

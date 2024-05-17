@@ -12,6 +12,24 @@ export const useRecentCallsStore = defineStore('RecentCallsStore', {
       })
     },
 
+    // 👉 Fetch Recent Calls Contact
+    fetchRecentCallsContact(data) {
+      return new Promise((resolve, reject) => {
+        axiosIns.post('/api/auth/recent-calls-contact/list', data)
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
+
+    // 👉 Fetch Member List
+    fetchMemberList() {
+      return new Promise((resolve, reject) => {
+        axiosIns.post('/api/auth/fetch/members')
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
+
     // 👉 Add Notes
     addNote(data) {
       return new Promise((resolve, reject) => {

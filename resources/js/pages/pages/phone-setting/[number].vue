@@ -2,11 +2,11 @@
 import Assign from '@/views/wizard/phone-listing/Assign.vue'
 import CallRouting from '@/views/wizard/phone-listing/CallRouting.vue'
 import CallerId from '@/views/wizard/phone-listing/CallerId.vue'
-import Greetings from '@/views/wizard/phone-listing/Greetings.vue'
-
-import OtherSettings from '@/views/wizard/phone-listing/OtherSettings.vue'
-
 import VoiceMail from '@/views/wizard/phone-listing/VoiceMail.vue'
+
+// import Greetings from '@/views/wizard/phone-listing/Greetings.vue'
+// import OtherSettings from '@/views/wizard/phone-listing/OtherSettings.vue'
+
 import { ref } from 'vue'
 import { useTheme } from 'vuetify'
 
@@ -49,20 +49,21 @@ const phoneListingSteps = [
     key: 'callerId',
   },
   {
-    title: 'Voice Mail',
+    title: 'Voice to Email',
     component: VoiceMail,
     key: 'voiceMail',
   },
-  {
-    title: 'Greetings',
-    component: Greetings,
-    key: 'greetings',
-  },
-  {
-    title: 'Other Settings',
-    component: OtherSettings,
-    key: 'otherSettings',
-  },
+
+  // {
+  //   title: 'Greetings',
+  //   component: Greetings,
+  //   key: 'greetings',
+  // },
+  // {
+  //   title: 'Other Settings',
+  //   component: OtherSettings,
+  //   key: 'otherSettings',
+  // },
   
 ]
 

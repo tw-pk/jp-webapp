@@ -128,16 +128,6 @@ class TeamController extends Controller
         ]);
     }
 
-    public function fetch_teams()
-    {
-
-        $teams = Team::select('id', 'name')->where('user_id', Auth::user()->id)->get();
-        return response()->json([
-            'message' => 'Teams fetched successfully',
-            'teams' => $teams
-        ]);
-    }
-
     public function fetch_roles()
     {
         $roles = Role::select('id', 'name')->get();
@@ -147,8 +137,10 @@ class TeamController extends Controller
         ]);
     }
 
-    public function fetch_members()
+    public function membersTeams()
     {
+        $teams = Team::select('id', 'name')->where('user_id', Auth::user()->id)->get();
+    
         $inviteMembers = Invitation::with(['invitationAccept' => function ($query) {
             $query->select('id', 'email');
         }, 'invitationAccept.profile' => function ($query) {
@@ -171,6 +163,7 @@ class TeamController extends Controller
         return response()->json([
             'message' => 'Members fetched successfully',
             'inviteMembers' => $inviteMembers,
+            'teams' => $teams
         ]);
     }
 

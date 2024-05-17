@@ -1,9 +1,9 @@
 <script setup>
-import { useCallRoutingStore } from "@/views/apps/number/useCallRoutingStore"
+import { useCallForwardingStore } from "@/views/apps/number/useCallForwardingStore"
 import { defineProps, ref, watch } from 'vue'
 
 const props = defineProps(['phoneNumber'])
-const callRoutingStore = useCallRoutingStore()
+const callForwardingStore = useCallForwardingStore()
 
 const fwd_incoming_call = ref(null)
 const ringOrder = ref(null)
@@ -15,17 +15,22 @@ const count = ref(0)
 const selectedUser = ref(null)
 const selectedUsers = ref([])
 const assignUsers = ref([])
-const errorEmailMsg = ref('')
+const errorExtPhone = ref('')
+const phoneNumber = ref('')
+const phoneNumberBlock = ref(false)
 const selectedUsersData = []
+const callForwardForm = ref()
+const webMobileBlock = ref(false)
+const mobileNumberBlock = ref(false)
 
 const incomingOption = [
   {
-    name: 'Web & Mobile Apps',
-    value: 'web_mobile_apps',
+    name: 'Web & Desktop Apps',
+    value: 'web_desktop_apps',
   },
   {
-    name: 'Mobile/landline number',
-    value: 'mobile_landline_number',
+    name: 'Mobile Number',
+    value: 'mobile_number',
   },
   {
     name: 'Team Members',
@@ -39,16 +44,24 @@ const incomingOption = [
 
 const ringOrders = [
   {
-    name: 'Voicemail',
-    value: 'voicemail',
+    name: '1 Ring',
+    value: '1_ring',
   },
   {
-    name: 'External Number',
-    value: 'external number',
+    name: '2 Ring',
+    value: '2_ring',
   },
   {
-    name: 'Dismiss',
-    value: 'dismiss',
+    name: '3 Ring',
+    value: '3_ring',
+  },
+  {
+    name: '4 Ring',
+    value: '4_ring',
+  },
+  {
+    name: '5 Ring',
+    value: '5_ring',
   },
 ]
 
@@ -68,8 +81,8 @@ const unansweredOption = [
 ]
 
 // 👉 Fetching call rounting
-const fetchCallRouting = () => {
-  callRoutingStore.fetchCallRouting({
+const fetchCallForwarding = () => {
+  callForwardingStore.fetchCallForwarding({
     phone_number: props.phoneNumber,
   }).then(response => {
     const data = response.data
@@ -87,21 +100,50 @@ const fetchCallRouting = () => {
 }
 
 onMounted(() => {
-  fetchCallRouting()
+  fetchCallForwarding()
 
   setTimeout(() => {
     count.value = 1
   }, 1000)
 })
 
-watch([fwd_incoming_call, unanswered_fwd_call, ringOrder], ([newForward, newUnanswered, newRingOrder], [oldForward, oldUnanswered, oldRingOrder]) => {
-  if ((newForward !== oldForward || newUnanswered !== oldUnanswered || newRingOrder !== oldRingOrder) && count.value === 1) {
-    addCallRouting(newForward, newUnanswered, newRingOrder)
+watch(fwd_incoming_call, newValue => {
+  console.log('fwd_incoming_call')
+  console.log(newValue)
+  
+  if(newValue=='web_desktop_apps') {
+    webMobileBlock.value = false
+    mobileNumberBlock.value = true
+    if(unanswered_fwd_call.value=='external_number') {
+      phoneNumberBlock.value = true
+    }else{
+      phoneNumberBlock.value = false
+    }
+  }else if(newValue=='mobile_number'){
+    webMobileBlock.value = false
+    mobileNumberBlock.value = false
+    phoneNumberBlock.value = true
+  }else{
+    webMobileBlock.value = true
+    mobileNumberBlock.value = true
+    if(unanswered_fwd_call.value=='external_number') {
+      phoneNumberBlock.value = true
+    }else{
+      phoneNumberBlock.value = false
+    }
   }
 })
 
-const addCallRouting = (newForward, newUnanswered, newRingOrder) => {
-  callRoutingStore.addCallRouting({
+watch(unanswered_fwd_call, newValue => {
+  if(newValue=='external_number') {
+    phoneNumberBlock.value = true
+  }else{
+    phoneNumberBlock.value = false
+  }
+})
+
+const addCallForwarding = (newForward, newUnanswered, newRingOrder) => {
+  callForwardingStore.addCallForwarding({
     phone_number: props.phoneNumber,
     fwd_incoming_call: newForward,
     unanswered_fwd_call: newUnanswered,
@@ -142,7 +184,7 @@ const handleCheckboxChange = (user, checkboxType) => {
       })
     }
   }
-  addCallRouting(fwd_incoming_call.value, unanswered_fwd_call.value, ringOrder.value)
+  addCallForwarding(fwd_incoming_call.value, unanswered_fwd_call.value, ringOrder.value)
 }
 
 watch(selectedUser, newValue => {
@@ -158,7 +200,10 @@ watch(selectedUser, newValue => {
 </script>
 
 <template>
-  <VForm>
+  <VForm
+    ref="callForwardForm"
+    @submit.prevent="addCallForwarding"
+  >
     <VRow>
       <VCol cols="12">
         <h4 class="text-h4 mb-3">
@@ -181,7 +226,10 @@ watch(selectedUser, newValue => {
           />
         </div>
 
-        <div class="mt-4">
+        <div
+          v-if="webMobileBlock"
+          class="mt-4"
+        >
           <!-- 👉 Select Ring Order -->
           <AppSelect
             v-model="ringOrder"
@@ -229,13 +277,14 @@ watch(selectedUser, newValue => {
         >
           <VCheckbox
             v-model="user.mobileLandline"
-            label="Mobile/Landline"
+            label="Mobile Number"
             @change="handleCheckboxChange(user)"
           />
         </VCol>
       </VRow>
     </div>
-    <VRow>
+    
+    <VRow v-if="webMobileBlock">
       <VCol
         cols="12"
         sm="6"
@@ -253,6 +302,7 @@ watch(selectedUser, newValue => {
             />
           </VBtn>
           <VText
+          
             color="primary"
             class="ml-2 mr-2 mt-2"
           >
@@ -268,7 +318,7 @@ watch(selectedUser, newValue => {
         </VRow>
       </VCol>
     </VRow>
-    <VRow>
+    <VRow v-if="mobileNumberBlock">
       <VCol
         cols="12"
         sm="6"
@@ -283,6 +333,36 @@ watch(selectedUser, newValue => {
             item-value="value"
           />
         </div>
+      </VCol>
+    </VRow>
+    <VRow>
+      <VCol
+        v-if="phoneNumberBlock"
+        cols="12"
+        sm="6"
+      >   
+        <div>
+          <!-- 👉 External Phone Number -->
+          <AppTextField
+            v-model="phoneNumber"
+            label="Phone Number"
+            placeholder="+10000000000"
+            :error-messages="errorExtPhone"
+          />
+        </div>
+      </VCol>
+      <VCol
+        cols="12"
+        class="d-flex justify-end mt-8"
+      >
+        <VBtn
+          color="success"
+          type="submit"
+          :disabled="isDisabled"
+          :loading="isDisabled"
+        >
+          Save
+        </VBtn>
       </VCol>
       <VCol
         cols="12"
