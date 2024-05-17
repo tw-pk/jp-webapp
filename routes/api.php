@@ -53,8 +53,9 @@ Route::group(['prefix' => 'auth'], function () {
 
     Route::post('/verify-reset-link', [AuthController::class, 'verifyResetLink']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-
     Route::post('invitation/verify', [MembersController::class, 'verifyToken']);
+    
+    Route::post('verify-phone-number', [AuthController::class, 'verifyPhoneNumber']);
 
     Route::group(['middleware' => ['auth:sanctum']], function () {
 

@@ -20,6 +20,7 @@ use Spatie\Permission\Models\Role;
 use App\Models\Invitation;
 use Str;
 use Symfony\Component\HttpKernel\Profiler\Profile;
+use App\Services\TwoFactorAuthenticationService;
 
 class AuthController extends Controller
 {
@@ -33,24 +34,33 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
+        $rules = [
             'firstname' => 'required|string',
-            'email' => 'required|string|unique:users',
+            'email' => 'required|string|email',
+            'phoneNumber' => 'required|numeric',
             'password' => 'required|string',
             'c_password' => 'required|same:password',
             'privacyPolicies' => 'required|accepted',
             //'terms_agreement' => 'required|accepted',
-        ]);
+        ];
+        
+        $user = User::find($request->lastInsertedId);
+        if ($user) {
+            $rules['email'] = 'required|string|email|unique:users,email,' . $user->id;
+        } else {
+            $rules['email'] = 'required|string|email|unique:users';
+        }
+        $request->validate($rules);
 
-        $user = new User([
-            'firstname' => $request->firstname,
-            'lastname' => $request->lastname,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'privacy_policy_agreed' => true,
-            //'terms_agreed' => true,
-        ]);
-
+        if (!$user) {
+            $user = new User();
+        }
+        $user->firstname = $request->firstname;
+        $user->lastname = $request->lastname;
+        $user->email = $request->email;
+        $user->password = bcrypt($request->password);
+        $user->privacy_policy_agreed = true;
+        
         if ($user->save()) {
 
             $invitationRole = Invitation::with('roleInfo')
@@ -69,14 +79,40 @@ class AuthController extends Controller
             $user->assignRole($role);
 
             $email_verification_service = new EmailVerificationService();
-
             $email_verification_service->generateOtp($user);
 
-            return response()->json([
-                'message' => 'Successfully created user!'
-            ], 201);
+            $twoFactorAuthenticationService = app(TwoFactorAuthenticationService::class);
+            return $twoFactorAuthenticationService->registerVerifyCode($request->phoneNumber, $request->otp, $user->id);
         } else {
             return response()->json(['error' => 'Provide proper details']);
+        }
+    }
+
+    public function verifyPhoneNumber(Request $request)
+    {
+        $request->validate([
+            'firstname' => 'required|string',
+            'email' => 'required|string|unique:users',
+            'phoneNumber' => 'required|numeric'
+        ]);
+        
+        $user = new User([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'email' => $request->email,
+            'password' => bcrypt(Carbon::now()),
+        ]);
+
+        if ($user->save()) {
+            $data = [
+                'lastInsertedId' => $user->id,
+                'phoneNumber' => $request->phoneNumber,
+                'channel' => 'sms'
+            ];
+            $twoFactorAuthenticationService = app(TwoFactorAuthenticationService::class);
+            return $twoFactorAuthenticationService->VerifyGenerateCode($data);
+        } else {
+            return response()->json(['error' => 'Failed to add user'], 500);
         }
     }
 
