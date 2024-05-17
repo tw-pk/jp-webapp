@@ -111,7 +111,6 @@ const createStripeSession = () => {
   isDisabled.value = true
   axiosIns.post('/api/auth/create-session-details')
     .then(res => {
-      console.log(res)
       if (res.data){
         isLoading.value = false
         isDisabled.value = false

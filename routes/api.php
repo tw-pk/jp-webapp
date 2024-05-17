@@ -71,6 +71,9 @@ Route::group(['prefix' => 'auth'], function () {
         //checkout session generator for first checkout
         Route::post('/create-session-details', [StripeController::class, 'createCheckoutSession']);
 
+        // create checkout after subscription expired
+        Route::post('/create-subscription-checkout', [StripeController::class, 'createSubscriptionCheckout']);
+
         //profile data api
         Route::post('/user/profile/data', [AuthController::class, 'userProfileData']);
         Route::post('user/account/deactivate', [AuthController::class, 'accountDeactivate']);
