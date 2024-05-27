@@ -69,9 +69,14 @@ class User extends Authenticatable implements MustVerifyEmail
         'deleted_at' => 'datetime',
     ];
 
-    public function userPaymentMethods(): HasMany
+    public function paymentMethods(): HasMany
     {
         return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function defaultPaymentMethod()
+    {
+        return $this->paymentMethods()->where('default', true)->first();
     }
 
     public function fullName(): string
