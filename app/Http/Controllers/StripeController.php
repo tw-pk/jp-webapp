@@ -313,7 +313,6 @@ class StripeController extends Controller
     public function paymentMethods()
     {
         $paymentMethods = [];
-
         foreach (Auth::user()->paymentMethods() as $paymentMethod) {
             $paymentMethods[] = [
                 'id' => encrypt($paymentMethod->id),
@@ -322,7 +321,7 @@ class StripeController extends Controller
                 'cardEmail' => $paymentMethod->billing_details->email,
                 'brand' => $paymentMethod->card->brand,
                 'cardExpiryDate' => $paymentMethod->card->exp_month . "/" . $paymentMethod->card->exp_year,
-                'isDefault' => Auth::user()->defaultPaymentMethod()?->id === $paymentMethod->id
+                'isDefault' => Auth::user()->defaultPaymentMethod()?->pmId === $paymentMethod->id
             ];
         }
         return response($paymentMethods);
