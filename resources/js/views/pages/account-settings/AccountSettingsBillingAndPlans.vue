@@ -94,7 +94,7 @@ const resetPaymentForm = () => {
 }
 
 onMounted(async() => {
-
+  
   Subscription.defaultMethodsCheck()
     .then(res => {
       noDefaultMethod.value = res.data.hasDefaultPaymentMethod
@@ -119,7 +119,7 @@ onMounted(async() => {
         })
       }
     })
-
+  
   Subscription.plan()
     .then(res => {
       if(res.data.status){
