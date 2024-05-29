@@ -1,13 +1,12 @@
 <script setup>
+import { StripeElement, StripeElements } from 'vue-stripe-js'
 import BillingHistoryTable from './BillingHistoryTable.vue'
-import { StripeElements, StripeElement } from 'vue-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
 
 // Images
-import mastercard from '@images/icons/payments/mastercard.png'
-import visa from '@images/icons/payments/visa.png'
 import Subscription from "@/apis/subscription"
 import axiosIns from '@axios'
+import mastercard from '@images/icons/payments/mastercard.png'
+import visa from '@images/icons/payments/visa.png'
 
 const selectedPaymentMethod = ref('credit-debit-atm-card')
 const isPricingPlanDialogVisible = ref(false)
@@ -47,7 +46,7 @@ const cardRef = ref()
 // Create a Card Element and mount it to the #card-element div
 const appearance = {
   theme: 'stripe',
-};
+}
 
 const style = {
   base: {
@@ -65,12 +64,10 @@ const style = {
   },
 }
 
-
 const elementsOptions = ref({
   appearance: appearance,
-  style: style
+  style: style,
 })
-
 
 const currentCardDetails = ref()
 
@@ -118,7 +115,7 @@ onMounted(async() => {
           type: res.data[i].brand === 'visa' ? 'visa' : 'mastercard',
           cvv: '',
           image: res.data[i].brand === 'visa' ? visa : mastercard,
-          cardLastFour: res.data[i].cardLastFour
+          cardLastFour: res.data[i].cardLastFour,
         })
       }
     })
@@ -134,38 +131,40 @@ onMounted(async() => {
           onGracePeriod: res.data.subscription.onGracePeriod,
           totalDays: res.data.subscription.totalDays,
           daysSpent: res.data.subscription.daysSpent,
-          credit: res.data.subscription.credit
+          credit: res.data.subscription.credit,
         }
       }
     })
 })
 
 const createPaymentMethod = async() => {
-  const {data} = await axiosIns.post('api/auth/stripe/payment-method/store', {
+  const { data } = await axiosIns.post('api/auth/stripe/payment-method/store', {
     cardName: cardName.value,
     cardExpiry: cardExpiryDate.value,
     cardNumber: cardNumber.value,
-    cardCvv: cardCvv.value
+    cardCvv: cardCvv.value,
   })
 }
 
 const createPaymentMethodCard = async () => {
   const cardNumberElement = cardNumber.value.stripeElement
+
   elms.value.instance.createPaymentMethod({
     type: 'card',
     card: cardNumberElement,
     billing_details: {
       name: 'HK 1',
     },
-  }).then( async (result) => {
+  }).then( async result => {
     console.log(result)
-    const {data} = await axiosIns.post('api/auth/stripe/payment-method/store', {
+
+    const { data } = await axiosIns.post('api/auth/stripe/payment-method/store', {
       pmId: result.paymentMethod.id,
     })
+
     console.log(data)
   })
 }
-
 </script>
 
 <template>
@@ -261,12 +260,12 @@ const createPaymentMethodCard = async () => {
 
             <VCol cols="12">
               <div class="d-flex flex-wrap gap-y-4">
-<!--                <VBtn-->
-<!--                  class="me-3"-->
-<!--                  @click="isPricingPlanDialogVisible = true"-->
-<!--                >-->
-<!--                  upgrade plan-->
-<!--                </VBtn>-->
+                <!--                <VBtn -->
+                <!--                  class="me-3" -->
+                <!--                  @click="isPricingPlanDialogVisible = true" -->
+                <!--                > -->
+                <!--                  upgrade plan -->
+                <!--                </VBtn> -->
 
                 <VBtn
                   color="error"
@@ -298,11 +297,11 @@ const createPaymentMethodCard = async () => {
     <!-- 👉 Payment Methods -->
     <VCol cols="12">
       <VAlert
-        class="mb-2"
         v-if="!noDefaultMethod"
+        class="mb-2"
         color="error"
         variant="tonal"
-        >
+      >
         You have multiple payment methods with us, please mark one of them as primary other wise you will not be able to use most of the features of the application!
       </VAlert>
 
@@ -320,106 +319,105 @@ const createPaymentMethodCard = async () => {
                       <!-- 👉 Card Number -->
                       <VCol cols="12">
                         <StripeElements
-                        ref="elms"
-                        v-slot="{ elements }"
-                        :stripe-key="key"
-                      >
-                        <VCol cols="12">
-                          <StripeElement
-                            ref="cardNumber"
-                            tabindex="0"
-                            class="cardElement"
-                            type="card"
-                            :elements="elements"
-                            :options="elementsOptions"
-                          />
-                        </VCol>
+                          ref="elms"
+                          v-slot="{ elements }"
+                          :stripe-key="key"
+                        >
+                          <VCol cols="12">
+                            <StripeElement
+                              ref="cardNumber"
+                              tabindex="0"
+                              class="cardElement"
+                              type="card"
+                              :elements="elements"
+                              :options="elementsOptions"
+                            />
+                          </VCol>
 
-<!--                      <VRow class="pa-3">-->
-<!--                        &lt;!&ndash; 👉 Name &ndash;&gt;-->
-<!--                        <VCol-->
-<!--                          cols="12"-->
-<!--                          md="6"-->
-<!--                        >-->
-<!--                          <AppTextField-->
-<!--                            v-model="cardName"-->
-<!--                          />-->
-<!--                        </VCol>-->
+                          <!--                      <VRow class="pa-3"> -->
+                          <!--                        &lt;!&ndash; 👉 Name &ndash;&gt; -->
+                          <!--                        <VCol -->
+                          <!--                          cols="12" -->
+                          <!--                          md="6" -->
+                          <!--                        > -->
+                          <!--                          <AppTextField -->
+                          <!--                            v-model="cardName" -->
+                          <!--                          /> -->
+                          <!--                        </VCol> -->
 
-<!--                        <VCol-->
-<!--                          cols="5"-->
-<!--                          md="3"-->
-<!--                        >-->
-<!--                          <StripeElement-->
-<!--                            tabindex="1"-->
-<!--                            class="cardElement"-->
-<!--                            type="cardExpiry"-->
-<!--                            :elements="elements"-->
-<!--                            :options="elementsOptions"-->
-<!--                          />-->
-<!--                        </VCol>-->
+                          <!--                        <VCol -->
+                          <!--                          cols="5" -->
+                          <!--                          md="3" -->
+                          <!--                        > -->
+                          <!--                          <StripeElement -->
+                          <!--                            tabindex="1" -->
+                          <!--                            class="cardElement" -->
+                          <!--                            type="cardExpiry" -->
+                          <!--                            :elements="elements" -->
+                          <!--                            :options="elementsOptions" -->
+                          <!--                          /> -->
+                          <!--                        </VCol> -->
 
-<!--                        &lt;!&ndash; 👉 Cvv code &ndash;&gt;-->
-<!--                        <VCol-->
-<!--                          cols="5"-->
-<!--                          md="3"-->
-<!--                        >-->
-<!--                          <StripeElement-->
-<!--                            tabindex="2"-->
-<!--                            class="cardElement"-->
-<!--                            type="cardCvc"-->
-<!--                            :elements="elements"-->
-<!--                            :options="elementsOptions"-->
-<!--                          />-->
-<!--                        </VCol>-->
-<!--                      </VRow>-->
-
-                      </StripeElements>
+                          <!--                        &lt;!&ndash; 👉 Cvv code &ndash;&gt; -->
+                          <!--                        <VCol -->
+                          <!--                          cols="5" -->
+                          <!--                          md="3" -->
+                          <!--                        > -->
+                          <!--                          <StripeElement -->
+                          <!--                            tabindex="2" -->
+                          <!--                            class="cardElement" -->
+                          <!--                            type="cardCvc" -->
+                          <!--                            :elements="elements" -->
+                          <!--                            :options="elementsOptions" -->
+                          <!--                          /> -->
+                          <!--                        </VCol> -->
+                          <!--                      </VRow> -->
+                        </StripeElements>
                       </VCol>
 
-<!--                      <VCol cols="12">-->
-<!--                        <AppTextField-->
-<!--                          v-model="cardNumber"-->
-<!--                          label="Card Number"-->
-<!--                          type="text"-->
-<!--                          maxlength="16"-->
-<!--                        />-->
-<!--                      </VCol>-->
+                      <!--                      <VCol cols="12"> -->
+                      <!--                        <AppTextField -->
+                      <!--                          v-model="cardNumber" -->
+                      <!--                          label="Card Number" -->
+                      <!--                          type="text" -->
+                      <!--                          maxlength="16" -->
+                      <!--                        /> -->
+                      <!--                      </VCol> -->
 
-<!--                      &lt;!&ndash; 👉 Name &ndash;&gt;-->
-<!--                      <VCol-->
-<!--                        cols="12"-->
-<!--                        md="6"-->
-<!--                      >-->
-<!--                        <AppTextField-->
-<!--                          v-model="cardName"-->
-<!--                          label="Name"-->
-<!--                        />-->
-<!--                      </VCol>-->
+                      <!--                      &lt;!&ndash; 👉 Name &ndash;&gt; -->
+                      <!--                      <VCol -->
+                      <!--                        cols="12" -->
+                      <!--                        md="6" -->
+                      <!--                      > -->
+                      <!--                        <AppTextField -->
+                      <!--                          v-model="cardName" -->
+                      <!--                          label="Name" -->
+                      <!--                        /> -->
+                      <!--                      </VCol> -->
 
-<!--                      &lt;!&ndash; 👉 Expiry date &ndash;&gt;-->
-<!--                      <VCol-->
-<!--                        cols="6"-->
-<!--                        md="3"-->
-<!--                      >-->
-<!--                        <AppTextField-->
-<!--                          v-model="cardExpiryDate"-->
-<!--                          label="Expiry Date"-->
-<!--                        />-->
-<!--                      </VCol>-->
+                      <!--                      &lt;!&ndash; 👉 Expiry date &ndash;&gt; -->
+                      <!--                      <VCol -->
+                      <!--                        cols="6" -->
+                      <!--                        md="3" -->
+                      <!--                      > -->
+                      <!--                        <AppTextField -->
+                      <!--                          v-model="cardExpiryDate" -->
+                      <!--                          label="Expiry Date" -->
+                      <!--                        /> -->
+                      <!--                      </VCol> -->
 
-<!--                      &lt;!&ndash; 👉 Cvv code &ndash;&gt;-->
-<!--                      <VCol-->
-<!--                        cols="6"-->
-<!--                        md="3"-->
-<!--                      >-->
-<!--                        <AppTextField-->
-<!--                          v-model="cardCvv"-->
-<!--                          type="text"-->
-<!--                          label="CVV Code"-->
-<!--                          maxlength="3"-->
-<!--                        />-->
-<!--                      </VCol>-->
+                      <!--                      &lt;!&ndash; 👉 Cvv code &ndash;&gt; -->
+                      <!--                      <VCol -->
+                      <!--                        cols="6" -->
+                      <!--                        md="3" -->
+                      <!--                      > -->
+                      <!--                        <AppTextField -->
+                      <!--                          v-model="cardCvv" -->
+                      <!--                          type="text" -->
+                      <!--                          label="CVV Code" -->
+                      <!--                          maxlength="3" -->
+                      <!--                        /> -->
+                      <!--                      </VCol> -->
 
                       <!-- 👉 Future Billing switch -->
                       <VCol cols="12">
@@ -479,12 +477,13 @@ const createPaymentMethodCard = async () => {
                         <div class="d-flex flex-wrap gap-4 order-sm-0 order-1">
                           <VBtn
                             variant="tonal"
+                            color="primary"
                             @click="openEditCardDialog(card)"
                           >
                             Edit
                           </VBtn>
                           <VBtn
-                            color="secondary"
+                            color="error"
                             variant="tonal"
                           >
                             Delete
@@ -508,7 +507,10 @@ const createPaymentMethodCard = async () => {
                 cols="12"
                 class="d-flex flex-wrap gap-4"
               >
-                <VBtn type="submit" @click.prevent="createPaymentMethodCard">
+                <VBtn
+                  type="submit"
+                  @click.prevent="createPaymentMethodCard"
+                >
                   Save changes
                 </VBtn>
                 <VBtn
@@ -642,53 +644,55 @@ const createPaymentMethodCard = async () => {
 
 
 <style scoped lang="scss">
-
-.cardElement{
-  font-size: 18px;
-  background-color: transparent;
-  padding: 10px 14px;
-  border-radius: 6px;
+.cardElement {
   border: 1px solid gray;
+  border-radius: 6px;
+  background-color: transparent;
+  font-size: 18px;
+  padding-block: 10px;
+  padding-inline: 14px;
 }
 
-.cardElement:focus-visible{
-  border-color: #38A6E3;
+.cardElement:focus-visible {
+  border-color: #38a6e3;
 }
 
-.cardElement:focus{
-  border-color: #38A6E3;
-  outline: #38A6E3;
+.cardElement:focus {
+  border-color: #38a6e3;
+  outline: #38a6e3;
   outline-offset: 1px;
 }
 
-.StripeElement--complete{
-  color: white !important;
-}
-.StripeElement--empty{
-  color: white !important;
-}
-.StripeElement--focus{
+.StripeElement--complete {
   color: white !important;
 }
 
-.InputElement:focus{
-  .cardElement{
-    outline: #38A6E3;
+.StripeElement--empty {
+  color: white !important;
+}
+
+.StripeElement--focus {
+  color: white !important;
+}
+
+.InputElement:focus {
+  .cardElement {
+    outline: #38a6e3;
   }
 }
 
-.ElementsApp input:focus{
-  .cardElement{
-    outline: #38A6E3;
+.ElementsApp input:focus {
+  .cardElement {
+    outline: #38a6e3;
   }
 }
 
-.ElementsApp, .ElementsApp .InputElement:focus{
-  .cardElement{
-    outline: #38A6E3;
+.ElementsApp,
+.ElementsApp .InputElement:focus {
+  .cardElement {
+    outline: #38a6e3;
   }
 }
-
 
 .pricing-dialog {
   .pricing-title {

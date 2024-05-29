@@ -12,10 +12,10 @@ import authV2MaskLight from '@images/pages/misc-mask-light.png'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import {
-alphaDashValidator, confirmedValidator,
-emailValidator, passwordValidator,
-phoneValidator,
-requiredValidator,
+  alphaDashValidator, confirmedValidator,
+  emailValidator, passwordValidator,
+  phoneValidator,
+  requiredValidator,
 } from '@validators'
 import { VForm } from 'vuetify/components/VForm'
 import { useAuthStore } from '../store/auth'
@@ -35,6 +35,10 @@ const snackbarActionColor = ref(' ')
 const otp = ref(null)
 const otpGenerated = ref(false)
 const lastInsertedId = ref('')
+const verified = ref(true)
+const verifiedMsg = ref('')
+const alertType = ref('success')
+const alertColor = ref('primary')
 
 // Router
 const route = useRoute()
@@ -64,7 +68,6 @@ const register = () => {
     lastname: lastname.value,
     email: email.value,
     phoneNumber: phoneNumber.value,
-    otp: otp.value,
     password: password.value,
     c_password: password.value,
     privacyPolicies: privacyPolicies.value,
@@ -150,8 +153,7 @@ const verifyPhoneNumber = async () => {
   errors.value.phoneNumber = validateField(phoneNumber.value, [requiredValidator, phoneValidator])
 
   if (errors.value.firstname === true && errors.value.email === true && errors.value.phoneNumber === true) {
-    console.log('All fields are valid')
-
+    
     await User.verifyPhoneNumber({
       'firstname': firstname.value,
       'lastname': lastname.value,
@@ -173,6 +175,35 @@ const verifyPhoneNumber = async () => {
       })
   } 
 }
+
+watch(otp, async newValue => { 
+  const otpValue = otp.value
+  if (otpValue.length === 6) {
+    try {
+      const res = await User.verifyCode({
+        lastInsertedId: lastInsertedId.value,
+        to: phoneNumber.value,
+        code: otp.value,
+      })
+
+      if (res.data.status) {
+        verified.value = false
+        alertType.value = 'success'
+        alertColor.value = 'primary'
+        verifiedMsg.value = res.data.message
+      }else{
+        alertType.value = 'error'
+        alertColor.value = 'error'
+        verifiedMsg.value = res.data.message
+      }
+    } catch (error) {
+      console.log(error)
+      snackbarActionColor.value = 'error'
+      snackbarMessage.value = error.response.data.errors
+      isSnackbarVisible.value = true
+    }
+  }
+})
 </script>
 
 <template>
@@ -262,18 +293,30 @@ const verifyPhoneNumber = async () => {
                   type="text"
                   placeholder="+1XXXXXXXXXXX"
                 />
-               
-                <div class="justify-end text-end">
+                <VAlert
+                  v-if="verifiedMsg"
+                  :type="alertType"
+                  variant="tonal"
+                  density="default"
+                  :color="alertColor"
+                  class="mt-3"
+                >
+                  {{ verifiedMsg }}
+                </VAlert>
+                <div
+                  v-if="verified"
+                  class="justify-end text-end"
+                >
                   <VBtn
                     variant="plain"
                     @click="verifyPhoneNumber"
                   >
-                    Verify Phone Number
+                    Verify now
                   </VBtn>
                 </div>
                 <!-- OTP -->
                 <AppTextField
-                  v-if="otpGenerated"
+                  v-if="otpGenerated && verified"
                   v-model="otp"
                   :rules="[requiredValidator]"
                   :error-messages="errors.otp"
