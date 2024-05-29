@@ -173,6 +173,11 @@ class VoiceController extends Controller
 
             $allCalls = [];
             foreach ($twilioCalls as $call) {
+
+                //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
+                //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
+                $recordingUrl = $call->sid? asset('storage/voicemail/' . $call->sid) : '-';
+
                 $allCalls[] = [
                     'call_sid' => $call->sid,
                     'teamdialer_number' => $call->from,
@@ -184,7 +189,7 @@ class VoiceController extends Controller
                     'notes' => '',
                     'rating' => '-',
                     'disposition' => '-',
-                    'record' => '-'
+                    'record' => $recordingUrl
                 ];
             }
             $startIndex = ($currentPage - 1) * $perPage;
@@ -388,6 +393,11 @@ class VoiceController extends Controller
                 $allCalls = [];
                 foreach ($twilioCalls as $call) {
                     if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
+                        
+                        //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
+                        //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
+                        $recordingUrl = $call->sid? asset('storage/voicemail/' . $call->sid) : '-';
+
                         $allCalls[] = [
                             'call_sid' => $call->sid,
                             'teamdialer_number' => $this->getTeamsDialerNumber($call),
@@ -399,7 +409,7 @@ class VoiceController extends Controller
                             'notes' => '',
                             'rating' => '-',
                             'disposition' => '-',
-                            'record' => '-'
+                            'record' => $recordingUrl
                         ];
                     }
                 }
@@ -449,6 +459,11 @@ class VoiceController extends Controller
                 $allCalls = [];
                 foreach ($twilioCalls as $call) {
                     if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
+                        
+                        //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
+                        //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
+                        $recordingUrl = $call->sid? asset('storage/voicemail/' . $call->sid) : '-';
+                        
                         $allCalls[] = [
                             'call_sid' => $call->sid,
                             'teamdialer_number' => $this->getTeamsDialerNumber($call),
@@ -460,7 +475,7 @@ class VoiceController extends Controller
                             'notes' => '',
                             'rating' => '-',
                             'disposition' => '-',
-                            'record' => '-'
+                            'record' => $recordingUrl
                         ];
                     }
                 }

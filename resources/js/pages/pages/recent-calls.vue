@@ -31,7 +31,7 @@ const dateRange = ref([new Date().toISOString(), new Date().toISOString()])
 const members = ref([])
 const member = ref(null)
 const requestData = ref(null)
-
+const isPlaying = ref(false)
 
 // headers
 const headers = [
@@ -211,6 +211,22 @@ const editItem = callSid => {
   fetchNote(callSid)
   editDialog.value = true
 }
+
+const playRecording = url => {
+  const audio = new Audio(url)
+
+  //audio.play()
+
+  if (isPlaying.value) {
+    audio.pause()
+  } else {
+    if (!audio || audio.src !== url) {
+      audio = new Audio(url)
+    }
+    audio.play()
+  }
+  isPlaying.value = !isPlaying.value
+}
 </script>
 
 <template>
@@ -367,6 +383,23 @@ const editItem = callSid => {
               </VChip>
             </template>
 
+            <!-- Play Button for Recording -->
+            <template #item.record="{ item }">
+              <div v-if="item.raw.record !== '-'">
+                <VBtn
+                  size="33"
+                  icon
+                  elevation="0"
+                  @click="playRecording(item.raw.record)"
+                >
+                  <VIcon :icon="isPlaying ? 'tabler-pause' : 'tabler-play'" />
+                </VBtn>
+              </div>
+              <div v-else>
+                {{ item.raw.record }}
+              </div>
+            </template>
+      
             <!-- pagination -->
             <template #bottom>
               <VDivider />

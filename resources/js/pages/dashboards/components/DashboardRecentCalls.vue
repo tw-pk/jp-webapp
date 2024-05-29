@@ -26,6 +26,7 @@ const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
 const form = ref()
+const isPlaying = ref(false)
 
 //const members = ['All members']
 const members = ref([])
@@ -210,6 +211,22 @@ onMounted(async () => {
       }
     })
 })
+
+const playRecording = url => {
+  const audio = new Audio(url)
+
+  //audio.play()
+
+  if (isPlaying.value) {
+    audio.pause()
+  } else {
+    if (!audio || audio.src !== url) {
+      audio = new Audio(url)
+    }
+    audio.play()
+  }
+  isPlaying.value = !isPlaying.value
+}
 </script>
 
 <template>
@@ -324,6 +341,23 @@ onMounted(async () => {
         >
           {{ item.raw.status }}
         </VChip>
+      </template>
+
+      <!-- Play Button for Recording -->
+      <template #item.record="{ item }">
+        <div v-if="item.raw.record !== '-'">
+          <VBtn
+            size="33"
+            icon
+            elevation="0"
+            @click="playRecording(item.raw.record)"
+          >
+            <VIcon :icon="isPlaying ? 'tabler-pause' : 'tabler-play'" />
+          </VBtn>
+        </div>
+        <div v-else>
+          {{ item.raw.record }}
+        </div>
       </template>
 
       <!-- pagination -->

@@ -37,6 +37,8 @@ const otpGenerated = ref(false)
 const lastInsertedId = ref('')
 const verified = ref(true)
 const verifiedMsg = ref('')
+const alertType = ref('success')
+const alertColor = ref('primary')
 
 // Router
 const route = useRoute()
@@ -186,8 +188,12 @@ watch(otp, async newValue => {
 
       if (res.data.status) {
         verified.value = false
+        alertType.value = 'success'
+        alertColor.value = 'primary'
         verifiedMsg.value = res.data.message
       }else{
+        alertType.value = 'error'
+        alertColor.value = 'error'
         verifiedMsg.value = res.data.message
       }
     } catch (error) {
@@ -289,10 +295,10 @@ watch(otp, async newValue => {
                 />
                 <VAlert
                   v-if="verifiedMsg"
-                  type="success"
+                  :type="alertType"
                   variant="tonal"
                   density="default"
-                  color="primary"
+                  :color="alertColor"
                   class="mt-3"
                 >
                   {{ verifiedMsg }}
