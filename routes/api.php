@@ -146,6 +146,9 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('team/fetch/members/teams', [TeamController::class, 'membersTeams']);
         Route::delete('team/delete/{id}', [TeamController::class, 'delete_team']);
 
+        Route::post('team/fetch/members', [TeamController::class, 'teamFetchMembers']);
+        //Route::post('team/fetch/teams', [TeamController::class, 'fetch_teams']);
+
         //fetch user phone number
         Route::post('fetch/user/numbers', [TeamController::class, 'fetch_numbers']);
         Route::post('fetch/roles', [TeamController::class, 'fetch_roles']);

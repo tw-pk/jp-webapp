@@ -13,6 +13,9 @@ export const useTeamListStore = defineStore('TeamListStore', {
       })
     },
 
+    // 👉 Fetch Member list
+    fetchMemberList(params) { return axiosIns.post('api/auth/team/fetch/members', { params }) },
+
     // 👉 Fetch Members
     fetchMembers(params) { return axiosIns.post('api/auth/team/fetch/members', { params }) },
 

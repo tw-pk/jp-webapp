@@ -253,10 +253,10 @@ class StripeController extends Controller
                 'totalDays' => Carbon::now()->daysInMonth,
                 'daysSpent' => Auth::user()->subscription('Basic')->trial_ends_at ? Carbon::now()->daysInMonth - Carbon::parse(Auth::user()->subscription('Basic')->trial_ends_at)->diffInDays(Carbon::now()->format('Y-m-d')) : Carbon::now()->daysInMonth - Carbon::parse(Auth::user()->subscription('Basic')->ends_at)->diffInDays(Carbon::now()->format('Y-m-d')),
                 'credit' => number_format(abs(Auth::user()->rawBalance()) / 100, 2),
-                'cardName' => Auth::user()->paymentMethods()->first()->billing_details['name'],
-                'cardExpiryDate' => Auth::user()->paymentMethods()->first()->card['exp_month'] . "/" . Auth::user()->paymentMethods()->first()->card['exp_year'],
-                'cardLastFour' => Auth::user()->paymentMethods()->first()->card['last4'],
-                'cardBrand' => Auth::user()->paymentMethods()->first()->card['brand']
+                'cardName' => Auth::user()->paymentMethods()->first()?->billing_details?->name,
+                'cardExpiryDate' => Auth::user()->paymentMethods()->first()?->card?->exp_month . "/" . Auth::user()->paymentMethods()->first()?->card?->exp_year,
+                'cardLastFour' => Auth::user()->paymentMethods()->first()?->card?->last4,
+                'cardBrand' => Auth::user()->paymentMethods()->first()?->card?->brand
             ];
             return response()->json([
                 'status' => true,
@@ -336,7 +336,6 @@ class StripeController extends Controller
     public function paymentMethods()
     {
         $paymentMethods = [];
-
         foreach (Auth::user()->paymentMethods() as $paymentMethod) {
             $paymentMethods[] = [
                 'id' => encrypt($paymentMethod->id),
@@ -345,7 +344,7 @@ class StripeController extends Controller
                 'cardEmail' => $paymentMethod->billing_details->email,
                 'brand' => $paymentMethod->card->brand,
                 'cardExpiryDate' => $paymentMethod->card->exp_month . "/" . $paymentMethod->card->exp_year,
-                'isDefault' => Auth::user()->defaultPaymentMethod()?->id === $paymentMethod->id
+                'isDefault' => Auth::user()->defaultPaymentMethod()?->pmId === $paymentMethod->id
             ];
         }
         return response($paymentMethods);
