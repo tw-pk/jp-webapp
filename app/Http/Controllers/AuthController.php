@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\URL;
 use Spatie\Permission\Models\Role;
 use App\Models\Invitation;
+use Illuminate\Support\Facades\Log;
 use Str;
 use Symfony\Component\HttpKernel\Profiler\Profile;
 use App\Services\TwoFactorAuthenticationService;
@@ -302,7 +303,7 @@ class AuthController extends Controller
         $user = ($query = User::query());
 
         $user = $user->where($query->qualifyColumn('email'), $request->input('email'))->first();
-
+        
         if (!$user || !$user->email) {
             return response()->json([
                 'status' => false,
@@ -480,7 +481,8 @@ class AuthController extends Controller
 
         $token_created_at = Carbon::parse($tokenData->created_at)->addMinutes(60)->format('Y-m-d h:i a');
         $date_now = Carbon::now()->addMinutes(60)->format('Y-m-d h:i a');
-        if ($token_created_at < $date_now) {
+
+        if ($token_created_at > $date_now) {
             // Token has expired, handle the error
             return response()->json(['error' => 'Password reset token has expired'], 400);
         }
@@ -589,6 +591,5 @@ class AuthController extends Controller
             'is'.$roleName => Auth::user()->hasRole([$roleName])
         ]);
     }
-
 
 }

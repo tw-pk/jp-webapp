@@ -86,14 +86,15 @@ const fetchCallForwarding = () => {
     phone_number: props.phoneNumber,
   }).then(response => {
     const data = response.data
-
-    fwd_incoming_call.value = data.phoneSetting.fwd_incoming_call
-    unanswered_fwd_call.value = data.phoneSetting.unanswered_fwd_call
-    ringOrder.value = data.phoneSetting.ring_order
-    if (data.phoneSetting.ring_order_value !== null && Array.isArray(data.phoneSetting.ring_order_value)) {
-      selectedUsers.value = data.phoneSetting.ring_order_value
-    } 
-    assignUsers.value = data.assignUsers
+    if(data.phoneSetting){
+      fwd_incoming_call.value = data?.phoneSetting?.fwd_incoming_call
+      unanswered_fwd_call.value = data?.phoneSetting?.unanswered_fwd_call
+      ringOrder.value = data?.phoneSetting?.ring_order
+      if (data?.phoneSetting?.ring_order_value !== null && Array.isArray(data?.phoneSetting.ring_order_value)) {
+        selectedUsers.value = data?.phoneSetting.ring_order_value
+      }
+    }
+    assignUsers.value = data?.assignUsers
   }).catch(error => {
     console.error(error)
   })

@@ -27,6 +27,7 @@ const resetPassword = () => {
   User.sendForgotPasswordMail({
     email: email.value,
   }).then(res => {
+    email.value = ''
     isDisabled.value = false
     if(res.data.status){
       alertMessage.value = 'Success! ' + res.data.message
@@ -50,7 +51,6 @@ const submitResetPassword = () => {
     }else{
       isDisabled.value = false
     }
-      
   })
 }
 </script>

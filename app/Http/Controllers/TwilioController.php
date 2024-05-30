@@ -35,7 +35,7 @@ class TwilioController extends Controller
 
     public function retrieveToken(){
         $capability = new ClientToken(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
-        $capability->allowClientOutgoing(env('TWILIO_VOICE_APP_SID'));
+        $capability->allowClientOutgoing(config('app.TWILIO_VOICE_APP_SID'));
         $client_name = Auth::user()->firstname ? Auth::user()->firstname :'Agent';
         $capability->allowClientIncoming($client_name);
         $token = $capability->generateToken();
@@ -58,11 +58,10 @@ class TwilioController extends Controller
 
     public function incomingCall(Request $request){
 
+        $response = new VoiceResponse();
         Log::info('Incoming Call Response: ');
         Log::info($request->all());
-    
-        $response = new VoiceResponse();
-        // Answer the incoming call
+
 
         $UserNumber = UserNumber::where('phone_number', $request->Called)->first();
         if (!empty($UserNumber)) {
@@ -101,9 +100,8 @@ class TwilioController extends Controller
             $dial->client($client_name);
             $dial->number($number);
         }
-
         // Answer the incoming call
-        $response->say('Thanks! Call ended....');
+        $response->say('Call ended....');
 
         // Render the TwiML response
         echo $response;

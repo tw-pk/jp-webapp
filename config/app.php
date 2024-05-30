@@ -71,11 +71,11 @@ return [
     */
 
     'TWILIO_CLIENT_ID' => env('TWILIO_CLIENT_ID'),
-
     'TWILIO_AUTH_TOKEN' => env('TWILIO_AUTH_TOKEN'),
-
+    'TWILIO_VOICE_APP_SID' => env('TWILIO_VOICE_APP_SID'),
     'TWILIO_POLICY_SID' => env('TWILIO_POLICY_SID'),
     'TWILIO_PRIMARY_USER_SID' => env('TWILIO_PRIMARY_USER_SID'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -87,7 +87,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('TIME_ZONE', 'UTC'),
 
     /*
     |--------------------------------------------------------------------------

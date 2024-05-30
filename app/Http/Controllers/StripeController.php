@@ -38,10 +38,8 @@ class StripeController extends Controller
             ->checkout();
     }
 
-    /**
-     * @throws ApiErrorException
-     */
-    public function createCheckoutSession(Request $request)
+    // create trial subscription
+    public function createCheckoutSession()
     {
         $stripe_price_id = Plans::where('name', 'Basic')->first()->stripe_price;
 
@@ -56,6 +54,34 @@ class StripeController extends Controller
             'checkout_url' => $checkout->url
         ]);
     }
+
+    // create subscription
+    /**
+     * @throws ApiErrorException
+     */
+    public function createSubscriptionCheckout()
+    {
+        // check if subscription trial period not expired then return nothing else return the checkout url
+        if(!Auth::user()->subscription('Basic')->hasExpiredTrial()){
+            return response()->json([
+                'status' => true,
+                'message' => 'Subscription is in trial period'
+            ]);
+        }
+
+        $stripe_price_id = Plans::where('name', 'Basic')->first()->stripe_price;
+
+        $checkout = Auth::user()->newSubscription('Basic', $stripe_price_id)
+            ->checkout([
+                "success_url" => config('app.url') . "/dashboards",
+                "cancel_url" => config('app.url') . "/dashboards"
+            ]);
+
+        return response()->json([
+            'checkout_url' => $checkout->url
+        ]);
+    }
+
 
     /**
      * @throws ApiErrorException
@@ -191,20 +217,17 @@ class StripeController extends Controller
     public function checkUserSubscription()
     {
         if (!is_null(Auth::user()->stripe_id)) {
-            if (Auth::user()->subscription('Basic')) {
-                //            Auth::user()->newSubscription('Basic', Plans::where('name', '=', 'Basic')->first()->stripe_price)->add();
-                if (Auth::user()->subscription('Basic')->onTrial() || Auth::user()->subscribedToPrice(Plans::where('name', '=', 'Basic')->first()->stripe_price)) {
-                    return response()->json([
-                        'status' => true,
-                        'message' => 'User is subscribed to Basic Plan'
-                    ]);
-                } else {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Subscription has ended'
-                    ]);
-                }
-            } else {
+            if (Auth::user()->subscription('Basic')->onTrial()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'User is subscribed to Basic Plan and is on Trial'
+                ]);
+            } else if(Auth::user()->subscription('Basic')->active()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'User is subscribed to Basic Plan'
+                ]);
+            }else {
                 return response()->json([
                     'status' => false,
                     'message' => 'User is not subscribed to any subscription'
