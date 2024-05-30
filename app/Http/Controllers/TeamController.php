@@ -167,6 +167,33 @@ class TeamController extends Controller
         ]);
     }
 
+    public function teamFetchMembers()
+    {
+        $inviteMembers = Invitation::with(['invitationAccept' => function ($query) {
+            $query->select('id', 'email');
+        }, 'invitationAccept.profile' => function ($query) {
+            $query->select('user_id', 'avatar');
+        }])
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email')
+            ->where('user_id', Auth::user()->id)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $inviteMembers->map(function ($item) {
+            $item->fullname = $item->firstname . ' ' . $item->lastname;
+            if (!empty($item->invitationAccept->profile->avatar)) {
+                $item->avatar_url = asset('storage/avatars/' .$item->invitationAccept->profile->avatar);
+            } else {
+                $item->avatar_url = asset('images/avatars/avatar-0.png');
+            }
+            return $item;
+        });
+        return response()->json([
+            'message' => 'Members fetched successfully',
+            'inviteMembers' => $inviteMembers,
+        ]);
+    }
+
     public function delete_team($id)
     {
         $teamId = $id;
