@@ -153,7 +153,7 @@ class TeamController extends Controller
 
         $inviteMembers->map(function ($item) {
             $item->fullname = $item->firstname . ' ' . $item->lastname;
-            if (!empty($item->invitationAccept->profile->avatar)) {
+            if (!empty($item->invitationAccept?->profile?->avatar)) {
                 $item->avatar_url = asset('storage/avatars/' .$item->invitationAccept->profile->avatar);
             } else {
                 $item->avatar_url = asset('images/avatars/avatar-0.png');
