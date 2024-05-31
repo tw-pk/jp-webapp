@@ -303,16 +303,20 @@ class StripeController extends Controller
         $request->validate([
             'pmId' => 'required',
         ]);
-
+       
         $result = Auth::user()->addPaymentMethod($request->pmId);
         if ($result->id) {
             $payment_method = new \App\Models\PaymentMethod();
             $payment_method->user_id = Auth::user()->id;
             $payment_method->pmId = $result->id;
-            $payment_method->card_name = $result->card->name;
-            $payment_method->card_email = $result->card->email;
-            $payment_method->expiry_year = $result->card->exp_year;
-            $payment_method->expiry_month = $result->card->exp_month;
+            if($request->isCardSaveBilling){
+                $payment_method->card_brand = $result?->card?->brand;
+                $payment_method->card_name = $result?->billing_details?->name;
+                $payment_method->card_email = Auth::user()->email;
+                $payment_method->card_number = $result?->card?->last4;
+                $payment_method->expiry_month = $result?->card?->exp_month;
+                $payment_method->expiry_year = $result?->card?->exp_year;
+            }
             $payment_method->save();
 
             return response()->json([

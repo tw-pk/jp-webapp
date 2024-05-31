@@ -87,11 +87,17 @@ const key = import.meta.env.VITE_STRIPE_KEY
 const noDefaultMethod = ref(true)
 
 const resetPaymentForm = () => {
-  cardNumber.value = ''
-  cardName.value = ''
-  cardExpiryDate.value = ''
-  cardCvv.value = 0X0
-  selectedPaymentMethod.value = 'credit-debit-atm-card'
+  // cardNumber.value = ''
+  // cardName.value = ''
+  // cardExpiryDate.value = ''
+  // cardCvv.value = 0X0
+  // selectedPaymentMethod.value = 'credit-debit-atm-card'
+  isCardDetailSaveBilling.value = false
+  cardError.value = ''
+
+  const elements = elms.value.elements
+
+  elements.getElement('card').clear()     
 }
 
 onMounted(async() => {
@@ -150,17 +156,20 @@ const createPaymentMethod = async() => {
 const createPaymentMethodCard = async () => {
   const cardNumberElement = cardNumber.value.stripeElement
 
+  const userData = JSON.parse(localStorage.getItem('userData') || 'null')
+  const userCardName = `${userData?.firstname || ''} ${userData?.lastname || ''}`.trim()
+
   elms.value.instance.createPaymentMethod({
     type: 'card',
     card: cardNumberElement,
     billing_details: {
-      name: 'HK 1',
+      name: userCardName,
     },
   }).then( async result => {
-    console.log(result)
-
+  
     const { data } = await axiosIns.post('api/auth/stripe/payment-method/store', {
       pmId: result.paymentMethod.id,
+      isCardSaveBilling: isCardDetailSaveBilling.value,
     })
 
     console.log(data)
