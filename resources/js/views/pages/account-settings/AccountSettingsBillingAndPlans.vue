@@ -38,6 +38,7 @@ const countryList = [
 ]
 
 const cardRef = ref()
+const cardError = ref('')
 
 //
 // // Replace 'your-publishable-key' with your actual Stripe publishable API key
@@ -50,12 +51,12 @@ const appearance = {
 
 const style = {
   base: {
-    color: '#FFFFFF99',
+    color: '#777581',
     fontFamily: '"Public Sans", sans-serif, -apple-system, blinkmacsystemfont, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
     fontSmoothing: 'antialiased',
     fontSize: '15px',
     '::placeholder': {
-      color: '#FFFFFF99',
+      color: '#777581',
     },
   },
   invalid: {
@@ -165,6 +166,14 @@ const createPaymentMethodCard = async () => {
     console.log(data)
   })
 }
+
+const handleChange = event => {
+  if (event.error) {
+    cardError.value = event.error.message
+  } else {
+    cardError.value = ''
+  }
+}
 </script>
 
 <template>
@@ -260,12 +269,12 @@ const createPaymentMethodCard = async () => {
 
             <VCol cols="12">
               <div class="d-flex flex-wrap gap-y-4">
-                <!--                <VBtn -->
-                <!--                  class="me-3" -->
-                <!--                  @click="isPricingPlanDialogVisible = true" -->
-                <!--                > -->
-                <!--                  upgrade plan -->
-                <!--                </VBtn> -->
+                <VBtn 
+                  class="me-3" 
+                  @click="isPricingPlanDialogVisible = true" 
+                > 
+                  upgrade plan 
+                </VBtn> 
 
                 <VBtn
                   color="error"
@@ -323,16 +332,21 @@ const createPaymentMethodCard = async () => {
                           v-slot="{ elements }"
                           :stripe-key="key"
                         >
-                          <VCol cols="12">
-                            <StripeElement
-                              ref="cardNumber"
-                              tabindex="0"
-                              class="cardElement"
-                              type="card"
-                              :elements="elements"
-                              :options="elementsOptions"
-                            />
-                          </VCol>
+                          <StripeElement
+                            ref="cardNumber"
+                            tabindex="0"
+                            class="cardElement"
+                            type="card"
+                            :elements="elements"
+                            :options="elementsOptions"
+                            @change="handleChange"
+                          />
+                          <p
+                            v-if="cardError"
+                            class="error"
+                          >
+                            {{ cardError }}
+                          </p>
 
                           <!--                      <VRow class="pa-3"> -->
                           <!--                        &lt;!&ndash; 👉 Name &ndash;&gt; -->
@@ -528,112 +542,113 @@ const createPaymentMethodCard = async () => {
     </VCol>
 
     <!-- 👉 Billing Address -->
-    <VCol cols="12">
+    <!--
+      <VCol cols="12">
       <VCard title="Billing Address">
-        <VCardText>
-          <VForm @submit.prevent="() => {}">
-            <VRow>
-              <!-- 👉 Company name -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="Company Name" />
-              </VCol>
+      <VCardText>
+      <VForm @submit.prevent="() => {}">
+      <VRow>
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="Company Name" />
+      </VCol>
 
-              <!-- 👉 Billing Email -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="Billing Email" />
-              </VCol>
+             
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="Billing Email" />
+      </VCol>
 
-              <!-- 👉 Tax ID -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="Tax ID" />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="Tax ID" />
+      </VCol>
 
-              <!-- 👉 Vat Number -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="VAT Number" />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="VAT Number" />
+      </VCol>
 
-              <!-- 👉 Mobile -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  dirty
-                  label="Phone Number"
-                  type="number"
-                  prefix="US (+1)"
-                />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField
+      dirty
+      label="Phone Number"
+      type="number"
+      prefix="US (+1)"
+      />
+      </VCol>
 
-              <!-- 👉 Country -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppSelect
-                  label="Country"
-                  :items="countryList"
-                />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppSelect
+      label="Country"
+      :items="countryList"
+      />
+      </VCol>
 
-              <!-- 👉 Billing Address -->
-              <VCol cols="12">
-                <AppTextField label="Billing Address" />
-              </VCol>
+              
+      <VCol cols="12">
+      <AppTextField label="Billing Address" />
+      </VCol>
 
-              <!-- 👉 State -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="State" />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="State" />
+      </VCol>
 
-              <!-- 👉 Zip Code -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  label="Zip Code"
-                  type="number"
-                />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField
+      label="Zip Code"
+      type="number"
+      />
+      </VCol>
 
-              <!-- 👉 Actions Button -->
-              <VCol
-                cols="12"
-                class="d-flex flex-wrap gap-4"
-              >
-                <VBtn type="submit">
-                  Save changes
-                </VBtn>
-                <VBtn
-                  type="reset"
-                  color="secondary"
-                  variant="tonal"
-                >
-                  Reset
-                </VBtn>
-              </VCol>
-            </VRow>
-          </VForm>
-        </VCardText>
+              
+      <VCol
+      cols="12"
+      class="d-flex flex-wrap gap-4"
+      >
+      <VBtn type="submit">
+      Save changes
+      </VBtn>
+      <VBtn
+      type="reset"
+      color="secondary"
+      variant="tonal"
+      >
+      Reset
+      </VBtn>
+      </VCol>
+      </VRow>
+      </VForm>
+      </VCardText>
       </VCard>
-    </VCol>
+      </VCol>
+    -->
 
     <!-- 👉 Billing History -->
     <VCol cols="12">
@@ -703,5 +718,11 @@ const createPaymentMethodCard = async () => {
     border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     box-shadow: none;
   }
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-block-start: 5px;
 }
 </style>

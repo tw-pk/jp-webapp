@@ -252,12 +252,13 @@ class StripeController extends Controller
                 'price' => "$" . number_format(Plans::where('name', 'Basic')->first()->price, 2),
                 'totalDays' => Carbon::now()->daysInMonth,
                 'daysSpent' => Auth::user()->subscription('Basic')->trial_ends_at ? Carbon::now()->daysInMonth - Carbon::parse(Auth::user()->subscription('Basic')->trial_ends_at)->diffInDays(Carbon::now()->format('Y-m-d')) : Carbon::now()->daysInMonth - Carbon::parse(Auth::user()->subscription('Basic')->ends_at)->diffInDays(Carbon::now()->format('Y-m-d')),
-                'credit' => number_format(abs(Auth::user()->rawBalance()) / 100, 2),
+                'credit' => number_format(Auth::user()?->credit?->credit, 2),
                 'cardName' => Auth::user()->paymentMethods()->first()?->billing_details?->name,
                 'cardExpiryDate' => Auth::user()->paymentMethods()->first()?->card?->exp_month . "/" . Auth::user()->paymentMethods()->first()?->card?->exp_year,
                 'cardLastFour' => Auth::user()->paymentMethods()->first()?->card?->last4,
                 'cardBrand' => Auth::user()->paymentMethods()->first()?->card?->brand
             ];
+
             return response()->json([
                 'status' => true,
                 'subscription' => $subscription
