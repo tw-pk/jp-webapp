@@ -354,4 +354,16 @@ class StripeController extends Controller
         }
         return response($paymentMethods);
     }
+
+    public function deletePaymentMethod($pmId)
+    {
+        $paymentMethodId = decrypt($pmId);
+        $user = Auth::user();
+        $user->deletePaymentMethod($paymentMethodId);
+        $user->userPaymentMethods()->where('pmId', $paymentMethodId)->delete();
+
+        return response()->json(['message' => 'Payment method deleted']);
+    }
+
+
 }

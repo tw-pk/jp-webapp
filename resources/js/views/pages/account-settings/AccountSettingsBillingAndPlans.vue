@@ -13,6 +13,9 @@ const isPricingPlanDialogVisible = ref(false)
 const isConfirmDialogVisible = ref(false)
 const isCardEditDialogVisible = ref(false)
 const isCardDetailSaveBilling = ref(false)
+const currentCardDetails = ref()
+const pmIdToDelete = ref(null)
+const isConfirmDialogOpen = ref(false)
 
 const userPlan = ref({
   name: '',
@@ -70,13 +73,6 @@ const elementsOptions = ref({
   style: style,
 })
 
-const currentCardDetails = ref()
-
-const openEditCardDialog = cardDetails => {
-  currentCardDetails.value = cardDetails
-  isCardEditDialogVisible.value = true
-}
-
 const cardNumber = ref()
 const cardName = ref('')
 const cardExpiryDate = ref('')
@@ -115,6 +111,7 @@ onMounted(async() => {
       creditCards.value = []
       for (var i = 0; i < res.data.length; i++){
         creditCards.value.push({
+          pmId: res.data[i].id,
           name: res.data[i].cardName,
           number: '',
           expiry: res.data[i].cardExpiryDate,
@@ -144,6 +141,27 @@ onMounted(async() => {
     })
 })
 
+const openEditCardDialog = cardDetails => {
+  currentCardDetails.value = cardDetails
+  isCardEditDialogVisible.value = true
+}
+
+const confirmDelete = async pmId => {
+  pmIdToDelete.value = pmId
+  isConfirmDialogOpen.value = true
+}
+
+const handleConfirmation = async action => {
+  if(action===true && pmIdToDelete.value){
+    try {
+      await axiosIns.delete(`api/auth/stripe/payment-method/${pmIdToDelete.value}`)
+      pmIdToDelete.value = null
+    } catch (error) {
+      console.log('Error deleting card:', error)
+    }
+  }
+}
+
 const createPaymentMethod = async() => {
   const { data } = await axiosIns.post('api/auth/stripe/payment-method/store', {
     cardName: cardName.value,
@@ -156,6 +174,10 @@ const createPaymentMethod = async() => {
 const createPaymentMethodCard = async () => {
   const cardNumberElement = cardNumber.value.stripeElement
 
+  console.log('cardNumberElement cardNumberElement')
+  console.log(cardNumberElement)
+  console.log(cardNumber.value)
+  
   const userData = JSON.parse(localStorage.getItem('userData') || 'null')
   const userCardName = `${userData?.firstname || ''} ${userData?.lastname || ''}`.trim()
 
@@ -508,6 +530,7 @@ const handleChange = event => {
                           <VBtn
                             color="error"
                             variant="tonal"
+                            @click="confirmDelete(card.pmId)"
                           >
                             Delete
                           </VBtn>
@@ -663,6 +686,16 @@ const handleChange = event => {
     <VCol cols="12">
       <BillingHistoryTable />
     </VCol>
+    <!-- Confirm Dialog -->
+    <ConfirmDialog
+      v-model:isDialogVisible="isConfirmDialogOpen"
+      confirmation-question="Are you sure you want to delete your card?"
+      confirm-title="Deleted!"
+      confirm-msg="Your card has been deleted successfully."
+      cancel-title="Cancelled"
+      cancel-msg="Card deletion cancelled!"
+      @confirm="handleConfirmation"
+    />
   </VRow>
 </template>
 

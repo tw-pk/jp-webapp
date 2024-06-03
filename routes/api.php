@@ -217,6 +217,7 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('fetch/credit-payment', [CreditController::class, 'fetch_credit_payment']);
         Route::post('add/credit-payment', [CreditController::class, 'add_credit_payment']);
         Route::post('stripe/payment-method/store', [StripeController::class, 'createPaymentMethod']);
+        Route::delete('stripe/payment-method/{id}', [StripeController::class, 'deletePaymentMethod']);
 
         //Dialer Routes
         Route::post('fetch/dialer/contacts', [PhoneController::class, 'dialer_contacts']);
