@@ -207,12 +207,15 @@ const createPaymentMethodCard = async () => {
     console.log('datadatadata data')
     console.log(data)
     fetchPaymentMethods()
+    isDisabled.value = false
+    isLoading.value = false
   })
     .catch(error => {
       console.log('An error occurred:', error)
+      isDisabled.value = false
+      isLoading.value = false
     })
-  isDisabled.value = false
-  isLoading.value = false
+  
 }
 
 const handleChange = event => {
@@ -571,7 +574,7 @@ const handleChange = event => {
                 class="d-flex flex-wrap gap-4"
               >
                 <VBtn
-                  type="submit"
+                 
                   :disabled="isDisabled"
                   :loading="isLoading"
                   @click.prevent="createPaymentMethodCard"
