@@ -16,6 +16,8 @@ const isCardDetailSaveBilling = ref(false)
 const currentCardDetails = ref()
 const pmIdToDelete = ref(null)
 const isConfirmDialogOpen = ref(false)
+const isDisabled = ref(false)
+const isLoading = ref(false)
 
 const userPlan = ref({
   name: '',
@@ -106,24 +108,8 @@ onMounted(async() => {
       console.log(error)
     })
 
-  Subscription.paymentMethods()
-    .then(res => {
-      creditCards.value = []
-      for (var i = 0; i < res.data.length; i++){
-        creditCards.value.push({
-          pmId: res.data[i].id,
-          name: res.data[i].cardName,
-          number: '',
-          expiry: res.data[i].cardExpiryDate,
-          isPrimary: res.data[i].isDefault,
-          type: res.data[i].brand === 'visa' ? 'visa' : 'mastercard',
-          cvv: '',
-          image: res.data[i].brand === 'visa' ? visa : mastercard,
-          cardLastFour: res.data[i].cardLastFour,
-        })
-      }
-    })
-  
+  fetchPaymentMethods()
+
   Subscription.plan()
     .then(res => {
       if(res.data.status){
@@ -141,6 +127,26 @@ onMounted(async() => {
     })
 })
 
+const fetchPaymentMethods = async () => {
+  Subscription.paymentMethods()
+    .then(res => {
+      creditCards.value = []
+      for (var i = 0; i < res.data.length; i++){
+        creditCards.value.push({
+          pmId: res.data[i].id,
+          name: res.data[i].cardName,
+          number: '',
+          expiry: res.data[i].cardExpiryDate,
+          isPrimary: res.data[i].isDefault,
+          type: res.data[i].brand === 'visa' ? 'visa' : 'mastercard',
+          cvv: '',
+          image: res.data[i].brand === 'visa' ? visa : mastercard,
+          cardLastFour: res.data[i].cardLastFour,
+        })
+      }
+    })
+}
+
 const openEditCardDialog = cardDetails => {
   currentCardDetails.value = cardDetails
   isCardEditDialogVisible.value = true
@@ -156,6 +162,7 @@ const handleConfirmation = async action => {
     try {
       await axiosIns.delete(`api/auth/stripe/payment-method/${pmIdToDelete.value}`)
       pmIdToDelete.value = null
+      fetchPaymentMethods()
     } catch (error) {
       console.log('Error deleting card:', error)
     }
@@ -172,6 +179,9 @@ const createPaymentMethod = async() => {
 }
 
 const createPaymentMethodCard = async () => {
+  isDisabled.value = true
+  isLoading.value = true
+ 
   const cardNumberElement = cardNumber.value.stripeElement
 
   console.log('cardNumberElement cardNumberElement')
@@ -194,8 +204,15 @@ const createPaymentMethodCard = async () => {
       isCardSaveBilling: isCardDetailSaveBilling.value,
     })
 
+    console.log('datadatadata data')
     console.log(data)
+    fetchPaymentMethods()
   })
+    .catch(error => {
+      console.log('An error occurred:', error)
+    })
+  isDisabled.value = false
+  isLoading.value = false
 }
 
 const handleChange = event => {
@@ -555,6 +572,8 @@ const handleChange = event => {
               >
                 <VBtn
                   type="submit"
+                  :disabled="isDisabled"
+                  :loading="isLoading"
                   @click.prevent="createPaymentMethodCard"
                 >
                   Save changes
