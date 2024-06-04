@@ -574,7 +574,7 @@ const handleChange = event => {
                 class="d-flex flex-wrap gap-4"
               >
                 <VBtn
-                 
+                  type="submit"
                   :disabled="isDisabled"
                   :loading="isLoading"
                   @click.prevent="createPaymentMethodCard"
