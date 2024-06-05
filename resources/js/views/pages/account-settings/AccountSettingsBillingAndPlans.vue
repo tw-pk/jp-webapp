@@ -135,8 +135,9 @@ const fetchPaymentMethods = async () => {
         creditCards.value.push({
           pmId: res.data[i].id,
           name: res.data[i].cardName,
-          number: '',
+          number: '**** **** **** '+res.data[i].cardLastFour,
           expiry: res.data[i].cardExpiryDate,
+          postalCode: res.data[i].postalCode,
           isPrimary: res.data[i].isDefault,
           type: res.data[i].brand === 'visa' ? 'visa' : 'mastercard',
           cvv: '',
@@ -176,6 +177,9 @@ const createPaymentMethod = async() => {
     cardNumber: cardNumber.value,
     cardCvv: cardCvv.value,
   })
+
+  console.log('datadatadata datadata12345678')
+  console.log(data)
 }
 
 const createPaymentMethodCard = async () => {
@@ -184,18 +188,16 @@ const createPaymentMethodCard = async () => {
  
   const cardNumberElement = cardNumber.value.stripeElement
 
-  console.log('cardNumberElement cardNumberElement')
-  console.log(cardNumberElement)
-  console.log(cardNumber.value)
-  
   const userData = JSON.parse(localStorage.getItem('userData') || 'null')
   const userCardName = `${userData?.firstname || ''} ${userData?.lastname || ''}`.trim()
-
+  const userCardEmail = `${userData?.email ?? ''}`.trim()
+  
   elms.value.instance.createPaymentMethod({
     type: 'card',
     card: cardNumberElement,
     billing_details: {
       name: userCardName,
+      email: userCardEmail,
     },
   }).then( async result => {
   
@@ -204,11 +206,12 @@ const createPaymentMethodCard = async () => {
       isCardSaveBilling: isCardDetailSaveBilling.value,
     })
 
-    console.log('datadatadata data')
+    console.log('data data data data')
     console.log(data)
-    fetchPaymentMethods()
     isDisabled.value = false
-    isLoading.value = false
+    isLoading.value = false 
+    fetchPaymentMethods()
+    resetPaymentForm()
   })
     .catch(error => {
       console.log('An error occurred:', error)
@@ -216,6 +219,26 @@ const createPaymentMethodCard = async () => {
       isLoading.value = false
     })
   
+}
+
+const updatePaymentMethod = async cardDetails => {
+  console.log('Submitted card details:', cardDetails)
+
+  try {
+    const response = await axiosIns.post('api/auth/stripe/payment-method/update', {
+      pmId: cardDetails.pmId,
+      expiryDate: cardDetails.expiry,
+      cardName: cardDetails.name,
+      postalCode: cardDetails.postalCode,
+      isPrimary: cardDetails.isPrimary,
+    })
+
+    console.log('Response:', response.data)
+    isConfirmDialogOpen.value = false
+    fetchPaymentMethods()
+  } catch (error) {
+    console.error('Error submitting card details:', error.response.data)
+  }
 }
 
 const handleChange = event => {
@@ -565,6 +588,7 @@ const handleChange = event => {
                 <CardAddEditDialog
                   v-model:isDialogVisible="isCardEditDialogVisible"
                   :card-details="currentCardDetails"
+                  @submit="updatePaymentMethod"
                 />
               </VCol>
 

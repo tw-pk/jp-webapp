@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Stripe\Checkout\Session;
+use Laravel\Cashier\Cashier;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentMethod;
 use Stripe\Product;
@@ -331,6 +332,54 @@ class StripeController extends Controller
         }
     }
 
+    public function updatePaymentMethod(Request $request)
+    {
+        $request->validate([
+            'pmId' => 'required|string',
+            'expiryDate' => 'required|string',
+            'cardName' => 'required|string',
+            'postalCode' => 'required|string',
+            'isPrimary' => 'required|boolean',
+        ]);
+       
+        $paymentMethodId = decrypt($request->pmId);
+        $user = Auth::user();
+        
+        $stripeCustomerId = $user->stripe_id;
+        if (!$stripeCustomerId) {
+            return response()->json(['error' => 'No Stripe customer ID found.'], 404);
+        }
+
+        [$expiryMonth, $expiryYear] = explode('/', $request->expiryDate);
+        $stripe = Cashier::stripe();
+        try {
+            $paymentMethod = $stripe->paymentMethods->retrieve($paymentMethodId);
+            $paymentMethod->card->exp_month = $expiryMonth;
+            $paymentMethod->card->exp_year = $expiryYear;
+            $paymentMethod->billing_details->name = $request->cardName;
+            $paymentMethod->billing_details->address->postal_code = $request->postalCode;
+            $paymentMethod->save();
+
+            $payment_method = $user->userPaymentMethods()->where('pmId', $paymentMethodId)->first();
+            if(!empty($payment_method->card_name)){
+                $payment_method->card_name = $request->cardName;
+                $payment_method->expiry_month = $expiryMonth;
+                $payment_method->expiry_year = $expiryYear;
+            }
+
+            if ($request->isPrimary) {
+                $user->updateDefaultPaymentMethod($paymentMethodId);
+                $payment_method->default = $request->isPrimary;
+                $user->userPaymentMethods()->where('pmId', '!=', $paymentMethodId)->update(['default' => 0]);
+            }
+            $payment_method->save();
+
+            return response()->json(['message' => 'Card updated successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function defaultPaymentMethod()
     {
         return response()->json([
@@ -347,6 +396,7 @@ class StripeController extends Controller
                 'cardLastFour' => $paymentMethod->card->last4,
                 'cardName' => $paymentMethod->billing_details->name,
                 'cardEmail' => $paymentMethod->billing_details->email,
+                'postalCode' => $paymentMethod->billing_details?->address?->postal_code,
                 'brand' => $paymentMethod->card->brand,
                 'cardExpiryDate' => $paymentMethod->card->exp_month . "/" . $paymentMethod->card->exp_year,
                 'isDefault' => Auth::user()->defaultPaymentMethod()?->pmId === $paymentMethod->id
