@@ -374,9 +374,16 @@ class StripeController extends Controller
             }
             $payment_method->save();
 
-            return response()->json(['message' => 'Card updated successfully.'], 200);
+            return response()->json([
+                'status' => true,
+                'message' => 'Card updated successfully.'
+            ]);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'status' => false,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 

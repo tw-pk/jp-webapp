@@ -206,8 +206,6 @@ const createPaymentMethodCard = async () => {
       isCardSaveBilling: isCardDetailSaveBilling.value,
     })
 
-    console.log('data data data data')
-    console.log(data)
     isDisabled.value = false
     isLoading.value = false 
     fetchPaymentMethods()
@@ -222,8 +220,6 @@ const createPaymentMethodCard = async () => {
 }
 
 const updatePaymentMethod = async cardDetails => {
-  console.log('Submitted card details:', cardDetails)
-
   try {
     const response = await axiosIns.post('api/auth/stripe/payment-method/update', {
       pmId: cardDetails.pmId,
@@ -233,9 +229,14 @@ const updatePaymentMethod = async cardDetails => {
       isPrimary: cardDetails.isPrimary,
     })
 
-    console.log('Response:', response.data)
-    isConfirmDialogOpen.value = false
-    fetchPaymentMethods()
+
+    if(response.data.status){
+      isCardEditDialogVisible.value = false
+      fetchPaymentMethods()
+    }else{
+      console.log(response.data)
+    }
+    
   } catch (error) {
     console.error('Error submitting card details:', error.response.data)
   }
