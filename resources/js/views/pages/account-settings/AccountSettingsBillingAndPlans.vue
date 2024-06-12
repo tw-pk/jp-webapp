@@ -178,8 +178,6 @@ const createPaymentMethod = async() => {
     cardCvv: cardCvv.value,
   })
 
-  console.log('datadatadata datadata12345678')
-  console.log(data)
 }
 
 const createPaymentMethodCard = async () => {

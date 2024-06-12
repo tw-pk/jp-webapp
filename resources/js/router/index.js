@@ -33,6 +33,14 @@ const router = createRouter({
         return { name: 'verify-email' }
       },
     },
+    
+    {
+      path: '/verify-phone',
+      redirect: to => {
+        return { name: 'verify-phone' }
+      },
+    },
+
     {
       path: '/select/available-numbers',
       redirect: to => {
