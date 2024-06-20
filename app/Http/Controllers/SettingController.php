@@ -80,6 +80,7 @@ class SettingController extends Controller
                 [
                     'user_id' => Auth::user()->id,
                     'phone_number' => $request->phone_number,
+                    'external_phone_number' => $request->externalPhoneNumber,
                     'fwd_incoming_call' => $request->fwd_incoming_call,
                     'unanswered_fwd_call' => $request->unanswered_fwd_call,
                     'ring_order' => $request->ringOrder,

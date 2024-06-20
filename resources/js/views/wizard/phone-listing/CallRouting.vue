@@ -7,7 +7,8 @@ const callForwardingStore = useCallForwardingStore()
 
 const fwd_incoming_call = ref(null)
 const ringOrder = ref(null)
-const unanswered_fwd_call = ref(null)
+const unanswered_fwd_call = ref('dismiss_call')
+const unansweredFwdCallValue = ref('dismiss_call')
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
@@ -16,12 +17,13 @@ const selectedUser = ref(null)
 const selectedUsers = ref([])
 const assignUsers = ref([])
 const errorExtPhone = ref('')
-const phoneNumber = ref('')
+const externalPhoneNumber = ref(null)
 const phoneNumberBlock = ref(false)
 const selectedUsersData = []
+const selectedUsersDataValue = []
 const callForwardForm = ref()
 const webMobileBlock = ref(false)
-const mobileNumberBlock = ref(false)
+const unansweredFwdCallBlock = ref(false)
 
 const incomingOption = [
   {
@@ -89,10 +91,14 @@ const fetchCallForwarding = () => {
     if(data.phoneSetting){
       fwd_incoming_call.value = data?.phoneSetting?.fwd_incoming_call
       unanswered_fwd_call.value = data?.phoneSetting?.unanswered_fwd_call
+      unansweredFwdCallValue.value = data?.phoneSetting?.unanswered_fwd_call
+      externalPhoneNumber.value = data?.phoneSetting?.external_phone_number
       ringOrder.value = data?.phoneSetting?.ring_order
       if (data?.phoneSetting?.ring_order_value !== null && Array.isArray(data?.phoneSetting.ring_order_value)) {
         selectedUsers.value = data?.phoneSetting.ring_order_value
       }
+      console.log('external_phone_number')
+      console.log(externalPhoneNumber.value)
     }
     assignUsers.value = data?.assignUsers
   }).catch(error => {
@@ -109,53 +115,64 @@ onMounted(() => {
 })
 
 watch(fwd_incoming_call, newValue => {
-  console.log('fwd_incoming_call')
-  console.log(newValue)
-  
   if(newValue=='web_desktop_apps') {
+    unansweredFwdCallBlock.value = true
     webMobileBlock.value = false
-    mobileNumberBlock.value = true
-    if(unanswered_fwd_call.value=='external_number') {
+    phoneNumberBlock.value = false
+    selectedUsers.value = []
+    if(unanswered_fwd_call.value == 'external_number'){
       phoneNumberBlock.value = true
-    }else{
-      phoneNumberBlock.value = false
     }
+    ringOrder.value = null
+    selectedUsersDataValue.value = []
   }else if(newValue=='mobile_number'){
     webMobileBlock.value = false
-    mobileNumberBlock.value = false
+    unansweredFwdCallBlock.value = false
+    selectedUsers.value = []
     phoneNumberBlock.value = true
+    unansweredFwdCallValue.value= null
+    ringOrder.value = null
+    selectedUsersDataValue.value = []
   }else{
     webMobileBlock.value = true
-    mobileNumberBlock.value = true
-    if(unanswered_fwd_call.value=='external_number') {
+    unansweredFwdCallBlock.value = true
+    phoneNumberBlock.value = false
+    if(unanswered_fwd_call.value == 'external_number'){
       phoneNumberBlock.value = true
-    }else{
-      phoneNumberBlock.value = false
     }
   }
 })
 
 watch(unanswered_fwd_call, newValue => {
+  
+  phoneNumberBlock.value = false
+  externalPhoneNumber.value = null
   if(newValue=='external_number') {
     phoneNumberBlock.value = true
-  }else{
-    phoneNumberBlock.value = false
   }
+  unansweredFwdCallValue.value = newValue
 })
 
-const addCallForwarding = (newForward, newUnanswered, newRingOrder) => {
+const addCallForwarding = () => {
+  if (((fwd_incoming_call.value === 'web_desktop_apps' && unansweredFwdCallValue.value == 'external_number') || fwd_incoming_call.value === 'mobile_number') && !externalPhoneNumber.value) {
+    snackbarMessage.value = 'Phone number is required.'
+    snackbarActionColor.value = 'error'
+    isSnackbarVisible.value = true
+
+    return 
+  }
   callForwardingStore.addCallForwarding({
     phone_number: props.phoneNumber,
-    fwd_incoming_call: newForward,
-    unanswered_fwd_call: newUnanswered,
-    ringOrder: newRingOrder,
-    ringOrderValue: selectedUsersData,
+    fwd_incoming_call: fwd_incoming_call.value,
+    unanswered_fwd_call: unansweredFwdCallValue.value,
+    externalPhoneNumber: externalPhoneNumber.value,
+    ringOrder: ringOrder.value,
+    ringOrderValue: selectedUsersDataValue.value,
   }).then(response => {
     snackbarMessage.value = response.data.message
     snackbarActionColor.value = `success`
     isSnackbarVisible.value = true
   }).catch(error => {
-    console.log(error)
     snackbarMessage.value = error.data.message
     snackbarActionColor.value = `error`
     isSnackbarVisible.value = true
@@ -167,6 +184,7 @@ const handleCheckboxChange = (user, checkboxType) => {
   if (!user.webDesktop && !user.mobileLandline) {
     if (userIndex !== -1) {
       selectedUsersData.splice(userIndex, 1)
+      selectedUsersDataValue.value = selectedUsersData
     }
   } else {
     if (userIndex !== -1) {
@@ -176,6 +194,7 @@ const handleCheckboxChange = (user, checkboxType) => {
         webDesktop: user.webDesktop,
         mobileLandline: user.mobileLandline,
       }
+      selectedUsersDataValue.value = selectedUsersData
     } else {
       selectedUsersData.push({
         invitationId: user.invitationId,
@@ -183,9 +202,11 @@ const handleCheckboxChange = (user, checkboxType) => {
         webDesktop: user.webDesktop,
         mobileLandline: user.mobileLandline,
       })
+      selectedUsersDataValue.value = selectedUsersData
     }
   }
-  addCallForwarding(fwd_incoming_call.value, unanswered_fwd_call.value, ringOrder.value)
+
+  //addCallForwarding(fwd_incoming_call.value, unanswered_fwd_call.value, ringOrder.value)
 }
 
 watch(selectedUser, newValue => {
@@ -319,7 +340,7 @@ watch(selectedUser, newValue => {
         </VRow>
       </VCol>
     </VRow>
-    <VRow v-if="mobileNumberBlock">
+    <VRow v-if="unansweredFwdCallBlock">
       <VCol
         cols="12"
         sm="6"
@@ -345,10 +366,10 @@ watch(selectedUser, newValue => {
         <div>
           <!-- 👉 External Phone Number -->
           <AppTextField
-            v-model="phoneNumber"
+            v-model="externalPhoneNumber"
+            
             label="Phone Number"
-            placeholder="+10000000000"
-            :error-messages="errorExtPhone"
+            placeholder="+1XXXXXXXXXXX"
           />
         </div>
       </VCol>
