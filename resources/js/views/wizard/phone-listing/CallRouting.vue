@@ -3,6 +3,7 @@ import { useCallForwardingStore } from "@/views/apps/number/useCallForwardingSto
 import { defineProps, ref, watch } from 'vue'
 
 const props = defineProps(['phoneNumber'])
+const emit = defineEmits(['updatePhoneSetting'])
 const callForwardingStore = useCallForwardingStore()
 
 const fwd_incoming_call = ref(null)
@@ -89,16 +90,7 @@ const fetchCallForwarding = () => {
   }).then(response => {
     const data = response.data
     if(data.phoneSetting){
-      fwd_incoming_call.value = data?.phoneSetting?.fwd_incoming_call
-      unanswered_fwd_call.value = data?.phoneSetting?.unanswered_fwd_call
-      unansweredFwdCallValue.value = data?.phoneSetting?.unanswered_fwd_call
-      externalPhoneNumber.value = data?.phoneSetting?.external_phone_number
-      ringOrder.value = data?.phoneSetting?.ring_order
-      if (data?.phoneSetting?.ring_order_value !== null && Array.isArray(data?.phoneSetting.ring_order_value)) {
-        selectedUsers.value = data?.phoneSetting.ring_order_value
-      }
-      console.log('external_phone_number')
-      console.log(externalPhoneNumber.value)
+      emit('updatePhoneSetting', data.phoneSetting)
     }
     assignUsers.value = data?.assignUsers
   }).catch(error => {
@@ -172,6 +164,8 @@ const addCallForwarding = () => {
     snackbarMessage.value = response.data.message
     snackbarActionColor.value = `success`
     isSnackbarVisible.value = true
+
+    fetchCallForwarding()
   }).catch(error => {
     snackbarMessage.value = error.data.message
     snackbarActionColor.value = `error`

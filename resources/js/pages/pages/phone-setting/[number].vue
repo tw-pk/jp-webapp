@@ -12,11 +12,15 @@ import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
 const currentThemeName = vuetifyTheme.name.value
+
+vuetifyTheme.themes.value[currentThemeName].colors.primary = '#38A6E3'
+
 const route = useRoute()
 
 const activeTab = ref('assign')
 const phoneNumber = ref('')
 const dPhoneNumber = ref('')
+const phoneSetting = ref(null)
 
 const formatePhoneNumber = phoneNumber => {
   const cleaned = ('' + phoneNumber).replace(/\D/g, '')
@@ -67,7 +71,9 @@ const phoneListingSteps = [
   
 ]
 
-vuetifyTheme.themes.value[currentThemeName].colors.primary = '#38A6E3'
+const handleUpdatePhoneSetting = data => {
+  phoneSetting.value = data
+}
 </script>
 
 <template>
@@ -126,11 +132,87 @@ vuetifyTheme.themes.value[currentThemeName].colors.primary = '#38A6E3'
                     :is="phonelistStep.component"
                     v-model:form-data="phonelistStep.key"
                     :phone-number="phoneNumber"
+                    @updatePhoneSetting="handleUpdatePhoneSetting"
                   />
                 </template>
               </VWindowItem>
             </VWindow>
           </VCardText>
+        </VCol>
+      </VRow>
+    </VCard>
+
+    
+    <VCard
+      v-if="activeTab === 'callRoutingDetails' && phoneSetting"
+      class="mt-5"
+    >
+      <VRow no-gutters>
+        <VCol cols="12">
+          <VTable>
+            <thead>
+              <tr>
+                <th>
+                  Forward Incoming Call To
+                </th>
+                <th>
+                  If Unanswered, Forward call to
+                </th>
+                <th>
+                  Phone Number
+                </th>
+                <th>
+                  Ring Order
+                </th>
+                <th>
+                  Members
+                </th>
+                <th>
+                  Web & Desktop
+                </th>
+                <th>
+                  Mobile Number
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                v-for="item in phoneSetting"
+                :key="item?.key"
+              >
+                <td>
+                  {{ item?.fwd_incoming_call }}
+                </td>
+                <td>
+                  {{ item?.unanswered_fwd_call }}
+                </td>
+                <td>
+                  {{ item?.external_phone_number }}
+                </td>
+                <td>
+                  {{ item?.ring_order }}
+                </td>
+                <td>
+                  {{ item?.ring_order_value?.fullname }}
+                </td>
+                <td>
+                  <VIcon
+                    :icon="item?.ring_order_value?.webDesktop?.icon"
+                    :color="item?.ring_order_value?.webDesktop?.color"
+                    :size="30"
+                  />
+                </td>
+                <td>
+                  <VIcon
+                    :icon="item?.ring_order_value?.mobileLandline?.icon"
+                    :color="item?.ring_order_value?.mobileLandline?.color"
+                    :size="30"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </VTable>
         </VCol>
       </VRow>
     </VCard>
