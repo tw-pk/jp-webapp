@@ -8,7 +8,7 @@ const callForwardingStore = useCallForwardingStore()
 
 const fwd_incoming_call = ref(null)
 const ringOrder = ref(null)
-const unanswered_fwd_call = ref('dismiss_call')
+const unanswered_fwd_call = ref(null)
 const unansweredFwdCallValue = ref('dismiss_call')
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
@@ -111,37 +111,43 @@ watch(fwd_incoming_call, newValue => {
     unansweredFwdCallBlock.value = true
     webMobileBlock.value = false
     phoneNumberBlock.value = false
-    selectedUsers.value = []
-    if(unanswered_fwd_call.value == 'external_number'){
-      phoneNumberBlock.value = true
-    }
+    unanswered_fwd_call.value = null
     ringOrder.value = null
+    selectedUsers.value = []
     selectedUsersDataValue.value = []
   }else if(newValue=='mobile_number'){
     webMobileBlock.value = false
     unansweredFwdCallBlock.value = false
-    selectedUsers.value = []
     phoneNumberBlock.value = true
-    unansweredFwdCallValue.value= null
+    
+    unanswered_fwd_call.value = null
     ringOrder.value = null
+    selectedUsers.value = []
     selectedUsersDataValue.value = []
   }else{
+    phoneNumberBlock.value = false
     webMobileBlock.value = true
     unansweredFwdCallBlock.value = true
-    phoneNumberBlock.value = false
-    if(unanswered_fwd_call.value == 'external_number'){
-      phoneNumberBlock.value = true
-    }
+   
+    unanswered_fwd_call.value = null
+    ringOrder.value = null
+    selectedUsers.value = []
+    selectedUsersDataValue.value = []
   }
 })
 
 watch(unanswered_fwd_call, newValue => {
-  
-  phoneNumberBlock.value = false
+
   externalPhoneNumber.value = null
+  if(fwd_incoming_call.value=='mobile_number'){
+    phoneNumberBlock.value = true
+  }else{
+    phoneNumberBlock.value = false
+  }
   if(newValue=='external_number') {
     phoneNumberBlock.value = true
   }
+  
   unansweredFwdCallValue.value = newValue
 })
 
@@ -361,7 +367,6 @@ watch(selectedUser, newValue => {
           <!-- 👉 External Phone Number -->
           <AppTextField
             v-model="externalPhoneNumber"
-            
             label="Phone Number"
             placeholder="+1XXXXXXXXXXX"
           />

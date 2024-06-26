@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +14,8 @@ use Twilio\TwiML\VoiceResponse;
 use Illuminate\Support\Facades\Broadcast;
 use App\Events\IncomingCallEvent;
 use App\Models\UserNumber;
+use App\Models\PhoneSetting;
+use App\Models\User;
 
 class TwilioController extends Controller
 {
@@ -61,44 +62,80 @@ class TwilioController extends Controller
         $response = new VoiceResponse();
         Log::info('Incoming Call Response: ');
         Log::info($request->all());
-
-
-        $UserNumber = UserNumber::where('phone_number', $request->Called)->first();
+        
+        $UserNumber = UserNumber::where('active', true)->where('phone_number', $request->To)->first();
         if (!empty($UserNumber)) {
            
+            $response->say('Hello! Kindly wait you are being connected to the call....');
             //$authenticatedUserId = Auth::check() ? Auth::id();
-            $authenticatedUserId = UserNumber::where('active', true)->where('id', $UserNumber->id)->value('user_id');
-            
             // Connect the call with your Twilio Device (replace 'your-device-identity' with your actual Device identity)
             // Check if the user ID from the request matches the authenticated user's ID
+            $phoneSetting = PhoneSetting::where('user_id', $UserNumber->user_id)
+            ->where('phone_number', $UserNumber->phone_number)
+            ->first();
+
+            $user = User::where('id', $UserNumber->user_id)
+                    ->select('firstname', 'lastname')
+                    ->first();
+            $client_name = $user->firstname .' '. $user->lastname;
             
-            if ($UserNumber->user_id && $UserNumber->user_id === $authenticatedUserId) {
-
-                $response->say('Hello! Kindly wait you are being connected to the call....');
+            //Select mobile number
+           if(!empty($phoneSetting->external_phone_number) && $phoneSetting->fwd_incoming_call == 'mobile_number'){
                 
-                // $data['broadcaster'] = $request->broadcaster;
-                // $data['receiver'] = $request->receiver;
-                // $data['offer'] = $request->offer;
+                $numberTo = Str::replaceFirst('+', '', $phoneSetting->external_phone_number);
+                $dial = $response->dial('', ['callerId' => $request->input('From')]);
+                if (!empty($client_name)) {
+                    $dial->client($client_name);
+                }
+                $dial->number($numberTo);
+           }
 
-                // event(new StreamOffer($data));
-                $dial = $response->dial();
-                $dial->client('browser-client-identifier');
-                event(new IncomingCallEvent($request->all()));
-                //return response($response)->header('Content-Type', 'text/xml');
-            } else {
-
-                $response->say('Sorry! The user you are calling up is not present on the system.');
+            //Select Web & Desktop Apps
+           if(!empty($phoneSetting->external_phone_number) && $phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'external_number'){
+                
+                $numberTo = Str::replaceFirst('+', '', $phoneSetting->external_phone_number);
+                $dial = $response->dial('', ['callerId' => $request->input('From')]);
+                if (!empty($client_name)) {
+                    $dial->client($client_name);
+                }
+                $dial->number($numberTo);
             }
+
+            //Select Web & Desktop Apps and Dismiss Call
+           if($phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'dismiss_call'){
+                $response->reject(['reason' => 'busy']);
+            }
+
+            //Select Web & Desktop Apps and Voicemail
+           if($phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'voicemail'){
+                $response->reject(['reason' => 'busy']);
+            }
+
+            
+           //dd($phoneSetting);
+            // $data['broadcaster'] = $request->broadcaster;
+            // $data['receiver'] = $request->receiver;
+            // $data['offer'] = $request->offer;
+
+            // event(new StreamOffer($data));
+            $dial = $response->dial();
+            $dial->client('browser-client-identifier');
+            event(new IncomingCallEvent($request->all()));
+            //return response($response)->header('Content-Type', 'text/xml');
+
+            ////
+            // $response->say('Hello! Kindly wait call is being forwarded to admin....');
+            // //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
+            // $client_name = 'Usman Ghani';
+            // $number = Str::replaceFirst('+', '', '923447431371');
+            
+            // $dial = $response->dial('', ['callerId' => $request->input('From')]);
+            // $dial->client($client_name);
+            // $dial->number($number);
+           
         } else {
     
-            $response->say('Hello! Kindly wait call is being forwarded to admin....');
-            //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
-            $client_name = 'Usman Ghani';
-            $number = Str::replaceFirst('+', '', '923447431371');
-            
-            $dial = $response->dial('', ['callerId' => $request->input('From')]);
-            $dial->client($client_name);
-            $dial->number($number);
+            $response->say('Sorry! The number you are calling is not currently active for a user.');
         }
         // Answer the incoming call
         $response->say('Call ended....');

@@ -191,7 +191,8 @@ class NumberController extends Controller
                 'country_code' => $twilio_number_lookup->countryCode,
                 'country' => TwilioCountry::where('country_code', $twilio_number_lookup->countryCode)->first()->country ?? $twilio_number_lookup->country,
                 'state' => $city,
-                'city' => $state
+                'city' => $state,
+                'active' => true
             ]);
         } catch (TwilioException $exception) {
             return response()->json([
