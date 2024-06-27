@@ -32,6 +32,9 @@ Route::post('webhook/ten/dlc', [TwilioController::class, 'webhook_ten_dlc'])->na
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
+Route::post('/handle-recording', [TwilioController::class, 'handleRecording'])->name('handle-recording');
+Route::post('/handle-transcription', [TwilioController::class, 'handleTranscription'])->name('handle-transcription');
+
 //These urls are passed to twilio and they cannot be changed 
 Route::post('/sms-{number}', [NumberController::class, 'handleSms'])->name('sms');
 Route::post('/voice-{number}', [NumberController::class, 'handleVoice'])->name('voice');

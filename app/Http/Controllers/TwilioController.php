@@ -16,6 +16,7 @@ use App\Events\IncomingCallEvent;
 use App\Models\UserNumber;
 use App\Models\PhoneSetting;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 class TwilioController extends Controller
 {
@@ -88,10 +89,9 @@ class TwilioController extends Controller
                     $dial->client($client_name);
                 }
                 $dial->number($numberTo);
-           }
 
-            //Select Web & Desktop Apps
-           if(!empty($phoneSetting->external_phone_number) && $phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'external_number'){
+            //Select Web & Desktop Apps    
+           }else if(!empty($phoneSetting->external_phone_number) && $phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'external_number'){
                 
                 $numberTo = Str::replaceFirst('+', '', $phoneSetting->external_phone_number);
                 $dial = $response->dial('', ['callerId' => $request->input('From')]);
@@ -99,16 +99,24 @@ class TwilioController extends Controller
                     $dial->client($client_name);
                 }
                 $dial->number($numberTo);
-            }
 
-            //Select Web & Desktop Apps and Dismiss Call
-           if($phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'dismiss_call'){
+                //Select Web & Desktop Apps and Dismiss Call
+            }else if($phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'dismiss_call'){
                 $response->reject(['reason' => 'busy']);
-            }
 
-            //Select Web & Desktop Apps and Voicemail
-           if($phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'voicemail'){
-                $response->reject(['reason' => 'busy']);
+                //Select Web & Desktop Apps and Voicemail
+            }if($phoneSetting->fwd_incoming_call == 'web_desktop_apps' && $phoneSetting->unanswered_fwd_call == 'voicemail'){
+            
+                $response->say('Please leave a message after the beep.');
+                $response->record([
+                    'action' => route('handle-recording'),
+                    'maxLength' => 120,
+                    'transcribe' => true,
+                    'playBeep' => true,
+                    'transcribeCallback' => route('handle-transcription')
+                ]);
+                $response->say('Thank you for your message. Goodbye!');
+                $response->hangup();
             }
 
             
@@ -170,6 +178,34 @@ class TwilioController extends Controller
         
         // Return the country ISO codes
         return $countryISOs;
+    }
+
+    public function handleRecording(Request $request)
+    {
+        // Save the recording URL and other details
+        $recordingUrl = $request->input('RecordingUrl');
+        $recordingSid = $request->input('RecordingSid');
+        $callSid = $request->input('CallSid');
+
+        // Store recording details in the database or perform any other logic
+        // For example, you can store the URL in the database
+
+        // Optionally, you can download the recording file and save it to local storage
+        $filePath = 'recordings/' . $recordingSid . '.mp3';
+        Storage::put($filePath, file_get_contents($recordingUrl . '.mp3'));
+
+        return response('Recording handled', 200);
+    }
+
+    public function handleTranscription(Request $request)
+    {
+        // Handle transcription if needed
+        $transcriptionText = $request->input('TranscriptionText');
+        $recordingSid = $request->input('RecordingSid');
+
+        // Store transcription details in the database or perform any other logic
+
+        return response('Transcription handled', 200);
     }
 
 
