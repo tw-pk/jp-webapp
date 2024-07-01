@@ -14,7 +14,6 @@ import { themeConfig } from '@themeConfig'
 import {
   alphaDashValidator, confirmedValidator,
   emailValidator, passwordValidator,
-  phoneValidator,
   requiredValidator,
 } from '@validators'
 import { VForm } from 'vuetify/components/VForm'
@@ -24,7 +23,6 @@ const refVForm = ref()
 const firstname = ref('')
 const lastname = ref('')
 const email = ref('')
-const phoneNumber = ref('')
 const password = ref('')
 const c_password = ref('')
 const privacyPolicies = ref(true)
@@ -32,13 +30,6 @@ const isLoading = ref(false)
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
-const otp = ref(null)
-const otpGenerated = ref(false)
-const lastInsertedId = ref('')
-const verified = ref(true)
-const verifiedMsg = ref('')
-const alertType = ref('success')
-const alertColor = ref('primary')
 
 // Router
 const route = useRoute()
@@ -51,8 +42,6 @@ const ability = useAppAbility()
 const errors = ref({
   firstname: undefined,
   email: undefined,
-  phoneNumber: undefined,
-  otp: undefined,
   password: undefined,
   c_password: undefined,
 })
@@ -63,18 +52,28 @@ const authStore = useAuthStore()
 const register = () => {
 
   const formData = {
-    lastInsertedId: lastInsertedId.value,
     firstname: firstname.value,
     lastname: lastname.value,
     email: email.value,
-    phoneNumber: phoneNumber.value,
     password: password.value,
     c_password: password.value,
     privacyPolicies: privacyPolicies.value,
   }
   
   User.register(formData)
-    .then(r => {
+    .then(res => {
+      
+      console.log('response.status response.status')
+      console.log(res.data)
+      if(res.data.status){
+        const id = res.data.lastInsertedId
+
+        router.replace(route.query.to ? String(route.query.to) : `/verify-phone/${id}`)
+      }else{
+        authStore.setVerificationMessage('A verification email has been sent to your email. Please login to verify your account.')
+        router.replace(route.query.to ? String(route.query.to) : '/login')
+      }
+
       // Redirect to `to` query if exist or redirect to index route
       //isSnackbarVisible.value = true
 
@@ -82,10 +81,7 @@ const register = () => {
       // snackbarMessage.value = 'A verification email has been sent to your email please login to verify your account.'
 
       //isSnackbarVisible.value = false
-      authStore.setVerificationMessage('A verification email has been sent to your email. Please login to verify your account.')
       
-      router.replace(route.query.to ? String(route.query.to) : '/login')
-
       // setTimeout(() => {
       //   snackbarActionColor.value = 'success'
       //   isSnackbarVisible.value = true
@@ -113,6 +109,11 @@ const isPasswordVisible = ref(false)
 const onSubmit = () => {
   event.preventDefault()
   isLoading.value = true
+
+  //const id = 13
+
+  //router.replace(route.query.to ? String(route.query.to) : `/verify-phone/${id}`)
+  
   refVForm.value?.validate().then(({ valid: isValid }) => {
     if (isValid){
       register()
@@ -133,75 +134,6 @@ onMounted(() => {
       lastname.value = response.data.lastname
       email.value = response.data.email
     })
-  }
-})
-
-const validateField = (value, rules) => {
-  for (let rule of rules) {
-    const result = rule(value)
-    if (result !== true) {
-      return result
-    }
-  }
-  
-  return true
-}
-
-const verifyPhoneNumber = async () => {
-  errors.value.firstname = validateField(firstname.value, [requiredValidator, alphaDashValidator])
-  errors.value.email = validateField(email.value, [requiredValidator, emailValidator])
-  errors.value.phoneNumber = validateField(phoneNumber.value, [requiredValidator, phoneValidator])
-
-  if (errors.value.firstname === true && errors.value.email === true && errors.value.phoneNumber === true) {
-    
-    await User.verifyPhoneNumber({
-      'firstname': firstname.value,
-      'lastname': lastname.value,
-      'email': email.value,
-      'phoneNumber': phoneNumber.value,
-    })
-      .then(res => {
-        if (res.data.status) {
-          otpGenerated.value = true
-          lastInsertedId.value = res.data.lastInsertedId
-        }
-      }).catch(error => {
-        console.log(error)
-
-        //isLoading.value = false
-        snackbarActionColor.value = 'error'
-        snackbarMessage.value = error.response.data.errors
-        isSnackbarVisible.value = true
-      })
-  } 
-}
-
-watch(otp, async newValue => { 
-  const otpValue = otp.value
-  if (otpValue.length === 6) {
-    try {
-      const res = await User.verifyCode({
-        lastInsertedId: lastInsertedId.value,
-        to: phoneNumber.value,
-        code: otp.value,
-      })
-
-      if (res.data.status) {
-        verified.value = false
-        alertType.value = 'success'
-        alertColor.value = 'primary'
-        verifiedMsg.value = res.data.message
-      }else{
-        alertType.value = 'error'
-        alertColor.value = 'error'
-        verifiedMsg.value = res.data.message
-      }
-    } catch (error) {
-      console.log(error)
-      snackbarActionColor.value = 'error'
-      snackbarMessage.value = error.response.data.errors
-      isSnackbarVisible.value = true
-    }
   }
 })
 </script>
@@ -271,7 +203,7 @@ watch(otp, async newValue => {
                 />
               </VCol>
 
-              <!-- verify -->
+              <!-- email -->
               <VCol cols="12">
                 <AppTextField
                   v-model="email"
@@ -279,52 +211,6 @@ watch(otp, async newValue => {
                   :error-messages="errors.email"
                   label="Email"
                   type="email"
-                />
-              </VCol>
-
-              <!-- phone number -->
-              <VCol cols="12">
-                <AppTextField
-                  v-model="phoneNumber"
-                  :rules="[requiredValidator, phoneValidator]"
-                  :error-messages="errors.phoneNumber"
-                  name="mobile"
-                  label="Phone Number"
-                  type="text"
-                  placeholder="+1XXXXXXXXXXX"
-                />
-                <VAlert
-                  v-if="verifiedMsg"
-                  :type="alertType"
-                  variant="tonal"
-                  density="default"
-                  :color="alertColor"
-                  class="mt-3"
-                >
-                  {{ verifiedMsg }}
-                </VAlert>
-                <div
-                  v-if="verified"
-                  class="justify-end text-end"
-                >
-                  <VBtn
-                    variant="plain"
-                    @click="verifyPhoneNumber"
-                  >
-                    Verify now
-                  </VBtn>
-                </div>
-                <!-- OTP -->
-                <AppTextField
-                  v-if="otpGenerated && verified"
-                  v-model="otp"
-                  :rules="[requiredValidator]"
-                  :error-messages="errors.otp"
-                  :label="`Please enter the OTP sent to your number: ${phoneNumber}`"
-                  type="number"
-                  min="0"
-                  max="6"
-                  placeholder="XXXXXX"
                 />
               </VCol>
 

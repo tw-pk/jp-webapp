@@ -146,6 +146,9 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('team/fetch/members/teams', [TeamController::class, 'membersTeams']);
         Route::delete('team/delete/{id}', [TeamController::class, 'delete_team']);
 
+        Route::post('team/fetch/members', [TeamController::class, 'teamFetchMembers']);
+        //Route::post('team/fetch/teams', [TeamController::class, 'fetch_teams']);
+
         //fetch user phone number
         Route::post('fetch/user/numbers', [TeamController::class, 'fetch_numbers']);
         Route::post('fetch/roles', [TeamController::class, 'fetch_roles']);
@@ -214,6 +217,8 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('fetch/credit-payment', [CreditController::class, 'fetch_credit_payment']);
         Route::post('add/credit-payment', [CreditController::class, 'add_credit_payment']);
         Route::post('stripe/payment-method/store', [StripeController::class, 'createPaymentMethod']);
+        Route::post('stripe/payment-method/update', [StripeController::class, 'updatePaymentMethod']);
+        Route::delete('stripe/payment-method/{id}', [StripeController::class, 'deletePaymentMethod']);
 
         //Dialer Routes
         Route::post('fetch/dialer/contacts', [PhoneController::class, 'dialer_contacts']);

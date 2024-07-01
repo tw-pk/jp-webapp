@@ -108,7 +108,14 @@ export const alphaDashValidator = value => {
     return true
   const valueAsString = String(value)
   
-  return /^[0-9A-Z_-]*$/i.test(valueAsString) || 'All Character are not valid'
+  // Check if value contains at least one alphabetic character
+  const containsAlpha = /[a-zA-Z]/.test(valueAsString)
+
+  // Check if value matches the alpha-dash pattern
+  const isAlphaDash = /^[0-9A-Z_-]*$/i.test(valueAsString)
+
+  return (containsAlpha && isAlphaDash) || 'All Character are not valid'
+
 }
 
 // 👉 Card Validator start here

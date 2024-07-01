@@ -299,7 +299,7 @@ const toggleCall = async () => {
   //Code for making outbound call...
   const user = await User.auth()
   const device = dialerStore.twilioDevice
-
+  const userData = user.data;
   if (!onPhone.value) {
 
     muted.value = false
@@ -307,12 +307,11 @@ const toggleCall = async () => {
 
     // make outbound call with current number
     const n = '+' + currentNumber.value.replace(/\D/g, '')    
-    
     try {
       connection.value = device.connect({
         params: {
           To: n,
-          agent: user.data?.fullName,
+          agent: JSON.stringify(userData),
           From: from.value,
         },
       })
