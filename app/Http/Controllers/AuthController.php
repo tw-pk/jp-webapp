@@ -72,7 +72,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => true,
-                'lastInsertedId' => encrypt($user->id),
+                //'lastInsertedId' => encrypt($user->id),
                 'message' => 'Successfully created user!'
             ], 201);
         } else {

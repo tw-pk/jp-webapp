@@ -62,17 +62,16 @@ const register = () => {
   
   User.register(formData)
     .then(res => {
-      
-      console.log('response.status response.status')
-      console.log(res.data)
-      if(res.data.status){
-        const id = res.data.lastInsertedId
+     
+      // if(res.data.status){
+      //   const id = res.data.lastInsertedId
 
-        router.replace(route.query.to ? String(route.query.to) : `/verify-phone/${id}`)
-      }else{
-        authStore.setVerificationMessage('A verification email has been sent to your email. Please login to verify your account.')
-        router.replace(route.query.to ? String(route.query.to) : '/login')
-      }
+      //   router.replace(route.query.to ? String(route.query.to) : `/verify-phone/${id}`)
+      // }
+      
+      authStore.setVerificationMessage('A verification email has been sent to your email. Please login to verify your account.')
+      router.replace(route.query.to ? String(route.query.to) : '/login')
+      
 
       // Redirect to `to` query if exist or redirect to index route
       //isSnackbarVisible.value = true
