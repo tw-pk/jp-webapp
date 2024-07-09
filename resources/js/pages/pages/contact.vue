@@ -3,7 +3,7 @@ import { paginationMeta } from '@/@fake-db/utils'
 import { useContactStore } from "@/views/apps/contact/useContactStore"
 import { avatarText } from "@core/utils/formatters"
 import avatar1 from '@images/avatars/avatar-0.png'
-import { emailValidator, requiredValidator } from '@validators'
+import { emailValidator, phoneValidator, requiredValidator } from '@validators'
 import { ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
@@ -394,8 +394,9 @@ const onCloseDialog = () => {
                             <AppTextField
                               v-model="phone"
                               label="Phone Number"
-                              :rules="[requiredValidator]"
+                              :rules="[requiredValidator, phoneValidator]"
                               required
+                              placeholder="+1XXXXXXXXXXX"
                             />
                           </VCol>
                         </VRow>

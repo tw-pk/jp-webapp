@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Stripe\Checkout\Session;
+use Laravel\Cashier\Cashier;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentMethod;
 use Stripe\Product;
@@ -252,12 +253,13 @@ class StripeController extends Controller
                 'price' => "$" . number_format(Plans::where('name', 'Basic')->first()->price, 2),
                 'totalDays' => Carbon::now()->daysInMonth,
                 'daysSpent' => Auth::user()->subscription('Basic')->trial_ends_at ? Carbon::now()->daysInMonth - Carbon::parse(Auth::user()->subscription('Basic')->trial_ends_at)->diffInDays(Carbon::now()->format('Y-m-d')) : Carbon::now()->daysInMonth - Carbon::parse(Auth::user()->subscription('Basic')->ends_at)->diffInDays(Carbon::now()->format('Y-m-d')),
-                'credit' => number_format(abs(Auth::user()->rawBalance()) / 100, 2),
-                'cardName' => Auth::user()->paymentMethods()->first()->billing_details['name'],
-                'cardExpiryDate' => Auth::user()->paymentMethods()->first()->card['exp_month'] . "/" . Auth::user()->paymentMethods()->first()->card['exp_year'],
-                'cardLastFour' => Auth::user()->paymentMethods()->first()->card['last4'],
-                'cardBrand' => Auth::user()->paymentMethods()->first()->card['brand']
+                'credit' => number_format(Auth::user()?->credit?->credit, 2),
+                'cardName' => Auth::user()->paymentMethods()->first()?->billing_details?->name,
+                'cardExpiryDate' => Auth::user()->paymentMethods()->first()?->card?->exp_month . "/" . Auth::user()->paymentMethods()->first()?->card?->exp_year,
+                'cardLastFour' => Auth::user()->paymentMethods()->first()?->card?->last4,
+                'cardBrand' => Auth::user()->paymentMethods()->first()?->card?->brand
             ];
+
             return response()->json([
                 'status' => true,
                 'subscription' => $subscription
@@ -302,16 +304,20 @@ class StripeController extends Controller
         $request->validate([
             'pmId' => 'required',
         ]);
-
+       
         $result = Auth::user()->addPaymentMethod($request->pmId);
         if ($result->id) {
             $payment_method = new \App\Models\PaymentMethod();
             $payment_method->user_id = Auth::user()->id;
             $payment_method->pmId = $result->id;
-            $payment_method->card_name = $result->card->name;
-            $payment_method->card_email = $result->card->email;
-            $payment_method->expiry_year = $result->card->exp_year;
-            $payment_method->expiry_month = $result->card->exp_month;
+            if($request->isCardSaveBilling){
+                $payment_method->card_brand = $result?->card?->brand;
+                $payment_method->card_name = $result?->billing_details?->name;
+                $payment_method->card_email = Auth::user()->email;
+                $payment_method->card_number = $result?->card?->last4;
+                $payment_method->expiry_month = $result?->card?->exp_month;
+                $payment_method->expiry_year = $result?->card?->exp_year;
+            }
             $payment_method->save();
 
             return response()->json([
@@ -326,6 +332,61 @@ class StripeController extends Controller
         }
     }
 
+    public function updatePaymentMethod(Request $request)
+    {
+        $request->validate([
+            'pmId' => 'required|string',
+            'expiryDate' => 'required|string',
+            'cardName' => 'required|string',
+            'postalCode' => 'required|string',
+            'isPrimary' => 'required|boolean',
+        ]);
+       
+        $paymentMethodId = decrypt($request->pmId);
+        $user = Auth::user();
+        
+        $stripeCustomerId = $user->stripe_id;
+        if (!$stripeCustomerId) {
+            return response()->json(['error' => 'No Stripe customer ID found.'], 404);
+        }
+
+        [$expiryMonth, $expiryYear] = explode('/', $request->expiryDate);
+        $stripe = Cashier::stripe();
+        try {
+            $paymentMethod = $stripe->paymentMethods->retrieve($paymentMethodId);
+            $paymentMethod->card->exp_month = $expiryMonth;
+            $paymentMethod->card->exp_year = $expiryYear;
+            $paymentMethod->billing_details->name = $request->cardName;
+            $paymentMethod->billing_details->address->postal_code = $request->postalCode;
+            $paymentMethod->save();
+
+            $payment_method = $user->userPaymentMethods()->where('pmId', $paymentMethodId)->first();
+            if(!empty($payment_method->card_name)){
+                $payment_method->card_name = $request->cardName;
+                $payment_method->expiry_month = $expiryMonth;
+                $payment_method->expiry_year = $expiryYear;
+            }
+
+            if ($request->isPrimary) {
+                $user->updateDefaultPaymentMethod($paymentMethodId);
+                $payment_method->default = $request->isPrimary;
+                $user->userPaymentMethods()->where('pmId', '!=', $paymentMethodId)->update(['default' => 0]);
+            }
+            $payment_method->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Card updated successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
     public function defaultPaymentMethod()
     {
         return response()->json([
@@ -336,18 +397,30 @@ class StripeController extends Controller
     public function paymentMethods()
     {
         $paymentMethods = [];
-
         foreach (Auth::user()->paymentMethods() as $paymentMethod) {
             $paymentMethods[] = [
                 'id' => encrypt($paymentMethod->id),
                 'cardLastFour' => $paymentMethod->card->last4,
                 'cardName' => $paymentMethod->billing_details->name,
                 'cardEmail' => $paymentMethod->billing_details->email,
+                'postalCode' => $paymentMethod->billing_details?->address?->postal_code,
                 'brand' => $paymentMethod->card->brand,
                 'cardExpiryDate' => $paymentMethod->card->exp_month . "/" . $paymentMethod->card->exp_year,
-                'isDefault' => Auth::user()->defaultPaymentMethod()?->id === $paymentMethod->id
+                'isDefault' => Auth::user()->defaultPaymentMethod()?->pmId === $paymentMethod->id
             ];
         }
         return response($paymentMethods);
     }
+
+    public function deletePaymentMethod($pmId)
+    {
+        $paymentMethodId = decrypt($pmId);
+        $user = Auth::user();
+        $user->deletePaymentMethod($paymentMethodId);
+        $user->userPaymentMethods()->where('pmId', $paymentMethodId)->delete();
+
+        return response()->json(['message' => 'Payment method deleted']);
+    }
+
+
 }
