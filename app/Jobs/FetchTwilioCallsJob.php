@@ -29,6 +29,7 @@ class FetchTwilioCallsJob implements ShouldQueue
     public function handle(): void
     {
         $users = User::all();
+        Log::info("inside the fetchController");
         $twilio = new Client(env('TWILIO_CLIENT_ID'), env('TWILIO_AUTH_TOKEN'));
         //foreach all users
         //check whether a user is admin or not
