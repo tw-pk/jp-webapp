@@ -311,7 +311,10 @@ const toggleCall = async () => {
       connection.value = device.connect({
         params: {
           To: n,
-          agent: JSON.stringify(userData),
+
+          //agent: JSON.stringify(userData),
+
+          agent: JSON.stringify(user.data),
           From: from.value,
         },
       })
@@ -545,14 +548,26 @@ const activeTab = ref('Dialer - JotPhone')
 const onMountedFunction = async () => {
   fetchCountries()
   currentNumber.value = '+' + selectedCountry.value.phone_code
+  const userDefaultNumber = await dialerStore.fetchSetting()
+  .then(res => {    
+    return res.setting.number_outbound_calls
+  })
+  .catch(error => {
+    console.error(error)
+  })
   dialerStore.fetchUserOwnerNumbers()
     .then(res => {
       userNumbers.value = res.data
       filteredNumbers.value = userNumbers.value.filter(item => item.number)
 
-      const activeNumber = filteredNumbers.value.map(item => item.active ? item.number : '')
+      if(userDefaultNumber){
+        console.log(userDefaultNumber, 'userDEfaultnumber');
+        from.value = userDefaultNumber;
+      }else{
+        const activeNumber = filteredNumbers.value.map(item => item.active ? item.number : '')
+        from.value = activeNumber[0]
+      }
 
-      from.value = activeNumber[0]
     })
     .catch(error => {
       console.log(error)
