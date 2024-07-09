@@ -220,7 +220,7 @@ class TwilioController extends Controller
     }
 
 
-    public function webhookCallstatus($d)
+    public function webhookCallstatus1($d)
     {
         $agentData = json_decode($d['agent'], true);        
         Call::create([
@@ -319,7 +319,7 @@ class TwilioController extends Controller
         
     }
 
-    public function updateCallDetails($d)
+    public function updateCallDetails1($d)
     {
         $callSid = $d['CallSid'];
         $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
