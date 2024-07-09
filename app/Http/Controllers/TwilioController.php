@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Broadcast;
 use App\Events\IncomingCallEvent;
 use App\Models\UserNumber;
 use App\Models\Call;
+use App\Models\Contact;
 use App\Models\UserCredit;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,7 @@ class TwilioController extends Controller
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);         
             $dial->number($number);
-            Log::info($request->all());
+
             if($request->CallStatus  == 'completed'){
                 $this->updateCallDetails($request->all());
             }else{
@@ -226,6 +227,40 @@ class TwilioController extends Controller
         } catch (\Exception $e) {
             Log::error('Error updating User credits : ' . $e->getMessage());
         }
+    }
+
+    public function webhookCallstatus($d)
+    {
+        $agentData = json_decode($d['agent'], true);        
+        Call::create([
+            'sid' => $d['CallSid'],
+            'from' => $d['From'],
+            'to' => $d['To'],
+            'user_id' => $agentData['id'],
+            'contact_id' => null,
+            'date_time' => now(),
+            'duration' => 0 . " seconds" ?? '-',
+            'direction' => $d['Direction'],
+            'status' => $d['CallStatus'],
+            'price'  => $d['CallPrice'] ?? null
+        ]);
+        
+    }
+
+    public function updateCallDetails($d)
+    {
+        $callSid = $d['CallSid'];
+        $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
+        $call = $client->calls($callSid)->fetch();
+        Log::info(print_r($call->toArray(), true));
+        $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
+        $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
+        $updateCallDetails = Call::where('sid', $callSid)->update([
+            'duration' => $call->duration . " seconds" ?? '-',                    
+            'status' => $call->status,
+            'price'  => $call->price,
+            'date_time' => $startTime .'-'. $endTime,
+        ]);
     }
 
 }
