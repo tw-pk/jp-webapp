@@ -219,26 +219,6 @@ class TwilioController extends Controller
         return response('Transcription handled', 200);
     }
 
-
-    public function webhookCallstatus1($d)
-    {
-        $agentData = json_decode($d['agent'], true);        
-        Call::create([
-            'sid' => $d['CallSid'],
-            'from' => $d['From'],
-            'to' => $d['To'],
-            'user_id' => $agentData['id'],
-            'contact_id' => null,
-            'date_time' => now(),
-            'duration' => 0 . " seconds" ?? '-',
-            'direction' => $d['Direction'],
-            'status' => $d['CallStatus'],
-            'price'  => $d['CallPrice'] ?? null
-        ]);
-
-    }
-
-
     public function updateCallDetails($d)
     {
         DB::beginTransaction();
@@ -319,20 +299,5 @@ class TwilioController extends Controller
         
     }
 
-    public function updateCallDetails1($d)
-    {
-        $callSid = $d['CallSid'];
-        $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
-        $call = $client->calls($callSid)->fetch();
-        Log::info(print_r($call->toArray(), true));
-        $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
-        $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
-        $updateCallDetails = Call::where('sid', $callSid)->update([
-            'duration' => $call->duration . " seconds" ?? '-',                    
-            'status' => $call->status,
-            'price'  => $call->price,
-            'date_time' => $startTime .'-'. $endTime,
-        ]);
-    }
 
 }
