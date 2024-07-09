@@ -299,7 +299,7 @@ const toggleCall = async () => {
   //Code for making outbound call...
   const user = await User.auth()
   const device = dialerStore.twilioDevice
-  const userData = user.data;
+  const userData = user.data
   if (!onPhone.value) {
 
     muted.value = false
@@ -548,23 +548,26 @@ const activeTab = ref('Dialer - JotPhone')
 const onMountedFunction = async () => {
   fetchCountries()
   currentNumber.value = '+' + selectedCountry.value.phone_code
+  
   const userDefaultNumber = await dialerStore.fetchSetting()
-  .then(res => {    
-    return res.setting.number_outbound_calls
-  })
-  .catch(error => {
-    console.error(error)
-  })
+    .then(res => {    
+      return res.setting.number_outbound_calls
+    })
+    .catch(error => {
+      console.error(error)
+    })
+
   dialerStore.fetchUserOwnerNumbers()
     .then(res => {
       userNumbers.value = res.data
       filteredNumbers.value = userNumbers.value.filter(item => item.number)
 
       if(userDefaultNumber){
-        console.log(userDefaultNumber, 'userDEfaultnumber');
-        from.value = userDefaultNumber;
+        console.log(userDefaultNumber, 'userDEfaultnumber')
+        from.value = userDefaultNumber
       }else{
         const activeNumber = filteredNumbers.value.map(item => item.active ? item.number : '')
+
         from.value = activeNumber[0]
       }
 
