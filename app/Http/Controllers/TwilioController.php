@@ -57,7 +57,7 @@ class TwilioController extends Controller
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);         
             $dial->number($number);
-            Log::info($request->all());
+            Log::info('Here is the main request =>'.$request->all());
             Log::info("Call Dialing");
             if($request->CallStatus  == 'completed'){
                 Log::info("update Call");
