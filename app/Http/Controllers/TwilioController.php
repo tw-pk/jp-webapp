@@ -57,13 +57,16 @@ class TwilioController extends Controller
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);         
             $dial->number($number);
-
+            Log::info('Here is the main request =>'.$request->all());
+            Log::info("Call Dialing");
             if($request->CallStatus  == 'completed'){
+                Log::info("update Call");
                 $this->updateCallDetails($request->all());
             }else{
+                Log::info("create Call ");
                 $this->webhookCallstatus($request->all());
             }
-            echo $response;
+            return $response;
         } catch (\Exception $e) {
             Log::error('Twilio API dial error: ' . $e->getMessage());   
         }        
