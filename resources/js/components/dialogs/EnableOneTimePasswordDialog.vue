@@ -184,6 +184,8 @@ const changeNumber = () => {
   <VSnackbar
     v-model="isSnackbarVisible"
     multi-line
+    transition="scroll-y-reverse-transition"
+    location="top end"
   >
     {{ snackbarMessage }}
 

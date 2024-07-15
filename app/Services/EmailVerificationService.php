@@ -37,7 +37,8 @@ class EmailVerificationService
         $password_verification = new PasswordVerification();
         $password_verification->otp = $otp;
         $password_verification->user_id = $user->id;
-        $password_verification->expires_at = Carbon::now()->addSeconds(30)->format('Y-m-d h:i');
+        $password_verification->expires_at = Carbon::now()->addMinutes(3)->format('Y-m-d h:i'); 
+        //Carbon::now()->addSeconds(30)->format('Y-m-d h:i');
         $password_verification->save();
 
 

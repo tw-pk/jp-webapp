@@ -10,7 +10,7 @@ import { getCallsChartConfig } from '@core/libs/apex-chart/apexCharConfig'
 import avatar1 from '@images/avatars/avatar-1.png'
 import avatar2 from '@images/avatars/avatar-2.png'
 import avatar3 from '@images/avatars/avatar-3.png'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { useTheme } from 'vuetify'
 

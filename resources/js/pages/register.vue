@@ -108,11 +108,6 @@ const isPasswordVisible = ref(false)
 const onSubmit = () => {
   event.preventDefault()
   isLoading.value = true
-
-  //const id = 13
-
-  //router.replace(route.query.to ? String(route.query.to) : `/verify-phone/${id}`)
-  
   refVForm.value?.validate().then(({ valid: isValid }) => {
     if (isValid){
       register()

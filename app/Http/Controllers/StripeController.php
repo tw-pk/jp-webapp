@@ -63,7 +63,7 @@ class StripeController extends Controller
     public function createSubscriptionCheckout()
     {
         // check if subscription trial period not expired then return nothing else return the checkout url
-        if(!Auth::user()->subscription('Basic')->hasExpiredTrial()){
+        if(!Auth::user()?->subscription('Basic')?->hasExpiredTrial()){
             return response()->json([
                 'status' => true,
                 'message' => 'Subscription is in trial period'
@@ -72,7 +72,7 @@ class StripeController extends Controller
 
         $stripe_price_id = Plans::where('name', 'Basic')->first()->stripe_price;
 
-        $checkout = Auth::user()->newSubscription('Basic', $stripe_price_id)
+        $checkout = Auth::user()?->newSubscription('Basic', $stripe_price_id)
             ->checkout([
                 "success_url" => config('app.url') . "/dashboards",
                 "cancel_url" => config('app.url') . "/dashboards"
@@ -217,13 +217,13 @@ class StripeController extends Controller
 
     public function checkUserSubscription()
     {
-        if (!is_null(Auth::user()->stripe_id)) {
-            if (Auth::user()->subscription('Basic')->onTrial()) {
+        if (!is_null(Auth::user()?->stripe_id)) {
+            if (Auth::user()?->subscription('Basic')?->onTrial()) {
                 return response()->json([
                     'status' => true,
                     'message' => 'User is subscribed to Basic Plan and is on Trial'
                 ]);
-            } else if(Auth::user()->subscription('Basic')->active()) {
+            } else if(Auth::user()?->subscription('Basic')?->active()) {
                 return response()->json([
                     'status' => true,
                     'message' => 'User is subscribed to Basic Plan'

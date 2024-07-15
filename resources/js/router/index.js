@@ -307,28 +307,14 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if(userRole.data.isAdmin) {
-      if (
-        !sessionIsVerified.data.status &&
-                isSubscribed &&
-                userData.data.email_verified &&
-                userData.data.numbers &&
-                userData.data.invitations &&
-                to.name !== '2fa-verify'
-      ) {
+      if (!sessionIsVerified.data.status && isSubscribed && userData.data.email_verified && userData.data.numbers && userData.data.invitations && to.name !== '2fa-verify') {
         return to.redirectedFrom && to.redirectedFrom.path !== "2fa-verify" ? next({
           name: '2fa-verify',
           query: { to: to.redirectedFrom.path },
         }) : next({ name: '2fa-verify', query: { to: "/" } })
       }
 
-      if (
-        sessionIsVerified.data.status &&
-                isSubscribed &&
-                userData.data.email_verified &&
-                userData.data.numbers &&
-                userData.data.invitations &&
-                to.name === '2fa-verify'
-      ) {
+      if (sessionIsVerified.data.status && isSubscribed && userData.data.email_verified && userData.data.numbers && userData.data.invitations && to.name === '2fa-verify') {
         return next("/")
       }
 
