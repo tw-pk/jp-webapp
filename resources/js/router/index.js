@@ -292,6 +292,9 @@ router.beforeEach(async (to, from, next) => {
     // Check if user is logged in and can navigate to the destination route
     const userData = await User.auth()
     
+    console.log('userData')
+    console.log(isSubscribed)
+
     if(userData.data.invitations && !isSubscribed){
       createStripeSession()
     }
@@ -326,15 +329,19 @@ router.beforeEach(async (to, from, next) => {
                 to.name !== 'available-numbers-select'
       ) {
         return next({ name: "available-numbers-select" })
-      } else if (
-        userData.data.email_verified &&
-                userData.data.numbers &&
-                !userData.data.invitations &&
-                isSubscribed &&
-                to.name !== 'team-members-invite'
-      ) {
-        return next({ name: "team-members-invite" })
-      } else if (
+      } 
+
+      // else if (
+      //   userData.data.email_verified &&
+      //           userData.data.numbers &&
+      //           !userData.data.invitations &&
+      //           isSubscribed &&
+      //           to.name !== 'team-members-invite'
+      // ) {
+      //   return next({ name: "team-members-invite" })
+      // } 
+
+      else if (
         userData.data.email_verified &&
                 userData.data.numbers &&
                 !userData.data.invitations &&
@@ -342,7 +349,8 @@ router.beforeEach(async (to, from, next) => {
                 to.name !== 'team-members-invite'
       ) {
         return next({ name: "team-members-invite" })
-      } else if (
+      } 
+      else if (
         to.name !== 'purchase-summary' &&
                 userData.data.email_verified &&
                 userData.data.numbers &&
