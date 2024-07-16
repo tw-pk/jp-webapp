@@ -298,8 +298,10 @@ const toggleCall = async () => {
 
   //Code for making outbound call...
   const user = await User.auth()
+  console.log(user, 'here is user');
   const device = dialerStore.twilioDevice
   const userData = user.data
+  console.log(userData, 'here is user');
   if (!onPhone.value) {
 
     muted.value = false
@@ -311,10 +313,7 @@ const toggleCall = async () => {
       connection.value = device.connect({
         params: {
           To: n,
-
-          //agent: JSON.stringify(userData),
-
-          agent: JSON.stringify(user.data),
+          agent: JSON.stringify(userData),  
           From: from.value,
         },
       })

@@ -57,7 +57,6 @@ class TwilioController extends Controller
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);         
             $dial->number($number);
-            Log::info('Here is the main request =>'.$request->all());
             Log::info("Call Dialing");
             if($request->CallStatus  == 'completed'){
                 Log::info("update Call");
@@ -66,7 +65,7 @@ class TwilioController extends Controller
                 Log::info("create Call ");
                 $this->webhookCallstatus($request->all());
             }
-            return $response;
+            echo $response;
         } catch (\Exception $e) {
             Log::error('Twilio API dial error: ' . $e->getMessage());   
         }        
@@ -229,7 +228,7 @@ class TwilioController extends Controller
         try {
             $callSid = $d['CallSid'];
             $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
-            $call = $client->calls($callSid)->fetch();            
+            $call = $client->calls($callSid)->fetch();                     
             Log::info('present call sid info => '.print_r($call->toArray(), true));
             $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
             $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
