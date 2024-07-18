@@ -53,7 +53,7 @@ const phoneListingSteps = [
     key: 'callerId',
   },
   {
-    title: 'Voice to Email',
+    title: 'Voicemail',
     component: VoiceMail,
     key: 'voiceMail',
   },
@@ -162,9 +162,6 @@ const handleUpdatePhoneSetting = data => {
                   Phone Number
                 </th>
                 <th>
-                  Ring Order
-                </th>
-                <th>
                   Members
                 </th>
                 <th>
@@ -189,9 +186,6 @@ const handleUpdatePhoneSetting = data => {
                 </td>
                 <td>
                   {{ item?.external_phone_number }}
-                </td>
-                <td>
-                  {{ item?.ring_order }}
                 </td>
                 <td>
                   {{ item?.ring_order_value?.fullname }}

@@ -1,5 +1,6 @@
 <script setup>
 import { useCallForwardingStore } from "@/views/apps/number/useCallForwardingStore"
+import { phoneValidator } from '@validators'
 import { defineProps, ref, watch } from 'vue'
 
 const props = defineProps(['phoneNumber'])
@@ -7,7 +8,8 @@ const emit = defineEmits(['updatePhoneSetting'])
 const callForwardingStore = useCallForwardingStore()
 
 const fwd_incoming_call = ref(null)
-const ringOrder = ref(null)
+
+//const ringOrder = ref(null)
 const unanswered_fwd_call = ref(null)
 const unansweredFwdCallValue = ref('dismiss_call')
 const isSnackbarVisible = ref(false)
@@ -39,40 +41,37 @@ const incomingOption = [
     name: 'Team Members',
     value: 'team_members',
   },
-  {
-    name: 'Voicemail',
-    value: 'voicemail',
-  },
+ 
 ]
 
-const ringOrders = [
-  {
-    name: '1 Ring',
-    value: '1_ring',
-  },
-  {
-    name: '2 Ring',
-    value: '2_ring',
-  },
-  {
-    name: '3 Ring',
-    value: '3_ring',
-  },
-  {
-    name: '4 Ring',
-    value: '4_ring',
-  },
-  {
-    name: '5 Ring',
-    value: '5_ring',
-  },
-]
+// const ringOrders = [
+//   {
+//     name: '1 Ring',
+//     value: '1_ring',
+//   },
+//   {
+//     name: '2 Ring',
+//     value: '2_ring',
+//   },
+//   {
+//     name: '3 Ring',
+//     value: '3_ring',
+//   },
+//   {
+//     name: '4 Ring',
+//     value: '4_ring',
+//   },
+//   {
+//     name: '5 Ring',
+//     value: '5_ring',
+//   },
+// ]
 
 const unansweredOption = [
-  {
-    name: 'Voicemail',
-    value: 'voicemail',
-  },
+  // {
+  //   name: 'Voicemail',
+  //   value: 'voicemail',
+  // },
   {
     name: 'Dismiss Call',
     value: 'dismiss_call',
@@ -89,7 +88,7 @@ const fetchCallForwarding = () => {
     phone_number: props.phoneNumber,
   }).then(response => {
     const data = response.data
-    if(data.phoneSetting){
+    if(Array.isArray(data.phoneSetting) && data.phoneSetting[0]?.fwd_incoming_call?.length > 0){
       emit('updatePhoneSetting', data.phoneSetting)
     }
     assignUsers.value = data?.assignUsers
@@ -112,7 +111,8 @@ watch(fwd_incoming_call, newValue => {
     webMobileBlock.value = false
     phoneNumberBlock.value = false
     unanswered_fwd_call.value = null
-    ringOrder.value = null
+
+    //ringOrder.value = null
     selectedUsers.value = []
     selectedUsersDataValue.value = []
   }else if(newValue=='mobile_number'){
@@ -121,7 +121,8 @@ watch(fwd_incoming_call, newValue => {
     phoneNumberBlock.value = true
     
     unanswered_fwd_call.value = null
-    ringOrder.value = null
+
+    //ringOrder.value = null
     selectedUsers.value = []
     selectedUsersDataValue.value = []
   }else{
@@ -130,7 +131,8 @@ watch(fwd_incoming_call, newValue => {
     unansweredFwdCallBlock.value = true
    
     unanswered_fwd_call.value = null
-    ringOrder.value = null
+
+    //ringOrder.value = null
     selectedUsers.value = []
     selectedUsersDataValue.value = []
   }
@@ -164,7 +166,8 @@ const addCallForwarding = () => {
     fwd_incoming_call: fwd_incoming_call.value,
     unanswered_fwd_call: unansweredFwdCallValue.value,
     externalPhoneNumber: externalPhoneNumber.value,
-    ringOrder: ringOrder.value,
+
+    //ringOrder: ringOrder.value,
     ringOrderValue: selectedUsersDataValue.value,
   }).then(response => {
     snackbarMessage.value = response.data.message
@@ -248,19 +251,22 @@ watch(selectedUser, newValue => {
           />
         </div>
 
-        <div
+        <!-- 👉 Select Ring Order -->
+        <!--
+          <div
           v-if="webMobileBlock"
           class="mt-4"
-        >
-          <!-- 👉 Select Ring Order -->
+          >
+          
           <AppSelect
-            v-model="ringOrder"
-            label="Select Ring Order"
-            :items="ringOrders"
-            item-title="name"
-            item-value="value"
+          v-model="ringOrder"
+          label="Select Ring Order"
+          :items="ringOrders"
+          item-title="name"
+          item-value="value"
           />
-        </div>
+          </div>
+        -->
       </VCol>
     </VRow>
 
@@ -312,32 +318,37 @@ watch(selectedUser, newValue => {
         sm="6"
         class="mt-7"
       >
-        <VRow>
+        <!--
+          <VRow>
+          
           <VBtn
-            size="38"
-            color="primary"
-            class="ml-3"
+          size="38"
+          color="primary"
+          class="ml-3"
           >
-            <VIcon
-              icon="tabler-plus"
-              size="22"
-            />
+          <VIcon
+          icon="tabler-plus"
+          size="22"
+          />
           </VBtn>
+          
           <VText
           
-            color="primary"
-            class="ml-2 mr-2 mt-2"
+          color="primary"
+          class="ml-2 mr-2 mt-2"
           >
-            Add
+          Add
           </VText>
-          <!-- 👉 If Unanswered, Forward calls to -->
-          <AppSelect
-            v-model="selectedUser"
-            :items="assignUsers"
-            item-title="fullname"
-            item-value="invitationId"
-          />
-        </VRow>
+          </VRow>
+        -->
+        <!-- 👉 If Unanswered, Forward calls to -->
+        <AppSelect
+          v-model="selectedUser"
+          :items="assignUsers"
+          item-title="fullname"
+          item-value="invitationId"
+          label="Select Member"
+        />
       </VCol>
     </VRow>
     <VRow v-if="unansweredFwdCallBlock">
@@ -369,6 +380,7 @@ watch(selectedUser, newValue => {
             v-model="externalPhoneNumber"
             label="Phone Number"
             placeholder="+1XXXXXXXXXXX"
+            :rules="[phoneValidator]"
           />
         </div>
       </VCol>
