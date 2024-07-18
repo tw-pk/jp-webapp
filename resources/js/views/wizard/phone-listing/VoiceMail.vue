@@ -5,7 +5,7 @@ import { defineProps, ref } from 'vue'
 const props = defineProps(['phoneNumber'])
 const voiceMailStore = useVoiceMailStore()
 
-const transcription = ref(true)
+const transcription = ref(false)
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
