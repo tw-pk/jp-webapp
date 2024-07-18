@@ -292,9 +292,6 @@ router.beforeEach(async (to, from, next) => {
     // Check if user is logged in and can navigate to the destination route
     const userData = await User.auth()
     
-    console.log('userData')
-    console.log(isSubscribed)
-
     if(userData.data.invitations && !isSubscribed){
       createStripeSession()
     }
