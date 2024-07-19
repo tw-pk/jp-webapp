@@ -54,13 +54,15 @@ class AuthController extends Controller
         if ($user->save()) {
             $invitationRole = Invitation::with('roleInfo')
                 ->where('email', $user->email)
-                ->select('role')
                 ->first();
+
             if ($invitationRole) {
                 $invitationRole->member_id = $user->id;
                 $invitationRole->registered = true;
                 $invitationRole->save();
+                
             }
+
             $role = $invitationRole?->roleInfo;
             if (empty($role)) {
                 $role = Role::where('name', 'Admin')->first();
