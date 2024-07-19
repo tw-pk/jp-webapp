@@ -54,13 +54,15 @@ class AuthController extends Controller
         if ($user->save()) {
             $invitationRole = Invitation::with('roleInfo')
                 ->where('email', $user->email)
-                ->select('role')
                 ->first();
+
             if ($invitationRole) {
                 $invitationRole->member_id = $user->id;
                 $invitationRole->registered = true;
                 $invitationRole->save();
+                
             }
+
             $role = $invitationRole?->roleInfo;
             if (empty($role)) {
                 $role = Role::where('name', 'Admin')->first();
@@ -332,6 +334,7 @@ class AuthController extends Controller
             'email_verified' => $request->user()->email_verified_at ?? false,
             'numbers' => $request->user()->numbers->count(),
             'invitations' => $request->user()->invitations->count(),
+            'can_have_new_number' => $request->user()?->invitationsMember?->can_have_new_number,
             "bio" => $request->user()->profile ? $request->user()->profile->bio : "",
             'avatar' => Auth::user()->profile ? (Auth::user()->profile->avatar != null ? asset('storage/avatars/' . Auth::user()->profile?->avatar) : null) : null
         ];
