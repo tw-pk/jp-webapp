@@ -409,6 +409,10 @@ router.beforeEach(async (to, from, next) => {
         return next({ name: 'verify-email' })
       }
 
+      if(userData.data.email_verified && userData.data.can_have_new_number==1 && !userData.data.numbers && to.name !== 'available-numbers-select') {
+        return next({ name: "available-numbers-select" })
+      } 
+
       if(userData.data.email_verified && to.name === 'verify-email'){
         return next("/")
       }
