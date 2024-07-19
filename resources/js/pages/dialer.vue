@@ -297,6 +297,7 @@ const toggleCall = async () => {
   event.preventDefault()
 
   //Code for making outbound call...
+  const user = await User.auth()  
   const user = await User.auth()
 
   console.log(user, 'here is user')
@@ -316,7 +317,7 @@ const toggleCall = async () => {
       connection.value = device.connect({
         params: {
           To: n,
-          agent: JSON.stringify(userData),  
+          agent: JSON.stringify(userData.id),  
           From: from.value,
         },
       })
