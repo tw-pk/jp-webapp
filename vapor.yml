@@ -11,6 +11,9 @@ environments:
             - 'COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev'
             - 'php artisan event:cache'
             - 'npm ci && npm run build && rm -rf node_modules'
+        env:
+            APP_ENV: development
+            APP_URL: https://beta.jotphone.com            
     production:
         domain: jotphone.com
         database: jotphone
@@ -21,3 +24,6 @@ environments:
             - 'COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev'
             - 'php artisan event:cache'
             - 'npm ci && npm run build && rm -rf node_modules'
+        env:
+            APP_ENV: development
+            APP_URL: https://jotphone.com

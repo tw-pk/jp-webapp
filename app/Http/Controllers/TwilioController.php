@@ -21,6 +21,7 @@ use App\Models\Call;
 use App\Models\Contact;
 use App\Models\UserCredit;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\UpdateCallDetails;
 
 class TwilioController extends Controller
 {
@@ -56,19 +57,17 @@ class TwilioController extends Controller
             $dial = $response->dial('', ['callerId' => $request->From]);
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);         
-            $dial->number($number);
-            Log::info("Call Dialing");
-            if($request->CallStatus  == 'completed'){
-                Log::info("update Call");
+            $dial->number($number);  
+            $data = $request->all(); 
+            if($request->CallStatus  === 'completed'){
                 $this->updateCallDetails($request->all());
             }else{
-                Log::info("create Call ");
-                $this->webhookCallstatus($request->all());
-            }
+                $this->webhookCallstatus($data, $number);
+            }  
             echo $response;
         } catch (\Exception $e) {
             Log::error('Twilio API dial error: ' . $e->getMessage());   
-        }        
+        }                
     }
 
     public function incomingCall(Request $request){
@@ -221,48 +220,47 @@ class TwilioController extends Controller
         return response('Transcription handled', 200);
     }
 
-    public function updateCallDetails($d)
+
+    public function webhookCallstatus($d, $number)
     {
-        DB::beginTransaction();
+        $data = json_encode($d, true);
+        $price = $this->fetchCallDetails($number);
+        $price = floatval(trim($price, '"'));
+        Log::info("Here is all detail =>".$data);
+        // Create or update a Call record
+        $call = new Call();
+        $call->sid = $d['CallSid'];
+        $call->from = $d['From'];
+        $call->to = $d['To'];
+        $call->user_id = $d['agent'];
+        $call->contact_id = null;
+        $call->date_time = now();
+        $call->duration = '0 seconds';
+        $call->direction = $d['Direction'];
+        $call->status = $d['CallStatus'];
+        $call->price = $price;
+        $call->save();
+        
+    }
 
-        try {
-            $callSid = $d['CallSid'];
-            $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
-            $call = $client->calls($callSid)->fetch();                     
-            Log::info('present call sid info => '.print_r($call->toArray(), true));
-            $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
-            $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
-            $duration = $call->duration . " seconds" ?? '-';
-            $status = $call->status;
-            $price = $call->price;
-            $dateTime = $startTime . '-' . $endTime;
-
-            $updateCallDetails = Call::where('sid', $callSid)->update([
-                'duration' => $duration,
-                'status' => $status,
-                'price' => $price,
-                'date_time' => $dateTime,
-            ]);
-
-            $callDetails = Call::where('sid', $callSid)->first();
-            Log::info('Here is all Call Price =>'. abs($callDetails->price));
-            $userId = $callDetails->user_id;            
-            $user = User::with('invitationsMember')->where('id', $userId)->first();    
-            if ($user->hasRole('Admin')) {
-                Log::info('Inside Admin role =>'.$userId);                   
-                $this->fetchUserCredit($userId, abs($callDetails->price));
-            } else {
-                Log::info('Inside memeber role');
-                $invitationMember = $user->invitationsMember; 
-                Log::info('here is Invitaion member relation => '. $invitationMember);
-                Log::info('here is Invitaion member relation of user (admin/teamlead user id) => '. $invitationMember->user_id);
-                $this->fetchUserCredit($invitationMember->user_id, abs($callDetails->price));
-            }
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error updating call details: ' . $e->getMessage());
-        }
+    
+    public function fetchCallDetails($n) 
+    { 
+        Log::info("Inside fetchCallDetails");
+        
+        $sid = config('app.TWILIO_CLIENT_ID');
+        $token = config('app.TWILIO_AUTH_TOKEN');
+        $twilio = new Client($sid, $token);
+        
+        $number = $twilio->pricing->v2->voice->numbers($n)->fetch();
+        
+        $price = isset($number->inboundCallPrice['current_price']) 
+        ? json_encode($number->inboundCallPrice['current_price']) 
+        : (isset($number->outboundCallPrices[0]['current_price']) 
+            ? json_encode($number->outboundCallPrices[0]['current_price']) 
+            : null);
+        Log::info("inside fetch details =>". $price);
+        return $price;
     }
 
 
@@ -283,23 +281,84 @@ class TwilioController extends Controller
         }
     }
 
-    public function webhookCallstatus($d)
-    {
-        $agentData = json_decode($d['agent'], true);        
-        Call::create([
-            'sid' => $d['CallSid'],
-            'from' => $d['From'],
-            'to' => $d['To'],
-            'user_id' => $agentData['id'],
-            'contact_id' => null,
-            'date_time' => now(),
-            'duration' => 0 . " seconds" ?? '-',
-            'direction' => $d['Direction'],
-            'status' => $d['CallStatus'],
-            'price'  => $d['CallPrice'] ?? null
-        ]);
-        
-    }
 
+    public function updateCallDetails($d)
+    {
+        DB::beginTransaction();
+
+        try {
+            $callSid = $d['CallSid'];
+            $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
+            $call = $client->calls($callSid)->fetch();
+
+            Log::info('Present call SID info => ' . print_r($call->toArray(), true));
+
+            $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
+            $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
+            $duration = $call->duration ? (int) $call->duration : 0; // Duration in seconds
+            $status = $call->status;
+            $price = $call->price; // This might be null if not provided
+            $dateTime = $startTime . '-' . $endTime;
+
+            // Prepare data for updating
+            $updateData = [
+                'duration' => $duration . " seconds",
+                'status' => $status,
+                'date_time' => $dateTime,
+            ];
+
+            if ($price !== null) {
+                // Update price if provided
+                $updateData['price'] = abs($price);
+            } else {
+                // Fetch existing call details from the database
+                $callDetails = Call::where('sid', $callSid)->first();
+                
+                // If the call details exist and have a price
+                if ($callDetails) {
+                    $pricePerMinute = $callDetails->price; // Fetch the price per minute from existing call details
+                    
+                    // Convert duration to minutes
+                    $durationInMinutes = $duration / 60;
+                    
+                    // Calculate the price
+                    $calculatedPrice = $durationInMinutes * $pricePerMinute;
+                    
+                    // Update the price with the calculated value
+                    $updateData['price'] = $calculatedPrice;
+                }
+            }
+
+            // Update call details in the database
+            Call::where('sid', $callSid)->update($updateData);
+
+            // Optional: Fetch the updated call details
+            $callDetails = Call::where('sid', $callSid)->first();
+            Log::info('Updated Call Details:', [
+                'price' => $callDetails->price,
+                'duration' => $callDetails->duration
+            ]);
+
+            // Additional logic for handling user credits
+            $userId = $callDetails->user_id;
+            $user = User::with('invitationsMember')->where('id', $userId)->first();
+
+            if ($user->hasRole('Admin')) {
+                Log::info('Inside Admin role => ' . $userId);
+                $this->fetchUserCredit($userId, abs($callDetails->price));
+            } else {
+                Log::info('Inside member role');
+                $invitationMember = $user->invitationsMember;
+                Log::info('Here is Invitation member relation => ' . $invitationMember);
+                Log::info('Here is Invitation member relation of user (admin/teamlead user id) => ' . $invitationMember->user_id);
+                $this->fetchUserCredit($invitationMember->user_id, abs($callDetails->price));
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating call details: ' . $e->getMessage());
+        }
+    }
 
 }
