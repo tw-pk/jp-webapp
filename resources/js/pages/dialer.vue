@@ -298,8 +298,7 @@ const toggleCall = async () => {
 
   //Code for making outbound call...
   const user = await User.auth()  
-  const user = await User.auth()
-
+  
   console.log(user, 'here is user')
 
   const device = dialerStore.twilioDevice
