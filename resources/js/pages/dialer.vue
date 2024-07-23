@@ -293,48 +293,79 @@ const toggleMute = () => {
   device.mute(muted.value)
 }
     
-const toggleCall = async () => {
-  event.preventDefault()
-
-  //Code for making outbound call...
-  const user = await User.auth()  
   
-  console.log(user, 'here is user')
 
-  const device = dialerStore.twilioDevice
-  const userData = user.data
+  const toggleCall = async (event) => {
+    event.preventDefault();
 
-  console.log(userData, 'here is user')
-  if (!onPhone.value) {
+    // Code for making outbound call...
+    const user = await User.auth();
+    const device = dialerStore.twilioDevice;
+    const userId = user.data.id;
 
-    muted.value = false
-    onPhone.value = true
+    // Function to check the user's credit balance
+    const checkBalance = async (userId) => {
+      try {
+        const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`);
+        console.log(response, 'hgere is reposn main');
+        // Check if the response status is OK (status code 200)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Check content-type to ensure it's JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new TypeError("Received non-JSON response");
+        }
+        
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Error checking balance:', error);
+        return null;
+      }
+      };
 
-    // make outbound call with current number
-    const n = '+' + currentNumber.value.replace(/\D/g, '')    
-    try {
-      connection.value = device.connect({
-        params: {
-          To: n,
-          agent: JSON.stringify(userData.id),  
-          From: from.value,
-        },
-      })
-      log.value = 'Calling ' + n
-    } catch (error) {
-      console.error('Error connecting:', error)
+    if (!onPhone.value) {
+      muted.value = false;
+      onPhone.value = true;
+
+      // Check user's balance
+      const balanceResult = await checkBalance(userId);
+      console.log(balanceResult, 'here is balance result');
+      if (balanceResult && balanceResult.lowBalance) {
+        // Show low balance message
+        log.value = 'Your balance is currently low. Please contact your team lead.';
+        onPhone.value = false;
+        muted.value = true;
+      } else {
+        // Make outbound call with current number
+        const n = '+' + currentNumber.value.replace(/\D/g, '');
+        try {
+          connection.value = device.connect({
+            params: {
+              To: n,
+              agent: JSON.stringify(userId),
+              From: from.value,
+            },
+          });
+          log.value = 'Calling ' + n;
+        } catch (error) {
+          console.error('Error connecting:', error);
+        }
+      }
+    } else {
+      log.value = 'Hanging Up';
+      device.disconnectAll();
+      log.value = 'Connected';
+
+      muted.value = true;
+      onPhone.value = false;
     }
-  } else {
-    log.value = 'Hanging Up '
+  };
 
-    // Hang up call in progress
-    device.disconnectAll()
-    log.value = 'Connected'
 
-    muted.value = true
-    onPhone.value = false
-  }
-}
     
 const playIncomingCallSound = connection => {
   incomingCallSound.value = new Audio(defaultRingtone)

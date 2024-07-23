@@ -22,6 +22,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\DialerSettingController;
+use App\Http\Controllers\TwilioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,7 +121,8 @@ Route::group(['prefix' => 'auth'], function () {
 
         //fetch twilio country from a database
         Route::post('twilio/country/list', [CountryController::class, 'twilio_country_list']);
-        Route::post('twilio/capability/token', [\App\Http\Controllers\TwilioController::class, 'retrieveToken']);
+        Route::post('twilio/capability/token', [TwilioController::class, 'retrieveToken']);
+        Route::get('check-balance/{userId}', [TwilioController::class, 'checkBalance']);
 
         Route::post('numbers/list', [NumberController::class, 'list']);
         Route::post('numbers', [NumberController::class, 'existingNumbers']);
