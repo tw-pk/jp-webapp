@@ -105,8 +105,7 @@ class TwilioController extends Controller
     }
     
    public function dial(Request $request){
-        try {
-                
+        try {                
             $response = new VoiceResponse();
             $dial = $response->dial('', ['callerId' => $request->From]);
             $to = $request->To;
