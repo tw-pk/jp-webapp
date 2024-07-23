@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Call;
 use App\Models\Contact;
 use App\Models\UserCredit;
+use App\Models\CreditProduct;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\UpdateCallDetails;
 
@@ -50,24 +51,80 @@ class TwilioController extends Controller
         return response()->json($token);
     }
 
-   public function dial(Request $request){
 
+    public function checkBalance($userId)
+    {
+        $id = json_decode($userId);
+        Log::info("here is user id =>". $userId);
+    
+
+        $userId = $id;
+        $user = User::with('invitationsMember')->where('id', $userId)->first();
+
+
+        $teamleadId;
+        if ($user->hasRole('Admin')) {
+            Log::info('Inside Admin role => ' . $userId);
+            $teamleadId = $userId;
+        } else {            
+            $invitationMember = $user->invitationsMember;
+            Log::info('Here is Invitation member relation => ' . $invitationMember);
+            Log::info('Here is Invitation member relation of user (admin/teamlead user id) => ' . $invitationMember->user_id);
+            $teamleadId = $invitationMember->user_id;
+        }
+
+        $creditInformation = UserCredit::where('user_id', $teamleadId)->first();
+    
+        // Check if $creditInformation is null
+        if (!$creditInformation) {
+            return response()->json([
+                'error' => 'User credit information not found.'
+            ], 404);
+        }
+    
+        $thresholdValue = CreditProduct::where('price_id', $creditInformation->threshold_value)->pluck('price')->first();
+    
+        // Check if $thresholdValue is null
+        if (is_null($thresholdValue)) {
+            return response()->json([
+                'error' => 'Threshold value not found.'
+            ], 404);
+        }
+    
+        if ($creditInformation->credit < $thresholdValue) {
+            return response()->json([
+                'message' => 'Your balance is currently low. Please contact your team lead.',
+                'lowBalance' => true
+            ], 200);
+        }
+    
+        return response()->json([
+            'message' => 'Your balance is sufficient.',
+            'lowBalance' => false
+        ], 200);
+    }
+    
+   public function dial(Request $request){
         try {
+                
             $response = new VoiceResponse();
             $dial = $response->dial('', ['callerId' => $request->From]);
             $to = $request->To;
-            $number = Str::replaceFirst('+', '', $to);         
-            $dial->number($number);  
-            $data = $request->all(); 
-            if($request->CallStatus  === 'completed'){
-                $this->updateCallDetails($request->all());
-            }else{
+            $number = Str::replaceFirst('+', '', $to);
+            $dial->number($number);
+            $data = $request->all();
+            
+            if ($request->CallStatus === 'completed') {
+                $this->updateCallDetails($data);
+            } else {
                 $this->webhookCallstatus($data, $number);
-            }  
+            }
+            
             echo $response;
         } catch (\Exception $e) {
-            Log::error('Twilio API dial error: ' . $e->getMessage());   
-        }                
+            Log::error('Twilio API dial error: ' . $e->getMessage());
+        }        
+                
     }
 
     public function incomingCall(Request $request){
