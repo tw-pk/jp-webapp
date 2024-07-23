@@ -189,7 +189,7 @@ const changeNumber = () => {
               :error-messages="error.otp"
               name="otp"
               label="OTP"
-              type="number"
+              type="text"
               min="0"
               max="6"
               placeholder="XXXXXX"
