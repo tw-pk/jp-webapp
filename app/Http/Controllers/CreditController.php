@@ -10,7 +10,6 @@ class CreditController extends Controller
 {
     public function fetch_top_up_credit(Request $request)
     {
-        dd(Auth::user()->credit);
         if(Auth::user()->credit){
             return response()->json([
                 'credit' =>  '$' . number_format(Auth::user()->credit->credit, 2),
@@ -19,7 +18,6 @@ class CreditController extends Controller
                 'recharge_value' => CreditProduct::where('price_id', Auth::user()->credit->recharge_value)->first()?->id,
                 'total_balance' => $this->calculateTotalBalance()
             ]);
-            
         }else{
             return response()->json([
                 'credit' =>  '$' . number_format(0, 2)
@@ -28,7 +26,7 @@ class CreditController extends Controller
     }
 
     protected function calculateTotalBalance() {
-        $userCredit = Auth::user()->credit->credit;
+        $userCredit = Auth::user()?->credit?->credit;
         $rechargeValue = CreditProduct::where('price_id', Auth::user()->credit->recharge_value)->first()?->price ?? 0;
     
         // Calculate total balance
