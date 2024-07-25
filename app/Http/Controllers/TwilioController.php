@@ -298,7 +298,6 @@ class TwilioController extends Controller
         $call->status = $d['CallStatus'];
         $call->price = $price;
         $call->save();
-        
     }
 
     

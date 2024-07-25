@@ -15,13 +15,24 @@ class CreditController extends Controller
                 'credit' =>  '$' . number_format(Auth::user()->credit->credit, 2),
                 'autoCredit' => Auth::user()->credit->threshold_enabled,
                 'threshold_value' => CreditProduct::where('price_id', Auth::user()->credit->threshold_value)->first()?->id,
-                'recharge_value' => CreditProduct::where('price_id', Auth::user()->credit->recharge_value)->first()?->id
+                'recharge_value' => CreditProduct::where('price_id', Auth::user()->credit->recharge_value)->first()?->id,
+                'total_balance' => $this->calculateTotalBalance()
             ]);
         }else{
             return response()->json([
                 'credit' =>  '$' . number_format(0, 2)
             ]);
         }
+    }
+
+    protected function calculateTotalBalance() {
+        $userCredit = Auth::user()?->credit?->credit;
+        $rechargeValue = CreditProduct::where('price_id', Auth::user()->credit->recharge_value)->first()?->price ?? 0;
+    
+        // Calculate total balance
+        $totalBalance = $userCredit + $rechargeValue;
+    
+        return '$' . number_format($totalBalance, 2);
     }
 
     public function fetch_top_limits(){

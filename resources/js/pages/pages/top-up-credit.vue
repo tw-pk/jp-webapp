@@ -1,5 +1,5 @@
 <script setup>
-import {useTopUpCreditStore} from "@/views/apps/credit/useTopUpCreditStore"
+import { useTopUpCreditStore } from "@/views/apps/credit/useTopUpCreditStore"
 import axiosIns from "@axios"
 
 const route = useRoute()
@@ -45,7 +45,7 @@ const updateCreditInfo = () => {
   axiosIns.post('/api/auth/credit-info/update', {
     autoCreditEnabled: autoCreditEnabled.value,
     autoCreditPrice: autoCreditValue.value,
-    rechargeAmount: rechargeAmount.value
+    rechargeAmount: rechargeAmount.value,
   })
     .then(res => {
       if (res.data.status) {
@@ -56,7 +56,7 @@ const updateCreditInfo = () => {
 }
 
 watch(topUpId, value => {
-  createStripeSession({topUpId: value})
+  createStripeSession({ topUpId: value })
 })
 
 const toggleSwitch = () => {
@@ -109,7 +109,12 @@ onMounted(() => {
     </div>
     <VRow class="match-height">
       <VCol cols="12">
-        <VAlert closable v-if="isPaymentSuccessful" color="success" class="mb-2">
+        <VAlert
+          v-if="isPaymentSuccessful"
+          closable
+          color="success"
+          class="mb-2"
+        >
           Payment Successful
         </VAlert>
         <VCard>
@@ -146,7 +151,12 @@ onMounted(() => {
         </VCard>
       </VCol>
       <VCol cols="12">
-        <VAlert closable v-if="creditInfoUpdated" color="success" class="mb-2">
+        <VAlert
+          v-if="creditInfoUpdated"
+          closable
+          color="success"
+          class="mb-2"
+        >
           Credit Info Updated Successfully
         </VAlert>
         <VCard>
