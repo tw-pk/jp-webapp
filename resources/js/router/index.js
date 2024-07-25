@@ -429,7 +429,7 @@ router.beforeEach(async (to, from, next) => {
   } else {
     // Handle not authorized access
     if (isLoggedIn) {
-      return next({ name: 'not-authorized' })
+      return next()
     } else {
       return next({ name: 'login', query: { to: to.name !== 'index' ? to.fullPath : undefined } })
     }

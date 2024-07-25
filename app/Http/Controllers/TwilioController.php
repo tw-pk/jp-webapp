@@ -54,22 +54,17 @@ class TwilioController extends Controller
 
     public function checkBalance($userId)
     {
-        $id = json_decode($userId);
-        Log::info("here is user id =>". $userId);
-    
+        $id = json_decode($userId);    
 
         $userId = $id;
         $user = User::with('invitationsMember')->where('id', $userId)->first();
 
 
         $teamleadId;
-        if ($user->hasRole('Admin')) {
-            Log::info('Inside Admin role => ' . $userId);
+        if ($user->hasRole('Admin')) {            
             $teamleadId = $userId;
         } else {            
-            $invitationMember = $user->invitationsMember;
-            Log::info('Here is Invitation member relation => ' . $invitationMember);
-            Log::info('Here is Invitation member relation of user (admin/teamlead user id) => ' . $invitationMember->user_id);
+            $invitationMember = $user->invitationsMember;                    
             $teamleadId = $invitationMember->user_id;
         }
 
@@ -97,7 +92,15 @@ class TwilioController extends Controller
                 'lowBalance' => true
             ], 200);
         }
+        
+        if($creditInformation->credit === 0){
+            return response()->json([
+                'message' => 'Your balance is currently low. Please contact your team lead.',
+                'lowBalance' => true
+            ], 200);
+        }
     
+
         return response()->json([
             'message' => 'Your balance is sufficient.',
             'lowBalance' => false
@@ -121,17 +124,16 @@ class TwilioController extends Controller
             
             echo $response;
         } catch (\Exception $e) {
-            Log::error('Twilio API dial error: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 404);
         }        
                 
     }
 
     public function incomingCall(Request $request){
 
-        $response = new VoiceResponse();
-        Log::info('Incoming Call Response: ');
-        Log::info($request->all());
-        
+        $response = new VoiceResponse();        
         $UserNumber = UserNumber::where('active', true)->where('phone_number', $request->To)->first();
         if (!empty($UserNumber)) {
            
@@ -282,7 +284,7 @@ class TwilioController extends Controller
         $data = json_encode($d, true);
         $price = $this->fetchCallDetails($number);
         $price = floatval(trim($price, '"'));
-        Log::info("Here is all detail =>".$data);
+        
         // Create or update a Call record
         $call = new Call();
         $call->sid = $d['CallSid'];
@@ -301,8 +303,7 @@ class TwilioController extends Controller
 
     
     public function fetchCallDetails($n) 
-    { 
-        Log::info("Inside fetchCallDetails");
+    {         
         
         $sid = config('app.TWILIO_CLIENT_ID');
         $token = config('app.TWILIO_AUTH_TOKEN');
@@ -315,7 +316,7 @@ class TwilioController extends Controller
         : (isset($number->outboundCallPrices[0]['current_price']) 
             ? json_encode($number->outboundCallPrices[0]['current_price']) 
             : null);
-        Log::info("inside fetch details =>". $price);
+        
         return $price;
     }
 
@@ -323,17 +324,18 @@ class TwilioController extends Controller
     public function fetchUserCredit($adminId, $price)
     {
         try {
-            Log::info('here is Teamlead user is => '. $adminId);
-            Log::info('here is call Price => '. $price);
+            
             $adminCredit = UserCredit::where('user_id', $adminId)->first();
-            Log::info('here is user credit => '.$adminCredit);
+            
             $callPrice = $price;
             $priceWithMargin = $callPrice * 1.15;
             $adminCredit->credit -=  $priceWithMargin; 
             $adminCredit->save();
-            Log::info('Deducte admin price');
+            
         } catch (\Exception $e) {
-            Log::error('Error updating User credits : ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 404);            
         }
     }
 
@@ -345,9 +347,7 @@ class TwilioController extends Controller
         try {
             $callSid = $d['CallSid'];
             $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
-            $call = $client->calls($callSid)->fetch();
-
-            Log::info('Present call SID info => ' . print_r($call->toArray(), true));
+            $call = $client->calls($callSid)->fetch();     
 
             $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
             $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
@@ -390,30 +390,24 @@ class TwilioController extends Controller
 
             // Optional: Fetch the updated call details
             $callDetails = Call::where('sid', $callSid)->first();
-            Log::info('Updated Call Details:', [
-                'price' => $callDetails->price,
-                'duration' => $callDetails->duration
-            ]);
-
+            
             // Additional logic for handling user credits
             $userId = $callDetails->user_id;
             $user = User::with('invitationsMember')->where('id', $userId)->first();
 
-            if ($user->hasRole('Admin')) {
-                Log::info('Inside Admin role => ' . $userId);
+            if ($user->hasRole('Admin')) {            
                 $this->fetchUserCredit($userId, abs($callDetails->price));
-            } else {
-                Log::info('Inside member role');
-                $invitationMember = $user->invitationsMember;
-                Log::info('Here is Invitation member relation => ' . $invitationMember);
-                Log::info('Here is Invitation member relation of user (admin/teamlead user id) => ' . $invitationMember->user_id);
+            } else {            
+                $invitationMember = $user->invitationsMember;            
                 $this->fetchUserCredit($invitationMember->user_id, abs($callDetails->price));
             }
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating call details: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 404);            
         }
     }
 

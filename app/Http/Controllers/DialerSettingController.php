@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\DialerSetting;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class DialerSettingController extends Controller
 {
@@ -41,7 +42,13 @@ class DialerSettingController extends Controller
 
     public function dialer_setting()
     {
-        $dialerSetting = DialerSetting::where('user_id', Auth::user()->id)?->first();
+        $user = Auth::user();
+        if ($user->hasRole('Admin')) {    
+            $dialerSetting = DialerSetting::where('user_id', Auth::user()->id)?->first();
+        }else{
+            $invitationMember = $user->invitationsMember;            
+            $dialerSetting = DialerSetting::where('user_id', $invitationMember->user_id)?->first();
+        }
         return response()->json([
             'setting' => $dialerSetting
         ]);
