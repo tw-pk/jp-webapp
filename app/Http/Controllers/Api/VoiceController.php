@@ -602,7 +602,7 @@ class VoiceController extends Controller
                     $member->avatar = $member?->profile?->avatar ? asset('storage/' . $member->profile->avatar) : null;
 
                     $curtime = Carbon::now();
-                    $dateTime = $member->last_login_at ? Carbon::parse($member->last_login_at) : $curtime->toDateTimeString();
+                    $dateTime = $member->last_login_at ? Carbon::parse($member->last_login_at) : $curtime;
                     $formattedDate = "Since " . $dateTime->format('j M, \a\t h:i A');
                     $member->last_login_at = $formattedDate;
 
