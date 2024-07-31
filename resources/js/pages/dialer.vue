@@ -278,6 +278,7 @@ const validPhone = computed(() => {
 })
     
 const handleSuccessfulRegistration = device => {
+  console.log(device, 'here is device values');
   log.value = 'Connected'
   connected.value = true
   console.log('The device is ready to receive incoming calls.')
@@ -292,8 +293,20 @@ const toggleMute = () => {
 
   device.mute(muted.value)
 }
-    
+
+
+const forwardCall = () => {
+  console.log('here is the console');
+}    
+
   
+const addConference = () => {
+  console.log('here is the console');
+} 
+
+const holdCall = () => {
+  log.value = 'Call on Hold';
+}
 
   const toggleCall = async (event) => {
     event.preventDefault();
@@ -333,12 +346,12 @@ const toggleMute = () => {
 
       // Check user's balance
       const balanceResult = await checkBalance(userId);
-      console.log(balanceResult, 'here is balance result');
       if (balanceResult && balanceResult.lowBalance) {
-        // Show low balance message
+        // Show low balance message        
+        connected.value = false;
         log.value = 'Your balance is currently low. Please contact your team lead.';
         onPhone.value = false;
-        muted.value = true;
+        muted.value = true;      
       } else {
         // Make outbound call with current number
         const n = '+' + currentNumber.value.replace(/\D/g, '');
@@ -351,9 +364,16 @@ const toggleMute = () => {
             },
           });
           log.value = 'Calling ' + n;
+          
+          setTimeout(() => {
+            console.log(connection.value, 'here is parameteers');
+          }, 1000);
+          
         } catch (error) {
           console.error('Error connecting:', error);
         }
+
+
       }
     } else {
       log.value = 'Hanging Up';
@@ -403,7 +423,7 @@ const handleIncomingCall = incomingCall => {
   const device = dialerStore.twilioDevice
 
   console.log('incomingCall')
-  console.log(device)
+  console.log(device, 'here is device')
   try {
     calledId.value = incomingCall.From
     callerId.value = incomingCall.To
@@ -434,7 +454,7 @@ const handleIncomingCall = incomingCall => {
     })
     
   } catch (error) {
-    console.log(error)
+    console.log(error, 'here is the twilio error')
   }
 }
     
@@ -534,6 +554,7 @@ const clearInput = () => {
 onMounted(() => {
   window.Echo.channel('incoming-calls')
     .listen('IncomingCallEvent', event => {
+      console.log(event.CallStatus, 'here is call status');
       if(event.CallStatus =='ringing'){
         handleIncomingCall(event)
       }
@@ -606,7 +627,7 @@ const onMountedFunction = async () => {
 
     })
     .catch(error => {
-      console.log(error)
+      console.log(error, 'No here is we are')
     })
     
   // Ask the user for microphone permission
@@ -666,7 +687,7 @@ const fetchContacts = () => {
     })
     .catch(error => {
       loading.value = false
-      console.log(error)
+      console.log(error, 'here is contacts')
     })
 }
 
@@ -686,7 +707,7 @@ const fetchSetting = () => {
     })
     .catch(error => {
       loading.value = false
-      console.log(error)
+      console.log(error,'here is setting')
     })
 }
 
@@ -1137,7 +1158,9 @@ const moreList = [
           </button>
         </div>
 
-        <div class="d-flex flex-row justify-center status-container mt-10">
+        
+
+        <div class="d-flex flex-row justify-center status-container mt-4">
           <VChip
             label
             :color="connected ? 'success' : 'error'"
@@ -1153,6 +1176,9 @@ const moreList = [
             {{ log }}
           </VChip>
         </div>
+        
+        
+        
 
         <div class="dialer-grid mt-10">
           <div
@@ -1185,9 +1211,35 @@ const moreList = [
               v-if="onPhone"
               :icon="muted ? 'tabler-microphone-off' : 'tabler-microphone'"
               size="large"
-              class="ml-10"
+              class="ml-3"
               @click="toggleMute"
             />
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              icon="tabler-arrow-forward"
+              title="Forward Call"
+              @click="forwardCall"
+            />            
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              icon="tabler-phone-plus"
+              title="Add Conference"
+              @click="addConference"
+            />            
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              icon="tabler-building-fortress"
+              title="Hold"
+              @click="holdCall"
+            />            
+            
+
           </div>
         </div>
 
