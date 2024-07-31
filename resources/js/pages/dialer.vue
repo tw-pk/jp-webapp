@@ -278,6 +278,7 @@ const validPhone = computed(() => {
 })
     
 const handleSuccessfulRegistration = device => {
+  console.log(device, 'here is device values');
   log.value = 'Connected'
   connected.value = true
   console.log('The device is ready to receive incoming calls.')
@@ -333,12 +334,12 @@ const toggleMute = () => {
 
       // Check user's balance
       const balanceResult = await checkBalance(userId);
-      console.log(balanceResult, 'here is balance result');
       if (balanceResult && balanceResult.lowBalance) {
-        // Show low balance message
+        // Show low balance message        
+        connected.value = false;
         log.value = 'Your balance is currently low. Please contact your team lead.';
         onPhone.value = false;
-        muted.value = true;
+        muted.value = true;      
       } else {
         // Make outbound call with current number
         const n = '+' + currentNumber.value.replace(/\D/g, '');
@@ -351,9 +352,16 @@ const toggleMute = () => {
             },
           });
           log.value = 'Calling ' + n;
+
+          setTimeout(() => {
+            console.log(connection.value, 'here is parameteers');
+          }, 1000);
+          
         } catch (error) {
           console.error('Error connecting:', error);
         }
+
+
       }
     } else {
       log.value = 'Hanging Up';
@@ -534,6 +542,7 @@ const clearInput = () => {
 onMounted(() => {
   window.Echo.channel('incoming-calls')
     .listen('IncomingCallEvent', event => {
+      console.log(event.CallStatus, 'here is call status');
       if(event.CallStatus =='ringing'){
         handleIncomingCall(event)
       }
@@ -1137,7 +1146,9 @@ const moreList = [
           </button>
         </div>
 
-        <div class="d-flex flex-row justify-center status-container mt-10">
+        
+
+        <div class="d-flex flex-row justify-center status-container mt-4">
           <VChip
             label
             :color="connected ? 'success' : 'error'"
@@ -1153,6 +1164,8 @@ const moreList = [
             {{ log }}
           </VChip>
         </div>
+        
+        
 
         <div class="dialer-grid mt-10">
           <div
@@ -1185,9 +1198,16 @@ const moreList = [
               v-if="onPhone"
               :icon="muted ? 'tabler-microphone-off' : 'tabler-microphone'"
               size="large"
-              class="ml-10"
+              class="ml-3"
               @click="toggleMute"
             />
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              icon="tabler-arrow-forward"
+              title="Forward Call"
+            />            
           </div>
         </div>
 
