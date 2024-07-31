@@ -98,16 +98,12 @@ class EmailVerificationService
     }
 
     private function checkIfOtpIsValid($otp){
+
         if($this->user->otps->count()){
             $latest_record = $this->user->otps->sortByDesc('created_at')->first();
             if($latest_record) {
                 if (($latest_record->expires_at > Carbon::now()->format('Y-m-d h:i'))) {
-                    if($otp === $latest_record->otp){
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Invalid OTP provided!'
-                        ], 401);
-                    }else{
+                    if($otp === strval($latest_record->otp)){
                         $latest_record->verified = true;
                         $latest_record->save();
                         $this->user->email_verified_at = Carbon::now();
@@ -115,6 +111,11 @@ class EmailVerificationService
                         return response()->json([
                             'status' => true,
                             'message' => 'OTP verified successfully.'
+                        ]);
+                    }else{
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Invalid OTP provided!'
                         ]);
                     }
                 } else {
@@ -125,10 +126,11 @@ class EmailVerificationService
                 }
             }
         }else{
-            return false;
+            return response()->json([
+                'status' => false,
+                'message' => 'Please generate new OTP!'
+            ]);
         }
-
-
     }
 
 }
