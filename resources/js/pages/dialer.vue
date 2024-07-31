@@ -293,8 +293,20 @@ const toggleMute = () => {
 
   device.mute(muted.value)
 }
-    
+
+
+const forwardCall = () => {
+  console.log('here is the console');
+}    
+
   
+const addConference = () => {
+  console.log('here is the console');
+} 
+
+const holdCall = () => {
+  log.value = 'Call on Hold';
+}
 
   const toggleCall = async (event) => {
     event.preventDefault();
@@ -352,7 +364,7 @@ const toggleMute = () => {
             },
           });
           log.value = 'Calling ' + n;
-
+          
           setTimeout(() => {
             console.log(connection.value, 'here is parameteers');
           }, 1000);
@@ -411,7 +423,7 @@ const handleIncomingCall = incomingCall => {
   const device = dialerStore.twilioDevice
 
   console.log('incomingCall')
-  console.log(device)
+  console.log(device, 'here is device')
   try {
     calledId.value = incomingCall.From
     callerId.value = incomingCall.To
@@ -442,7 +454,7 @@ const handleIncomingCall = incomingCall => {
     })
     
   } catch (error) {
-    console.log(error)
+    console.log(error, 'here is the twilio error')
   }
 }
     
@@ -615,7 +627,7 @@ const onMountedFunction = async () => {
 
     })
     .catch(error => {
-      console.log(error)
+      console.log(error, 'No here is we are')
     })
     
   // Ask the user for microphone permission
@@ -675,7 +687,7 @@ const fetchContacts = () => {
     })
     .catch(error => {
       loading.value = false
-      console.log(error)
+      console.log(error, 'here is contacts')
     })
 }
 
@@ -695,7 +707,7 @@ const fetchSetting = () => {
     })
     .catch(error => {
       loading.value = false
-      console.log(error)
+      console.log(error,'here is setting')
     })
 }
 
@@ -1166,6 +1178,7 @@ const moreList = [
         </div>
         
         
+        
 
         <div class="dialer-grid mt-10">
           <div
@@ -1207,7 +1220,26 @@ const moreList = [
               class="ml-3"
               icon="tabler-arrow-forward"
               title="Forward Call"
+              @click="forwardCall"
             />            
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              icon="tabler-phone-plus"
+              title="Add Conference"
+              @click="addConference"
+            />            
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              icon="tabler-building-fortress"
+              title="Hold"
+              @click="holdCall"
+            />            
+            
+
           </div>
         </div>
 
