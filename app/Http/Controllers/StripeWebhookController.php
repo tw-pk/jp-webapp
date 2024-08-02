@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Jobs\AwardCredit;
 use App\Models\User;
 use App\Models\UserCredit;
+use App\Models\CreditHistory;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
 use App\Notifications\CreditAwarded;
@@ -39,6 +40,7 @@ class StripeWebhookController extends WebhookController
 
         if($method == 'handlePaymentIntentSucceeded'){
             $this->creditCustomerAccount($payload);
+            $this->billingHistory($payload);
         }
 
         if (method_exists($this, $method)) {
@@ -55,11 +57,11 @@ class StripeWebhookController extends WebhookController
     private function creditCustomerAccount(array $payload)
     {
         $paymentIntent = $payload['data']['object'];
-        $amountStatus = $paymentIntent['status'];
+        $paymentStatus = $paymentIntent['status'];
         $paymentData = $paymentIntent['charges']['data'][0];
         $customerId = $paymentData['customer'];
         $amount = $paymentData['amount'] / 100;
-        if ($amountStatus === 'succeeded') {
+        if ($paymentStatus === 'succeeded') {
             $user = User::where('stripe_id', $customerId)->first();
             if ($user) {
                 if ($user->credit) {
@@ -73,6 +75,29 @@ class StripeWebhookController extends WebhookController
                 }
                 $user->notify(new CreditAwarded($amount));
             }
+        }
+    }
+
+    private function billingHistory(array $payload)
+    {
+        $paymentIntent = $payload['data']['object'];
+        $paymentStatus = $paymentIntent['status'];
+        $transaction_id = $paymentIntent['id'];
+
+        $paymentData = $paymentIntent['charges']['data'][0];
+        $customerId = $paymentData['customer'];
+        $amount = $paymentData['amount'] / 100;
+        $receipt_url = $paymentData['receipt_url'];
+        $user = User::where('stripe_id', $customerId)->first();
+        if ($user) {
+            CreditHistory::create([
+                'user_id' => $user->id,
+                'user_credit_id' => $user->credit?->id,
+                'transaction_id' => $transaction_id,
+                'amount' => $amount,
+                'status' => $paymentStatus,
+                'receipt_url' => $receipt_url,
+            ]);
         }
     }
 
