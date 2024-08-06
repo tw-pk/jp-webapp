@@ -39,8 +39,8 @@ class StripeWebhookController extends WebhookController
         WebhookReceived::dispatch($payload);
 
         if($method == 'handlePaymentIntentSucceeded'){
-            $this->creditCustomerAccount($payload);
             $this->billingHistory($payload);
+            $this->creditCustomerAccount($payload);
         }
 
         if (method_exists($this, $method)) {
@@ -89,6 +89,7 @@ class StripeWebhookController extends WebhookController
         $amount = $paymentData['amount'] / 100;
         $receipt_url = $paymentData['receipt_url'];
         $user = User::where('stripe_id', $customerId)->first();
+
         if ($user) {
             CreditHistory::create([
                 'user_id' => $user->id,

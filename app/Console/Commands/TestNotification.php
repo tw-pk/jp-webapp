@@ -27,6 +27,6 @@ class TestNotification extends Command
      */
     public function handle()
     {
-        event(new NewNotificationEvent(2));
+        event(new NewNotificationEvent(47));
     }
 }

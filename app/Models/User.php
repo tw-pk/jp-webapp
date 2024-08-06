@@ -141,7 +141,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function creditHistory(): HasMany
     {
-        return $this->hasMany(CreditHistory::class);
+        return $this->hasMany(CreditHistory::class)->orderBy('created_at', 'desc');
     }
 
     public function note(): HasOne
