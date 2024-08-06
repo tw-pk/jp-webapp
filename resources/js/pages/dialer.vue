@@ -29,6 +29,9 @@ const twilioDevice = computed(() => dialerStore.twilioDevice)
 const currentNumber = ref('')
 const muted = ref(false)
 const onPhone = ref(false)
+const onForward = ref(false)
+const selectedTeamMember = ref(null)
+const teamMembers = ref([])
 const log = ref('Connecting...')
 const connection = ref(null)
 const connected = ref(false)
@@ -265,6 +268,19 @@ const fetchCountries = () => {
       console.log(error)
     })
 }
+
+const fetchTeamMembers = async () => {
+  try {
+    const res = await dialerStore.fetchMemberList()        
+    teamMembers.value = res.map(member => ({
+      title: member.fullname,
+      value: member.id
+    }))
+  } catch (error) {
+    console.error('Failed to fetch team members:', error)
+  }
+}
+
     
 const currentTab = ref('tab-phone')
 const filteredNumbers = ref([])
@@ -295,17 +311,31 @@ const toggleMute = () => {
 }
 
 
-const forwardCall = () => {
-  console.log('here is the console');
+const forwardCall = () => {  
+  onForward.value = true;
 }    
 
+const connectForwardCall = () => {
+  const id = selectedTeamMember.value;  
+  try {
+    const response = dialerStore.connectTransferCall(id);
+    if (response.data.success) {
+      log.value('Call transferred successfully');
+    } else {
+      log.value('Failed to transfer call:', response.data.message);
+    }
+  } catch (error) {
+    console.error('Failed to transfer call:', error);
+  }
   
+};
+
 const addConference = () => {
   console.log('here is the console');
 } 
 
 const holdCall = () => {
-  log.value = 'Call on Hold';
+  
 }
 
   const toggleCall = async (event) => {
@@ -365,10 +395,7 @@ const holdCall = () => {
           });
           log.value = 'Calling ' + n;
           
-          setTimeout(() => {
-            console.log(connection.value, 'here is parameteers');
-          }, 1000);
-          
+
         } catch (error) {
           console.error('Error connecting:', error);
         }
@@ -386,8 +413,8 @@ const holdCall = () => {
   };
 
 
-    
-const playIncomingCallSound = connection => {
+
+  const playIncomingCallSound = connection => {
   incomingCallSound.value = new Audio(defaultRingtone)
   incomingCallSound.value.play()
 }
@@ -467,9 +494,9 @@ const initializeTwilio = async () => {
   const device = dialerStore.twilioDevice
   
   device.on("ready", function (device) {
-    log("Twilio.Device Ready!")
+    log("Twilio.Device Ready!", device)
   })
-
+    
   // add event Listener to check if device is registered and ready
   device.on('registered', handleSuccessfulRegistration)
 
@@ -552,6 +579,7 @@ const clearInput = () => {
 }
    
 onMounted(() => {
+  fetchTeamMembers()
   window.Echo.channel('incoming-calls')
     .listen('IncomingCallEvent', event => {
       console.log(event.CallStatus, 'here is call status');
@@ -596,10 +624,10 @@ const selectCountry = country => {
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
 }
-    
+
 const activeTab = ref('Dialer - JotPhone')
     
-const onMountedFunction = async () => {
+const onMountedFunction = async () => { 
   fetchCountries()
   currentNumber.value = '+' + selectedCountry.value.phone_code
   
@@ -1176,8 +1204,26 @@ const moreList = [
             {{ log }}
           </VChip>
         </div>
-        
-        
+
+        <div v-if="onForward" class="d-flex flex-row justify-center align-items-center status-container mt-4 mr-4 ml-4 gap-4">          
+          <VSelect
+            v-model="selectedTeamMember"
+            label="Select Team Member"
+            :items="teamMembers"
+            item-value="value" 
+            item-title="title" 
+            density="compact"              
+            clearable
+            clear-icon="tabler-x"
+            style="width: 10rem;"
+          />     
+          <VBtn              
+            size="large"
+            color="success"
+            text="Connect"              
+            @click.prevent="connectForwardCall"
+          />   
+        </div>  
         
 
         <div class="dialer-grid mt-10">

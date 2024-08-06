@@ -108,14 +108,13 @@ class TwilioController extends Controller
     }
     
    public function dial(Request $request){
-        try {                
+        try {                             
             $response = new VoiceResponse();
             $dial = $response->dial('', ['callerId' => $request->From]);
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);
             $dial->number($number);
             $data = $request->all();
-            
             if ($request->CallStatus === 'completed') {
                 $this->updateCallDetails($data);
             } else {
@@ -408,6 +407,31 @@ class TwilioController extends Controller
                 'error' => $e->getMessage()
             ], 404);            
         }
+    }
+
+    public function transferCall(Request $request)
+    {
+        Log::info("Here is all transfer call Details =>". $request->all());
+        // $toNumber = $request->input('toNumber');
+        // $callSid = $request->input('callSid');
+
+        // $accountSid = config('services.twilio.sid');
+        // $authToken = config('services.twilio.token');
+        // $twilioNumber = config('services.twilio.from');
+
+        // $client = new Client($accountSid, $authToken);
+
+        // try {
+        //     $call = $client->calls($callSid)
+        //         ->update([
+        //             "method" => "POST",
+        //             "url" => route('twilio.transfer', ['toNumber' => $toNumber])
+        //         ]);
+
+        //     return response()->json(['success' => true, 'message' => 'Call transferred successfully']);
+        // } catch (\Exception $e) {
+        //     return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        // }
     }
 
 }

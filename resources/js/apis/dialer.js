@@ -9,5 +9,11 @@ export default {
     async setCurrentNumber(data){
       return axiosIns.put('api/auth/dialer/current-number', data)
     },
+
+    data(){
+      return {        
+        selectedTeamMember,        
+      }
+    }
     
 }
