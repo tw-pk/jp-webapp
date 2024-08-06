@@ -90,7 +90,7 @@ export const useDialerStore = defineStore('dialer', {
         .then(res => resolve(res))
         .catch(error => reject(error));
       });
-    };
+    },
     
 
      //fetch team member        
