@@ -86,11 +86,15 @@ export const useDialerStore = defineStore('dialer', {
     //connect transfer call
     connectTransferCall(data) {
       return new Promise((resolve, reject) => {
-        axiosIns.post('api/auth/connect/transfer-call', data)
+        axiosIns.post('api/auth/connect/transfer-call', {
+          id: data.id,
+          number: data.number
+        })
         .then(res => resolve(res))
         .catch(error => reject(error));
       });
     },
+    
     
 
      //fetch team member        

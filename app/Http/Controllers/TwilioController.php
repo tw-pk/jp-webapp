@@ -19,6 +19,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Call;
 use App\Models\Contact;
+use App\Models\AssignNumber;
 use App\Models\UserCredit;
 use App\Models\CreditProduct;
 use Illuminate\Support\Facades\DB;
@@ -411,27 +412,33 @@ class TwilioController extends Controller
 
     public function transferCall(Request $request)
     {
-        Log::info("Here is all transfer call Details =>". $request->all());
-        // $toNumber = $request->input('toNumber');
-        // $callSid = $request->input('callSid');
+        
+        try {
+            $id =  $request->input('id');
+            // $from = $request->input('number');                        
+            $assignedNumber = AssignNumber::where('invitation_id', (string)$id)->first();   
+            // if ($assignedNumber) {                
+            //     $response = new VoiceResponse();
+            //     $dial = $response->dial('', ['callerId' => $from]);                
+            //     $dial->number($assignedNumber->phone_number);
+            // } else {
+            //     Log::error("No assigned number found for invitation_id: " . $id);
+            // }
 
-        // $accountSid = config('services.twilio.sid');
-        // $authToken = config('services.twilio.token');
-        // $twilioNumber = config('services.twilio.from');
+            $response = new VoiceResponse();
 
-        // $client = new Client($accountSid, $authToken);
+            // Placing the original caller on hold and dialing the second agent
+            $dial = $response->dial(['action' => url('/api/dial-status')]);
+            $dial->number($assignedNumber->phone_number); // Second agent's number
+    
+            return response($response)->header('Content-Type', 'text/xml');
 
-        // try {
-        //     $call = $client->calls($callSid)
-        //         ->update([
-        //             "method" => "POST",
-        //             "url" => route('twilio.transfer', ['toNumber' => $toNumber])
-        //         ]);
-
-        //     return response()->json(['success' => true, 'message' => 'Call transferred successfully']);
-        // } catch (\Exception $e) {
-        //     return response()->json(['success' => false, 'message' => $e->getMessage()]);
-        // }
+        } catch (\Exception $e) {
+            Log::info("error =>".$e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 404);            
+        }
     }
 
 }

@@ -69,6 +69,9 @@ const searchContact = ref('')
 const activeTabName = ref('home')
 const incomingCall = ref(null)
 
+//hold track
+const isOnHold = ref(false) 
+
 // Chat message
 const msg = ref('')
 
@@ -271,7 +274,8 @@ const fetchCountries = () => {
 
 const fetchTeamMembers = async () => {
   try {
-    const res = await dialerStore.fetchMemberList()        
+    const res = await dialerStore.fetchMemberList()
+    console.log(res, 'here is the response of invite memeber');
     teamMembers.value = res.map(member => ({
       title: member.fullname,
       value: member.id
@@ -316,9 +320,11 @@ const forwardCall = () => {
 }    
 
 const connectForwardCall = () => {
-  const id = selectedTeamMember.value;  
-  try {
-    const response = dialerStore.connectTransferCall(id);
+  const id = selectedTeamMember.value;
+  const number = '+' + currentNumber.value.replace(/\D/g, '');
+  try {    
+    const data = { id, number };
+    const response = dialerStore.connectTransferCall(data);
     if (response.data.success) {
       log.value('Call transferred successfully');
     } else {
@@ -333,10 +339,6 @@ const connectForwardCall = () => {
 const addConference = () => {
   console.log('here is the console');
 } 
-
-const holdCall = () => {
-  
-}
 
   const toggleCall = async (event) => {
     event.preventDefault();
@@ -1282,8 +1284,10 @@ const moreList = [
               class="ml-3"
               icon="tabler-building-fortress"
               title="Hold"
-              @click="holdCall"
-            />            
+              @click="toggleHold">
+              {{ buttonText }}
+            </VBtn>
+    
             
 
           </div>
