@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->post('broadcasting/auth', function (Request $
 });
 
 
-Route::group(['prefix' => 'auth'], function () {
+Route::group(['prefix' => 'auth', 'middleware' => ['check.balance']], function (){
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('register', [AuthController::class, 'register']);
     Route::post('/forgot/password', [AuthController::class, 'forgotPassword']);

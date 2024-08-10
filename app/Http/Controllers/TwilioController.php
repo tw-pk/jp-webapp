@@ -19,6 +19,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Call;
 use App\Models\Contact;
+use App\Models\AssignNumber;
 use App\Models\UserCredit;
 use App\Models\CreditProduct;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +60,7 @@ class TwilioController extends Controller
         $userId = $id;
         $user = User::with('invitationsMember')->where('id', $userId)->first();
 
+
         $teamleadId;
         if ($user->hasRole('Admin')) {            
             $teamleadId = $userId;
@@ -69,6 +71,10 @@ class TwilioController extends Controller
 
         $creditInformation = UserCredit::where('user_id', $teamleadId)->first();
     
+        if($thresholdEnabled->threshold_enabled == '1'){
+            $this->autoTopUpPaymentService->checkAndTopUp($user);
+            
+        }
         // Check if $creditInformation is null
         if (!$creditInformation) {
             return response()->json([
@@ -78,6 +84,7 @@ class TwilioController extends Controller
     
         $thresholdValue = CreditProduct::where('price_id', $creditInformation->threshold_value)->pluck('price')->first();
     
+
         // Check if $thresholdValue is null
         if (is_null($thresholdValue)) {
             return response()->json([
@@ -107,14 +114,13 @@ class TwilioController extends Controller
     }
     
    public function dial(Request $request){
-        try {                
+        try {                             
             $response = new VoiceResponse();
             $dial = $response->dial('', ['callerId' => $request->From]);
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);
             $dial->number($number);
             $data = $request->all();
-            
             if ($request->CallStatus === 'completed') {
                 $this->updateCallDetails($data);
             } else {
@@ -408,5 +414,40 @@ class TwilioController extends Controller
             ], 404);            
         }
     }
+
+    public function transferCall(Request $request)
+    {
+        
+        try {
+            $id =  $request->input('id');
+            // $from = $request->input('number');                        
+            $assignedNumber = AssignNumber::where('invitation_id', (string)$id)->first();   
+            // if ($assignedNumber) {                
+            //     $response = new VoiceResponse();
+            //     $dial = $response->dial('', ['callerId' => $from]);                
+            //     $dial->number($assignedNumber->phone_number);
+            // } else {
+            //     Log::error("No assigned number found for invitation_id: " . $id);
+            // }
+
+            $response = new VoiceResponse();
+
+            // Placing the original caller on hold and dialing the second agent
+            $dial = $response->dial(['action' => url('/api/dial-status')]);
+            $dial->number($assignedNumber->phone_number); // Second agent's number
+    
+            return response($response)->header('Content-Type', 'text/xml');
+
+        } catch (\Exception $e) {
+            Log::info("error =>".$e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 404);            
+        }
+    }
+
+
+    
+
 
 }
