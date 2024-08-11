@@ -18,7 +18,6 @@ import DialerSettings from "@/views/apps/dialer/components/DialerSettings.vue"
 import { avatarText } from '@core/utils/formatters'
 
 const incomingCallSound = ref(null)
-let isCallAccepted = false
 const vuetifyTheme = useTheme()
 const dialerStore = useDialerStore()
 const showNotification = ref(false)
@@ -33,6 +32,7 @@ const onForward = ref(false)
 const selectedTeamMember = ref(null)
 const teamMembers = ref([])
 const log = ref('Connecting...')
+const CallTimer = ref(0);
 const connection = ref(null)
 const connected = ref(false)
 const dropdownContainer = ref(null)
@@ -74,6 +74,11 @@ const isOnHold = ref(false)
 
 // Chat message
 const msg = ref('')
+
+const callStartTime = ref(null);
+const currentTime = ref(null);
+const timerInterval = ref(null);
+const isCallAccepted = ref(false);
 
 // file input
 const refInputEl = ref()
@@ -161,18 +166,6 @@ const testOutputDevice = async () => {
     
     return
   }
-
-  //check devices connected with laptop
-  // navigator.mediaDevices.enumerateDevices()
-  //   .then(devices => {
-  //     devices.forEach(device => {
-  //       console.log('devices')
-  //       console.log(device.kind, device.label, device.deviceId)
-  //     })
-  //   })
-  //   .catch(error => {
-  //     console.error('Error enumerating devices:', error)
-  //   })
      
   testOutputBtn.value = "Testing ..."
 
@@ -340,79 +333,127 @@ const addConference = () => {
   console.log('here is the console');
 } 
 
-  const toggleCall = async (event) => {
-    event.preventDefault();
+const callDuration = computed(() => {
+  if (!callStartTime.value || !currentTime.value) return '00:00:00';
+  
+  const diff = Math.floor((currentTime.value - callStartTime.value) / 1000);
+  const hours = Math.floor(diff / 3600).toString().padStart(2, '0');
+  const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+  const seconds = (diff % 60).toString().padStart(2, '0');
+  
+  return `${hours}:${minutes}:${seconds}`;
+});
 
-    // Code for making outbound call...
-    const user = await User.auth();
-    const device = dialerStore.twilioDevice;
-    const userId = user.data.id;
+const startTimer = () => {
+  callStartTime.value = Date.now();
+  currentTime.value = Date.now();
+  timerInterval.value = setInterval(() => {
+    currentTime.value = Date.now();
+  }, 1000);
+};
 
-    // Function to check the user's credit balance
-    const checkBalance = async (userId) => {
-      try {
-        const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`);
-        console.log(response, 'hgere is reposn main');
-        // Check if the response status is OK (status code 200)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Check content-type to ensure it's JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new TypeError("Received non-JSON response");
-        }
-        
-        const result = await response.json();
-        return result;
-      } catch (error) {
-        console.error('Error checking balance:', error);
-        return null;
+const stopTimer = () => {
+  if (timerInterval.value) {
+    clearInterval(timerInterval.value);
+    timerInterval.value = null;
+  }
+  callStartTime.value = null;
+  currentTime.value = null;
+  isCallAccepted.value = false;
+};
+
+
+
+const toggleCall = async (event) => {
+  event.preventDefault();
+
+  // Code for making outbound call...
+  const user = await User.auth();
+  const device = dialerStore.twilioDevice;
+  const userId = user.data.id;
+
+  // Function to check the user's credit balance
+  const checkBalance = async (userId) => {
+    try {
+      const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`);            
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      };
+            
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new TypeError("Received non-JSON response");
+      }
+      
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      return null;
+    }
+    };
 
-    if (!onPhone.value) {
-      muted.value = false;
-      onPhone.value = true;
+  if (!onPhone.value) {
+    muted.value = false;
+    onPhone.value = true;
 
-      // Check user's balance
-      const balanceResult = await checkBalance(userId);
-      if (balanceResult && balanceResult.lowBalance) {
-        // Show low balance message        
-        connected.value = false;
-        log.value = 'Your balance is currently low. Please contact your team lead.';
-        onPhone.value = false;
-        muted.value = true;      
-      } else {
-        // Make outbound call with current number
-        const n = '+' + currentNumber.value.replace(/\D/g, '');
-        try {
-          connection.value = device.connect({
+    // Check user's balance
+    const balanceResult = await checkBalance(userId);
+    if (balanceResult && balanceResult.lowBalance) {
+      // Show low balance message        
+      connected.value = false;
+      log.value = 'Your balance is currently low. Please contact your team lead.';
+      onPhone.value = false;
+      muted.value = true;      
+    } else {
+      // Make outbound call with current number
+      const n = '+' + currentNumber.value.replace(/\D/g, '');
+      try {        
+        connection.value = device.connect({
             params: {
               To: n,
               agent: JSON.stringify(userId),
               From: from.value,
             },
-          });
-          log.value = 'Calling ' + n;
-          
+          }).then(call => {
+                                       
+            call.on('accept', () => {                            
+              log.value = 'Call in progress';
+              isCallAccepted.value = true;
+              startTimer();
+            });                                    
 
-        } catch (error) {
-          console.error('Error connecting:', error);
-        }
+            call.on('disconnect', () => {
+              onPhone.value = false;
+              connected.value = false;
+              console.log('Call ended');              
+              log.value = 'Call has ended';
+              stopTimer();
+            });
 
-
+            call.on('ringing', () => {              
+              log.value = 'Phone is ringing';
+            });            
+            
+          }).catch(error => {
+            console.error('Error initiating call:', error);
+          });        
+        
+      } catch (error) {
+        console.error('Error connecting:', error);
       }
-    } else {
-      log.value = 'Hanging Up';
-      device.disconnectAll();
-      log.value = 'Connected';
 
-      muted.value = true;
-      onPhone.value = false;
+
     }
-  };
+  } else {
+    log.value = 'Hanging Up';
+    device.disconnectAll();
+    log.value = 'Connected';
+
+    muted.value = true;
+    onPhone.value = false;
+  }
+};
 
 
 
@@ -580,14 +621,13 @@ const clearInput = () => {
   currentNumber.value = currentNumber.value.slice(0, -1)
 }
    
-onMounted(() => {
+onMounted(() => {  
   fetchTeamMembers()
   window.Echo.channel('incoming-calls')
-    .listen('IncomingCallEvent', event => {
-      console.log(event.CallStatus, 'here is call status');
-      if(event.CallStatus =='ringing'){
+    .listen('IncomingCallEvent', event => {      
+      if(event.CallStatus =='ringing'){       
         handleIncomingCall(event)
-      }
+      }      
     })
 })
 
@@ -1205,6 +1245,23 @@ const moreList = [
             />
             {{ log }}
           </VChip>
+        </div>
+
+        <div v-if="isCallAccepted" class="d-flex flex-row justify-center status-container mt-4">          
+          <VChip
+            label
+            :color="isCallAccepted ? 'success' : 'error'"
+            class="ml-1"
+          >
+            <VIcon
+              start
+              :color="isCallAccepted ? 'success' : 'error'"
+              icon="tabler-point-filled"
+              class="mr-1"
+              size="18px"
+            />
+            {{ callDuration }}          
+          </VChip>            
         </div>
 
         <div v-if="onForward" class="d-flex flex-row justify-center align-items-center status-container mt-4 mr-4 ml-4 gap-4">          
@@ -2125,114 +2182,12 @@ const moreList = [
         <DialerSettings
           :countries="countries"
           :numbers="userNumbers"
-        />
-        <!--        <PerfectScrollbar -->
-        <!--          :options="{ wheelPropagation: false }" -->
-        <!--          style="max-block-size: 39rem;" -->
-        <!--        > -->
-        <!--          &lt;!&ndash; Show the loader &ndash;&gt; -->
-        <!--          <DialerLoader :is-processing="loading" /> -->
-
-        <!--        -->
-        <!--          <VCol cols="12"> -->
-        <!--            <VExpansionPanels multiple> -->
-        <!--              <VExpansionPanel> -->
-        <!--                <VExpansionPanelTitle> -->
-        <!--                  <VIcon -->
-        <!--                    icon="tabler-volume" -->
-        <!--                    size="18" -->
-        <!--                  /> -->
-        <!--                  <h4 class=""> -->
-        <!--                    &nbsp;&nbsp;Audio Settings -->
-        <!--                  </h4> -->
-        <!--                </VExpansionPanelTitle> -->
-        <!--                <VExpansionPanelText> -->
-        <!--                  <VCol -->
-        <!--                    cols="12" -->
-        <!--                    md="12" -->
-        <!--                  > -->
-        <!--                    <AppAutocomplete -->
-        <!--                      v-model="selectedAudioDevice" -->
-        <!--                      label="Select Output Devices" -->
-        <!--                      :items="audioDevices" -->
-        <!--                      item-title="name" -->
-        <!--                      item-value="value" -->
-        <!--                    /> -->
-        <!--                    <span -->
-        <!--                      v-if="audioDeviceError" -->
-        <!--                      class="error" -->
-        <!--                      :style="{ color: audioDeviceError.color || 'red' }" -->
-        <!--                    >{{ audioDeviceError.msg }}</span> -->
-        <!--                    <VSpacer /> -->
-        <!--                    <VBtn -->
-        <!--                      color="primary" -->
-        <!--                      class="mt-5" -->
-        <!--                      @click="testAudio" -->
-        <!--                    > -->
-        <!--                      {{ testAudioBtn }} -->
-        <!--                    </VBtn> -->
-        <!--                  </VCol> -->
-        <!--                  <p class="border-b" /> -->
-
-        <!--                  <VCol -->
-        <!--                    cols="12" -->
-        <!--                    md="12" -->
-        <!--                  > -->
-        <!--                    <AppAutocomplete -->
-        <!--                      v-model="selectedInputDevice" -->
-        <!--                      label="Select Input Devices" -->
-        <!--                      :items="inputDevices" -->
-        <!--                      item-title="name" -->
-        <!--                      item-value="value" -->
-        <!--                    /> -->
+        />        
         <span
           v-if="inputDeviceError"
           class="error"
           :style="{ color: inputDeviceError.color || 'red' }"
-        >{{ inputDeviceError.msg }}</span>
-        <!--                    <VSpacer /> -->
-        <!--                    <VBtn -->
-        <!--                      color="primary" -->
-        <!--                      class="mt-5" -->
-        <!--                      @click="testInputDevice" -->
-        <!--                    > -->
-        <!--                      {{ testInputBtn }} -->
-        <!--                    </VBtn> -->
-        <!--                  </VCol> -->
-        <!--                  <p class="border-b" /> -->
-
-        <!--                  <VCol -->
-        <!--                    cols="12" -->
-        <!--                    md="12" -->
-        <!--                  > -->
-        <!--                    <label>Select Ringtone Devices</label> -->
-        <!--                    <p><small>Output device that is used to play the ringing sound when receiving an incoming call.</small></p> -->
-        <!--                    <AppAutocomplete -->
-        <!--                      v-model="selectedOutputDevice" -->
-        <!--                      label="Select Output Devices" -->
-        <!--                      :items="audioDevices" -->
-        <!--                      item-title="name" -->
-        <!--                      item-value="value" -->
-        <!--                    /> -->
-        <!--                    <span -->
-        <!--                      v-if="outputDeviceError" -->
-        <!--                      class="error" -->
-        <!--                      :style="{ color: outputDeviceError.color || 'red' }" -->
-        <!--                    >{{ outputDeviceError.msg }}</span> -->
-        <!--                    <VSpacer /> -->
-        <!--                    <VBtn -->
-        <!--                      color="primary" -->
-        <!--                      class="mt-5" -->
-        <!--                      @click="testOutputDevice" -->
-        <!--                    > -->
-        <!--                      {{ testOutputBtn }} -->
-        <!--                    </VBtn> -->
-        <!--                  </VCol> -->
-        <!--                </VExpansionPanelText> -->
-        <!--              </VExpansionPanel> -->
-        <!--            </VExpansionPanels> -->
-        <!--          </VCol> -->
-        <!--        </PerfectScrollbar> -->
+        >{{ inputDeviceError.msg }}</span>     
       </div>
 
       <div class="d-flex flex-row align-center position-absolute bottom__0">
