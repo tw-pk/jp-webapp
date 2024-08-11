@@ -60,7 +60,6 @@ class TwilioController extends Controller
         $userId = $id;
         $user = User::with('invitationsMember')->where('id', $userId)->first();
 
-
         $teamleadId;
         if ($user->hasRole('Admin')) {            
             $teamleadId = $userId;

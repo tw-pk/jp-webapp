@@ -275,18 +275,32 @@ class StripeController extends Controller
     public function invoices(Request $request)
     {
         $invoices = [];
-        $stripeInvoices = Auth::user()->invoices();
+        // $stripeInvoices = Auth::user()->invoices();
+        // foreach ($stripeInvoices as $stripeInvoice) {
+        //     $invoices[] = [
+        //         'id' => $stripeInvoice->number,
+        //         'status' => $stripeInvoice->status,
+        //         'total' => $stripeInvoice->total,
+        //         'balance' => $stripeInvoice->ending_balance,
+        //         'invoice_url' => $stripeInvoice->hosted_invoice_url,
+        //         'date' => Carbon::createFromTimeString($stripeInvoice->effective_at)->format('d M, Y'),
+        //         'createdAt' => Carbon::createFromTimeString($stripeInvoice->created)->format('d M, Y')
+        //     ];
+        // }
+
+        $stripeInvoices = Auth::user()->creditHistory;
         foreach ($stripeInvoices as $stripeInvoice) {
             $invoices[] = [
-                'id' => $stripeInvoice->number,
+                'id' => $stripeInvoice->transaction_id,
                 'status' => $stripeInvoice->status,
-                'total' => $stripeInvoice->total,
-                'balance' => $stripeInvoice->ending_balance,
-                'invoice_url' => $stripeInvoice->hosted_invoice_url,
-                'date' => Carbon::createFromTimeString($stripeInvoice->effective_at)->format('d M, Y'),
-                'createdAt' => Carbon::createFromTimeString($stripeInvoice->created)->format('d M, Y')
+                'total' => number_format($stripeInvoice->amount, 2),
+                'balance' => number_format($stripeInvoice->amount, 2),
+                'invoice_url' => $stripeInvoice->receipt_url,
+                'date' => Carbon::createFromTimeString($stripeInvoice->created_at)->format('d M, Y'),
+                'createdAt' => Carbon::createFromTimeString($stripeInvoice->created_at)->format('d M, Y')
             ];
         }
+       
 
         return response()->json([
             'status' => true,

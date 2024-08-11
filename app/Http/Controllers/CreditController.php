@@ -38,13 +38,13 @@ class CreditController extends Controller
     }
 
     public function update_credit_info(Request $request){
+        
         $request->validate([
             'autoCreditEnabled' => 'required'
         ]);
-
         $autoCreditValue = CreditProduct::find($request->autoCreditPrice);
         $rechargeAmount = CreditProduct::find($request->rechargeAmount);
-
+       
         if(!$autoCreditValue){
             return response()->json([
                 'status' => false,
@@ -52,15 +52,12 @@ class CreditController extends Controller
             ], 404);
         }
 
-
         if(!$rechargeAmount){
             return response()->json([
                 'status' => false,
                 'message' => 'No credit information found!'
             ], 404);
         }
-
-
 
         if(Auth::user()->credit){
             Auth::user()->credit->threshold_enabled = $request->autoCreditEnabled;
