@@ -23,6 +23,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\DialerSettingController;
 use App\Http\Controllers\TwilioController;
+use App\Http\Controllers\CallController;
 
 /*
 |--------------------------------------------------------------------------
@@ -137,7 +138,8 @@ Route::group(['prefix' => 'auth', 'middleware' => ['check.balance']], function (
         //Manage Members
         Route::post('members/add', [MembersController::class, 'store']);
         Route::post('members/list', [MembersController::class, 'list']);
-        Route::post('fetch/members', [MembersController::class, 'fetchMembers']);
+        Route::post('fetch/members', [MembersController::class, 'fetchMembers']);   
+        Route::post('connect/transfer-call', [TwilioController::class, 'transferCall']);
 
         //invite member routes
         Route::post('invitations/store', [InvitationController::class, 'store']);
@@ -232,6 +234,8 @@ Route::group(['prefix' => 'auth', 'middleware' => ['check.balance']], function (
 });
 
 Route::post('/twilio-sms', [ChatController::class, 'handleIncomingMessage']);
-
+Route::post('/dial-status', [CallController::class, 'handleDialStatus']);
 Route::get('/stripe/top-up/checkout/success', [StripeController::class, 'topUpSuccess']);
 Route::get('/stripe/top-up/checkout/cancel', [StripeController::class, 'topUpCancel']);
+Route::post('/hold-call', [CallController::class, 'holdCall']);
+Route::post('/resume-call', [CallController::class, 'resumeCall']);
