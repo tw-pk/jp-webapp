@@ -448,7 +448,4 @@ class TwilioController extends Controller
     }
 
 
-    
-
-
 }
