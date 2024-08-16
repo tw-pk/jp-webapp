@@ -22,6 +22,9 @@ class Invitation extends Model
         'user_id'
     ];
 
+    public function fullName(){
+        return $this->firstname." ".$this->lastname;
+    }
 
     public function user(): BelongsTo
     {

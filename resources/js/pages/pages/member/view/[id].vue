@@ -1,6 +1,6 @@
 <script setup>
-import Profile from "@/pages/pages/contact-details/components/Profile.vue"
-import ProfileHeader from "@/pages/pages/contact-details/components/ProfileHeader.vue"
+import Profile from "@/pages/pages/member/view/components/Profile.vue"
+import ProfileHeader from "@/pages/pages/member/view/components/ProfileHeader.vue"
 import { useMemberListStore } from '@/views/apps/member/useMemberListStore'
 import { useRoute } from "vue-router"
 
@@ -10,24 +10,20 @@ const router = useRouter()
 const memberDetail = ref(null)
 
 onMounted(async () => {
-  if(route.params.id){
-    console.log('member member member')
+  let member_id = Number(route.params.id)
+  if(member_id){
     await memberListStore.fetchMemberDetail({
-      member_id: route.params.id,
+      member_id: member_id,
     })
       .then(res => {
-        console.log('member member member')
-        console.log(res)
-
-        // if(res.data.status){
-        //   memberDetail.value = res.data.member
-        // }else{
-        //   router.replace({ name: 'pages-misc-not-found' })
-        // }
+        if(res.data.status){
+          memberDetail.value = res.data.memberDetail
+        }else{
+          router.replace({ name: 'pages-misc-not-found' })
+        }
       })
   }else{
-    //await router.replace({ name: 'pages-misc-not-found' })
-    console.log('pages-misc-not-found')
+    await router.replace({ name: 'pages-misc-not-found' })
   }
 })
 </script>

@@ -9,6 +9,7 @@ use App\Models\AssignNumber;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class MembersController extends Controller
 {
@@ -145,23 +146,32 @@ class MembersController extends Controller
 
     public function fetchMemberDetail(Request $request)
     { 
-        dd('test');
         try {
-            $member = Invitation::find($memberId);
+            $member = Invitation::find($request->member_id);
             if(!$member){
                 return response()->json([
                     'status' => false,
                     'message' => 'Member not found'
                 ]);
             }
+            
+            $memberDetail = [
+                'fullName' => $member->fullName(),
+                'email' => $member->email,
+                'number' => $member->number,
+                'registered' => $member->registered ==1 ? "True" : "False",
+                'role' => $member->roleInfo ? $member->roleInfo->name : 'Role not found',
+                'invitationDate' => Carbon::parse($member->created_at)->format('d M, Y'),
+                'avatar' => $member->invitationAccept && $member->invitationAccept->profile && $member->invitationAccept->profile->avatar
+                ? asset('storage/avatars/' . $member->invitationAccept->profile->avatar)
+                : null,
+            ];
             return response()->json([
                 'status' => true,
-                'member' => $member
+                'memberDetail' => $memberDetail
             ]);
         } catch (\Exception $e) {
-            
-            Log::error('Error fetching member detail: ' . $e->getMessage());
-            return response()->json(['error' => 'An error occurred while fetching member details.'], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }
