@@ -3,7 +3,9 @@ import axiosIns from "@axios"
 import avatar from "@images/avatars/avatar-0.png"
 import UserProfileHeaderBg from '@images/pages/user-profile-header-bg.png'
 import { useRoute } from "vue-router"
-import About from "./About.vue"
+
+
+
 
 const props = defineProps({
   contactData: {
@@ -93,7 +95,7 @@ fetchHeaderData()
     </VCardText>
     <VCardText class="d-flex flex-sm-row flex-column justify-end align-top about-container">
       <div class="about-scroll-container">
-        <About :data="contactData" />
+        <p>About here</p>
       </div>
     </VCardText>
   </VCard>
