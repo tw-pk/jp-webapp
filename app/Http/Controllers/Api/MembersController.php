@@ -142,4 +142,26 @@ class MembersController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function fetchMemberDetail(Request $request)
+    { 
+        dd('test');
+        try {
+            $member = Invitation::find($memberId);
+            if(!$member){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ]);
+            }
+            return response()->json([
+                'status' => true,
+                'member' => $member
+            ]);
+        } catch (\Exception $e) {
+            
+            Log::error('Error fetching member detail: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while fetching member details.'], 500);
+        }
+    }
 }

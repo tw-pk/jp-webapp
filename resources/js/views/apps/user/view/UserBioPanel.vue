@@ -1,377 +1,153 @@
 <script setup>
-import {
-  avatarText,
-  kFormatter,
-} from '@core/utils/formatters'
+import axiosIns from "@axios"
+import avatar from "@images/avatars/avatar-0.png"
+import UserProfileHeaderBg from '@images/pages/user-profile-header-bg.png'
+import { useRoute } from "vue-router"
+import About from "./About.vue"
 
 const props = defineProps({
-  userData: {
+  contactData: {
     type: Object,
     required: true,
   },
 })
 
-const standardPlan = {
-  plan: 'Standard',
-  price: 99,
-  benefits: [
-    '10 Users',
-    'Up to 10GB storage',
-    'Basic Support',
-  ],
+const profileHeaderData = ref()
+const route = useRoute()
+
+const fetchHeaderData = () => {
+  axiosIns.post('/api/auth/contact/details', {
+    contact_id: route.params.id,
+  }).then(response => {
+    profileHeaderData.value = response.data.contactData
+    profileHeaderData.value.coverImg = UserProfileHeaderBg
+  })
 }
 
-const isUserInfoEditDialogVisible = ref(false)
-const isUpgradePlanDialogVisible = ref(false)
-
-const resolveUserStatusVariant = stat => {
-  if (stat === 'pending')
-    return 'warning'
-  if (stat === 'active')
-    return 'success'
-  if (stat === 'inactive')
-    return 'secondary'
-  
-  return 'primary'
-}
-
-const resolveUserRoleVariant = role => {
-  if (role === 'subscriber')
-    return {
-      color: 'warning',
-      icon: 'tabler-user',
-    }
-  if (role === 'author')
-    return {
-      color: 'success',
-      icon: 'tabler-circle-check',
-    }
-  if (role === 'maintainer')
-    return {
-      color: 'primary',
-      icon: 'tabler-chart-pie-2',
-    }
-  if (role === 'editor')
-    return {
-      color: 'info',
-      icon: 'tabler-pencil',
-    }
-  if (role === 'admin')
-    return {
-      color: 'secondary',
-      icon: 'tabler-server-2',
-    }
-  
-  return {
-    color: 'primary',
-    icon: 'tabler-user',
-  }
-}
+fetchHeaderData()
 </script>
 
 <template>
-  <VRow>
-    <!-- SECTION User Details -->
-    <VCol cols="12">
-      <VCard v-if="props.userData">
-        <VCardText class="text-center pt-15">
-          <!-- 👉 Avatar -->
-          <VAvatar
-            rounded
-            :size="100"
-            :color="!props.userData.avatar ? 'primary' : undefined"
-            :variant="!props.userData.avatar ? 'tonal' : undefined"
-          >
-            <VImg
-              v-if="props.userData.avatar"
-              :src="props.userData.avatar"
-            />
-            <span
-              v-else
-              class="text-5xl font-weight-medium"
-            >
-              {{ avatarText(props.userData.fullName) }}
-            </span>
-          </VAvatar>
+  <VCard v-if="profileHeaderData">
+    <VImg
+      :src="profileHeaderData.coverImg"
+      min-height="125"
+      max-height="250"
+      cover
+    />
+    
+    <VCardText class="d-flex align-bottom flex-sm-row flex-column justify-center gap-x-5">
+      <div class="d-flex h-0">
+        <VAvatar
+          rounded
+          size="120"
+          :image="profileHeaderData.avatar ?? avatar"
+          class="user-profile-avatar mx-auto"
+        />
+      </div>
 
-          <!-- 👉 User fullName -->
-          <h6 class="text-h4 mt-4">
-            {{ props.userData.fullName }}
-          </h6>
+      <div class="user-profile-info w-100 mt-16 pt-6 pt-sm-0 mt-sm-0">
+        <h6 class="text-h6 text-center text-sm-start font-weight-medium mb-3">
+          {{ profileHeaderData.fullName }}
+        </h6>
 
-          <!-- 👉 Role chip -->
-          <VChip
-            label
-            :color="resolveUserRoleVariant(props.userData.role).color"
-            size="small"
-            class="text-capitalize mt-3"
-          >
-            {{ props.userData.role }}
-          </VChip>
-        </VCardText>
-
-        <VCardText class="d-flex justify-center flex-wrap mt-3">
-          <!-- 👉 Done task -->
-          <div class="d-flex align-center me-8">
-            <VAvatar
-              :size="38"
-              rounded
-              color="primary"
-              variant="tonal"
-              class="me-3"
-            >
-              <VIcon icon="tabler-checkbox" />
-            </VAvatar>
-
-            <div>
-              <h6 class="text-h6">
-                {{ kFormatter(props.userData.taskDone) }}
-              </h6>
-              <span class="text-sm">Task Done</span>
-            </div>
-          </div>
-
-          <!-- 👉 Done Project -->
-          <div class="d-flex align-center me-4">
-            <VAvatar
-              :size="38"
-              rounded
-              color="primary"
-              variant="tonal"
-              class="me-3"
-            >
-              <VIcon icon="tabler-briefcase" />
-            </VAvatar>
-
-            <div>
-              <h6 class="text-h6">
-                {{ kFormatter(props.userData.projectDone) }}
-              </h6>
-              <span class="text-sm">Project Done</span>
-            </div>
-          </div>
-        </VCardText>
-
-        <VDivider />
-
-        <!-- 👉 Details -->
-        <VCardText>
-          <p class="text-sm text-uppercase text-disabled">
-            Details
-          </p>
-
-          <!-- 👉 User Details list -->
-          <VList class="card-list mt-2">
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Username:
-                  <span class="text-body-1">
-                    {{ props.userData.fullName }}
-                  </span>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Email:
-                  <span class="text-body-1">{{ props.userData.email }}</span>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Status:
-
-                  <VChip
-                    label
-                    size="small"
-                    :color="resolveUserStatusVariant(props.userData.status)"
-                    class="text-capitalize"
-                  >
-                    {{ props.userData.status }}
-                  </VChip>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Role:
-                  <span class="text-capitalize text-body-1">{{ props.userData.role }}</span>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Tax ID:
-                  <span class="text-body-1">
-                    {{ props.userData.taxId }}
-                  </span>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Contact:
-                  <span class="text-body-1">{{ props.userData.contact }}</span>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Language:
-                  <span class="text-body-1">{{ props.userData.language }}</span>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-
-            <VListItem>
-              <VListItemTitle>
-                <h6 class="text-h6">
-                  Country:
-                  <span class="text-body-1">{{ props.userData.country }}</span>
-                </h6>
-              </VListItemTitle>
-            </VListItem>
-          </VList>
-        </VCardText>
-
-        <!-- 👉 Edit and Suspend button -->
-        <VCardText class="d-flex justify-center">
-          <VBtn
-            variant="elevated"
-            class="me-4"
-            @click="isUserInfoEditDialogVisible = true"
-          >
-            Edit
-          </VBtn>
-
-          <VBtn
-            variant="tonal"
-            color="error"
-          >
-            Suspend
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VCol>
-    <!-- !SECTION -->
-
-    <!-- SECTION Current Plan -->
-    <VCol cols="12">
-      <VCard>
-        <VCardText class="d-flex">
-          <!-- 👉 Standard Chip -->
-          <VChip
-            label
-            color="primary"
-            size="small"
-            class="font-weight-medium"
-          >
-            Popular
-          </VChip>
-
-          <VSpacer />
-
-          <!-- 👉 Current Price  -->
-          <div class="d-flex align-center">
-            <sup class="text-primary text-sm font-weight-regular">$</sup>
-            <h3 class="text-h3 text-primary">
-              99
-            </h3>
-            <sub class="mt-3"><h6 class="text-sm font-weight-regular text-disabled">/ month</h6></sub>
-          </div>
-        </VCardText>
-
-        <VCardText>
-          <!-- 👉 Price Benefits -->
-          <VList class="card-list">
-            <VListItem
-              v-for="benefit in standardPlan.benefits"
-              :key="benefit"
-            >
+        <div class="d-flex align-center justify-center justify-sm-space-between flex-wrap gap-4">
+          <div class="d-flex flex-wrap justify-center justify-sm-start flex-grow-1 gap-2">
+            <span class="d-flex">
               <VIcon
-                size="12"
-                color="#A8AAAE"
-                class="me-2"
-                icon="tabler-circle"
+                size="20"
+                icon="tabler-color-swatch"
+                class="me-1"
               />
-              <span>{{ benefit }}</span>
-            </VListItem>
-          </VList>
+              <span class="text-body-1">
+                Contact
+              </span>
+            </span>
 
-          <!-- 👉 Days -->
-          <div class="my-6">
-            <div class="d-flex mt-3 mb-2">
-              <h6 class="text-base font-weight-medium">
-                Days
-              </h6>
-              <VSpacer />
-              <h6 class="text-base font-weight-medium">
-                26 of 30 Days
-              </h6>
-            </div>
+            <!--
+              <span class="d-flex align-center">
+              <VIcon
+              size="20"
+              icon="tabler-map-pin"
+              class="me-2"
+              />
+              <span class="text-body-1">
+              {{ profileHeaderData?.address_home }}
+              </span>
+              </span>
+            -->
 
-            <!-- 👉 Progress -->
-            <VProgressLinear
-              rounded
-              rounded-bar
-              :model-value="65"
-              height="10"
-              color="primary"
-            />
-
-            <p class="mt-2">
-              4 days remaining
-            </p>
+            <span class="d-flex align-center">
+              <VIcon
+                size="20"
+                icon="tabler-calendar"
+                class="me-2"
+              />
+              <span class="text-body-1">
+                {{ profileHeaderData?.joinedAt }}
+              </span>
+            </span>
           </div>
-
-          <!-- 👉 Upgrade Plan -->
-          <div class="d-flex gap-4">
-            <VBtn @click="isUpgradePlanDialogVisible = true">
-              Upgrade Plan
-            </VBtn>
-            <VBtn
-              variant="tonal"
-              color="default"
-            >
-              cancel
-            </VBtn>
-          </div>
-        </VCardText>
-      </VCard>
-    </VCol>
-    <!-- !SECTION -->
-  </VRow>
-
-  <!-- 👉 Edit user info dialog -->
-  <UserInfoEditDialog
-    v-model:isDialogVisible="isUserInfoEditDialogVisible"
-    :user-data="props.userData"
-  />
-
-  <!-- 👉 Upgrade plan dialog -->
-  <UserUpgradePlanDialog v-model:isDialogVisible="isUpgradePlanDialogVisible" />
+        </div>
+      </div>
+    </VCardText>
+    <VCardText class="d-flex flex-sm-row flex-column justify-end align-top about-container">
+      <div class="about-scroll-container">
+        <About :data="contactData" />
+      </div>
+    </VCardText>
+  </VCard>
 </template>
 
-<style lang="scss" scoped>
-.card-list {
-  --v-card-list-gap: 0.75rem;
+<style lang="scss">
+.user-profile-avatar {
+  border: 5px solid rgb(var(--v-theme-surface));
+  background-color: rgb(var(--v-theme-surface)) !important;
+  inset-block-start: -3rem;
+
+  .v-img__img {
+    border-radius: 0.125rem;
+  }
 }
 
-.text-capitalize {
-  text-transform: capitalize !important;
+.about-container {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 0.875rem;
+  inset-inline-end: 0.5625rem;
+
+  @media (min-width: 576px) {
+    inset-block-start: 0.875rem;
+    inset-inline-end: 0.5625;
+  }
+
+  @media (min-width: 768px) {
+    inset-block-start: 0.875rem;
+    inset-inline-end: 0.5625;
+  }
+
+  @media (min-width: 992px) {
+    inset-block-start: 0.875rem;
+    inset-inline-end: 0.5625rem;
+  }
+}
+
+.about-scroll-container {
+  max-block-size: 350px;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: nowrap;
+
+  @media (max-width: 576px) {
+    max-block-size: 200px;
+  }
+
+  @media (max-width: 768px) {
+    max-block-size: 200px;
+  }
+
+  @media (max-width: 992px) {
+    max-block-size: 200px;
+  }
 }
 </style>

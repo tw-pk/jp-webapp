@@ -36,6 +36,15 @@ export const useMemberListStore = defineStore('MemberListStore', {
       })
     },
 
+    // 👉 fetch member detail
+    fetchMemberDetail(data){
+      return new Promise((resolve, reject) => {
+        axiosIns.post('api/auth/member/detail', data)
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
+
     // 👉 Delete User
     deleteMember(id) {
       return new Promise((resolve, reject) => {

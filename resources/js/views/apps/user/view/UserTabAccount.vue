@@ -1,327 +1,286 @@
 <script setup>
-import { VDataTable } from 'vuetify/labs/VDataTable'
-import UserInvoiceTable from './UserInvoiceTable.vue'
-import { paginationMeta } from '@/@fake-db/utils'
+import { paginationMeta } from "@/@fake-db/utils"
+import { useRecentCallsStore } from "@/views/apps/recent-calls/useRecentCallsStore"
+import { ref } from "vue"
+import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
-// Images
-import avatar2 from '@images/avatars/avatar-2.png'
-import figma from '@images/icons/project-icons/figma.png'
-import html5 from '@images/icons/project-icons/html5.png'
-import python from '@images/icons/project-icons/python.png'
-import react from '@images/icons/project-icons/react.png'
-import sketch from '@images/icons/project-icons/sketch.png'
-import vue from '@images/icons/project-icons/vue.png'
-import xamarin from '@images/icons/project-icons/xamarin.png'
+const router = useRoute()
+const isProcessing = ref(false)
+const recentCallsStore = useRecentCallsStore()
+const error = ref(false)
+const errorMessage = ref('')
+const searchQuery = ref('')
+const isDisabled = ref(false)
+const isLoading = ref(false)
+const isSnackbarVisible = ref(false)
+const snackbarMessage = ref('')
+const snackbarActionColor = ref(' ')
+const totalPage = ref(1)
+const totalRecord = ref(0)
+const form = ref()
+const calls = ref([])
+const currentTab = ref(0)
 
-const projectTableHeaders = [
+// headers
+const headers = [
   {
-    title: 'PROJECT',
-    key: 'name',
+    title: 'JOTPHONE NUMBER',
+    key: 'teamdialer_number',
   },
   {
-    title: 'TOTAL TASK',
-    key: 'totalTask',
+    title: 'NAME/NUMBER',
+    key: 'number',
   },
   {
-    title: 'PROGRESS',
-    key: 'progress',
+    title: 'DATE & TIME',
+    key: 'date',
   },
   {
-    title: 'HOURS',
-    key: 'hours',
+    title: "DURATION",
+    key: "duration",
   },
 ]
 
-const search = ref('')
+const tabTitles = [
+  {
+    icon: 'tabler-phone-call',
+    title: 'All',
+    
+  },
+  {
+    icon: 'tabler-phone-outgoing',
+    title: 'Outbound',
+    
+  },
+  {
+    icon: 'tabler-phone-incoming',
+    title: 'Inbound',
+    
+  },
+  {
+    icon: 'tabler-phone-pause',
+    title: 'Missed',
+    
+  },
+  {
+    icon: 'tabler-record-mail',
+    title: 'Voicemail',
+    
+  },
+]
 
 const options = ref({
-  itemsPerPage: 5,
   page: 1,
+  itemsPerPage: 10,
+  sortBy: [],
+  groupBy: [],
+  search: undefined,
 })
 
-const projects = [
-  {
-    logo: react,
-    name: 'BGC eCommerce App',
-    project: 'React Project',
-    totalTask: '122/240',
-    progress: 78,
-    hours: '18:42',
-  },
-  {
-    logo: figma,
-    name: 'Falcon Logo Design',
-    project: 'Figma Project',
-    totalTask: '09/56',
-    progress: 18,
-    hours: '20:42',
-  },
-  {
-    logo: vue,
-    name: 'Dashboard Design',
-    project: 'Vuejs Project',
-    totalTask: '290/320',
-    progress: 62,
-    hours: '120:87',
-  },
-  {
-    logo: xamarin,
-    name: 'Foodista mobile app',
-    project: 'Xamarin Project',
-    totalTask: '290/320',
-    progress: 8,
-    hours: '120:87',
-  },
-  {
-    logo: python,
-    name: 'Dojo Email App',
-    project: 'Python Project',
-    totalTask: '120/186',
-    progress: 49,
-    hours: '230:10',
-  },
-  {
-    logo: sketch,
-    name: 'Blockchain Website',
-    project: 'Sketch Project',
-    totalTask: '99/109',
-    progress: 92,
-    hours: '342:41',
-  },
-  {
-    logo: html5,
-    name: 'Hoffman Website',
-    project: 'HTML Project',
-    totalTask: '98/110',
-    progress: 88,
-    hours: '12:45',
-  },
-]
+const fetchRecentCallsContact = () => {
+  isProcessing.value = true
 
-const resolveUserProgressVariant = progress => {
-  if (progress <= 25)
-    return 'error'
-  if (progress > 25 && progress <= 50)
-    return 'warning'
-  if (progress > 50 && progress <= 75)
-    return 'primary'
-  if (progress > 75 && progress <= 100)
-    return 'success'
-  
-  return 'secondary'
+  const selectedTabTitle = tabTitles[currentTab.value]
+
+  recentCallsStore.fetchRecentCallsContact({
+    callType: selectedTabTitle,
+    q: searchQuery.value,
+    options: options.value,
+  })
+    .then(res => {
+      if(res.data.status){
+        error.value = false
+        isProcessing.value = false
+        calls.value = res.data.calls
+
+        totalPage.value = res.data.totalPage
+        totalRecord.value = res.data.totalRecord
+        options.value.page = res.data.page
+      }
+    })
+    .catch(error => {
+      error.value = true
+      errorMessage.value = error.response.data.message
+      isProcessing.value = false
+    })
+}
+
+watchEffect(fetchRecentCallsContact)
+
+const resolveUserRoleVariant = direction => {
+  if (direction === 'outbound-api')
+    return {
+      color: 'info',
+      icon: 'tabler-phone-call',
+    }
+  if (direction === 'inbound')
+    return {
+      color: 'error',
+      icon: 'tabler-phone-off',
+    }
+
+  return {
+    color: 'error',
+    icon: 'tabler-phone-off',
+  }
 }
 </script>
 
 <template>
   <VRow>
     <VCol cols="12">
-      <VCard title="User's Projects List">
-        <VCardText>
-          <div class="d-flex">
-            <AppSelect
-              :model-value="options.itemsPerPage"
-              :items="[
-                { value: 5, title: '5' },
-                { value: 10, title: '10' },
-                { value: 50, title: '50' },
-                { value: 100, title: '100' },
-                { value: -1, title: 'All' },
-              ]"
-              style="width: 6.25rem;"
-              @update:model-value="options.itemsPerPage = parseInt($event, 10)"
-            />
-            <div class="flex-grow-1" />
-            <AppTextField v-model="search" />
-          </div>
-        </VCardText>
-        <VDivider />
-        <!-- 👉 User Project List Table -->
-
-        <!-- SECTION Datatable -->
-        <VDataTable
-          v-model:page="options.page"
-          :headers="projectTableHeaders"
-          :items="projects"
-          :search="search"
-          :items-per-page="options.itemsPerPage"
-          @update:options="options = $event"
+      <div
+        v-if="errorMessage"
+        class="my-3"
+      >
+        <VAlert
+          density="compact"
+          color="error"
+          variant="tonal"
+          closable
         >
-          <!-- projects -->
-          <template #item.name="{ item }">
-            <div class="d-flex">
-              <VAvatar
-                :size="34"
-                class="me-3"
-                :image="item.raw.logo"
-              />
-              <div>
-                <p class="font-weight-medium mb-0">
-                  {{ item.raw.name }}
-                </p>
-                <p class="text-xs text-medium-emphasis mb-0">
-                  {{ item.raw.project }}
-                </p>
+          {{ errorMessage }}
+        </VAlert>
+      </div>
+      <VRow>
+        <VCol cols="12">
+          <VCard>
+            <div class="__dashboard__recent-calls-header pa-4 __border-bottom-light">
+              <div class="__dashboard__header-title">
+                <h5 class="font-weight-bold text-h5">
+                  Call Logs
+                </h5>
+              </div>
+      
+              <div class="__dashboard__header-tabs">
+                <VTabs
+                  v-model="currentTab"
+                  class="v-tabs-pill"
+                >
+                  <VTab
+                    v-for="tab in tabTitles"
+                    :key="tab.icon"
+                    class="me-5"
+                  >
+                    <VIcon
+                      :size="18"
+                      :icon="tab.icon"
+                      class="me-1"
+                    />
+                    <span>{{ tab.title }}</span>
+                  </VTab>
+                </VTabs>
+              </div>
+              <div class="__dashboard__header-search">
+                <AppTextField
+                  v-model="searchQuery"
+                  placeholder="Search Number"
+                  density="compact"
+                  append-inner-icon="tabler-search"
+                  single-line
+                  hide-details
+                  dense
+                  outlined
+                />
               </div>
             </div>
-          </template>
-
-          <!-- Progress -->
-          <template #item.progress="{ item }">
-            <span>{{ item.raw.progress }}%</span>
-            <VProgressLinear
-              :height="6"
-              :model-value="item.raw.progress"
-              rounded
-              :color="resolveUserProgressVariant(item.raw.progress)"
-            />
-          </template>
-
-          <!-- pagination -->
-          <template #bottom>
             <VDivider />
-            <div class="d-flex align-center justify-sm-space-between justify-center flex-wrap gap-3 pa-5 pt-3">
-              <p class="text-sm text-disabled mb-0">
-                {{ paginationMeta(options, projects.length) }}
-              </p>
+            <!-- Show the loader -->
+            <template v-if="isProcessing">
+              <VProgressLinear
+                indeterminate
+                height="3"
+                bg-color="primary"
+                color="primary"
+                :rounded="false"
+              />
+            </template>
 
-              <VPagination
-                v-model="options.page"
-                :length="Math.ceil(projects.length / options.itemsPerPage)"
-                :total-visible="Math.ceil(projects.length / options.itemsPerPage)"
-              >
-                <template #prev="slotProps">
-                  <VBtn
-                    variant="tonal"
-                    color="default"
-                    v-bind="slotProps"
-                    :icon="false"
-                  >
-                    Previous
-                  </VBtn>
-                </template>
-
-                <template #next="slotProps">
-                  <VBtn
-                    variant="tonal"
-                    color="default"
-                    v-bind="slotProps"
-                    :icon="false"
-                  >
-                    Next
-                  </VBtn>
-                </template>
-              </VPagination>
-            </div>
-          </template>
-        </VDataTable>
-        <!-- !SECTION -->
-      </VCard>
-    </VCol>
-
-    <VCol cols="12">
-      <!-- 👉 Activity timeline -->
-      <VCard title="User Activity Timeline">
-        <VCardText>
-          <VTimeline
-            density="compact"
-            align="start"
-            truncate-line="both"
-            class="v-timeline-density-compact"
-          >
-            <VTimelineItem
-              dot-color="error"
-              size="x-small"
+            <VDataTableServer
+              v-model:items-per-page="options.itemsPerPage"
+              v-model:page="options.page"
+              :items="calls"
+              :items-length="totalRecord"
+              :headers="headers"
+              class="text-no-wrap"
+              @update:options="options = $event"
             >
-              <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-3">
-                <span class="app-timeline-title">
-                  12 Invoices have been paid
-                </span>
-                <span class="app-timeline-meta">12 min ago</span>
-              </div>
-
-              <p class="app-timeline-text mb-2">
-                Invoices have been paid to the company
-              </p>
-              <div class="d-flex align-center mt-2">
-                <VIcon
-                  color="error"
-                  icon="tabler-file"
-                  size="18"
-                  class="me-2"
-                />
-                <h6 class="font-weight-medium text-sm">
-                  Invoices.pdf
-                </h6>
-              </div>
-            </VTimelineItem>
-
-            <VTimelineItem
-              dot-color="primary"
-              size="x-small"
-            >
-              <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-3">
-                <span class="app-timeline-title">
-                  Meeting with john
-                </span>
-                <span class="app-timeline-meta">45 min ago</span>
-              </div>
-
-              <p class="app-timeline-text mb-1">
-                React Project meeting with john @10:15am
-              </p>
-
-              <div class="d-flex align-center mt-3">
-                <VAvatar
-                  size="34"
-                  class="me-2"
-                  :image="avatar2"
-                />
-                <div>
-                  <h6 class="text-sm font-weight-medium mb-n1">
-                    John Doe (Client)
-                  </h6>
-                  <span class="text-xs">CEO of Kelly Group</span>
+              <!-- JotPhone Number -->
+              <template #item.teamdialer_number="{ item }">
+                <div class="d-flex align-center gap-4">
+                  <VIcon
+                    :size="20"
+                    :color="resolveUserRoleVariant(item.raw.direction).color"
+                    :icon="resolveUserRoleVariant(item.raw.direction).icon"
+                  />
+                  <span class="text-capitalize">{{ item.raw.teamdialer_number }}</span>
                 </div>
-              </div>
-            </VTimelineItem>
+              </template>
 
-            <VTimelineItem
-              dot-color="info"
-              size="x-small"
-            >
-              <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-3">
-                <span class="app-timeline-title">
-                  Create a new react project for client
-                </span>
-                <span class="app-timeline-meta">2 day ago</span>
-              </div>
 
-              <p class="app-timeline-text mb-0">
-                Add files to new design folder
-              </p>
-            </VTimelineItem>
+              <!-- pagination -->
+              <template #bottom>
+                <VDivider />
+                <div class="d-flex align-center justify-sm-space-between justify-center flex-wrap gap-3 pa-5 pt-3">
+                  <p class="text-sm text-disabled mb-0">
+                    {{ paginationMeta(options, totalRecord) }}
+                  </p>
 
-            <VTimelineItem
-              dot-color="success"
-              size="x-small"
-            >
-              <div class="d-flex justify-space-between align-center flex-wrap gap-2 mb-3">
-                <span class="app-timeline-title">
-                  12 Create invoices for client
-                </span>
-                <span class="app-timeline-meta">5 day ago</span>
-              </div>
-              <p class="app-timeline-text mb-0">
-                Weekly review of freshly prepared design for our new app.
-              </p>
-            </VTimelineItem>
-          </VTimeline>
-        </VCardText>
-      </VCard>
-    </VCol>
+                  <VPagination
+                    v-model="options.page"
+                    :length="Math.ceil(totalRecord / options.itemsPerPage)"
+                    :total-visible="$vuetify.display.xs ? 1 : Math.ceil(totalRecord / options.itemsPerPage)"
+                  >
+                    <template #prev="slotProps">
+                      <VBtn
+                        variant="tonal"
+                        color="default"
+                        v-bind="slotProps"
+                        :icon="false"
+                      >
+                        Previous
+                      </VBtn>
+                    </template>
 
-    <VCol cols="12">
-      <UserInvoiceTable />
+                    <template #next="slotProps">
+                      <VBtn
+                        variant="tonal"
+                        color="default"
+                        v-bind="slotProps"
+                        :icon="false"
+                      >
+                        Next
+                      </VBtn>
+                    </template>
+                  </VPagination>
+                </div>
+              </template>
+            </VDataTableServer>
+          </VCard>
+        </VCol>
+      </VRow>
     </VCol>
   </VRow>
 </template>
+
+
+<style scoped lang="scss">
+@use "@core-scss/template/pages/page-auth.scss";
+
+.v-tabs-pill {
+  font-size: 0.8125rem;
+  padding-block: 0.2rem;
+  padding-inline: 0.5rem;
+}
+
+.v-tab {
+  block-size: 30px;
+  line-height: 1.1;
+  padding-block: 0.1rem;
+  padding-inline: 0.3rem;
+}
+
+.v-tabs-pill .v-tab__indicator {
+  block-size: 1px;
+}
+</style>

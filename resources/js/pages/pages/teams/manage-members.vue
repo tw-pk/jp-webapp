@@ -475,7 +475,7 @@ watch(assignNumber, value => {
                 <div class="d-flex flex-column">
                   <h6 class="text-base">
                     <RouterLink
-                      :to="{ name: 'apps-user-view-id', params: { id: item.raw.id } }"
+                      :to="{ name: 'pages-member-view-id', params: { id: item.raw.id } }"
                       class="font-weight-medium user-list-name"
                     >
                       {{ item.raw.firstname }} {{ item.raw.lastname }}

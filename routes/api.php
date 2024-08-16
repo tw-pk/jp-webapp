@@ -47,8 +47,8 @@ Route::middleware('auth:sanctum')->post('broadcasting/auth', function (Request $
     return $pusher->socketAuth($request->request->get('channel_name'), ($request->request->get('socket_id')));
 });
 
-
-Route::group(['prefix' => 'auth', 'middleware' => ['check.balance']], function (){
+//'middleware' => ['check.balance']
+Route::group(['prefix' => 'auth'], function (){
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('register', [AuthController::class, 'register']);
     Route::post('/forgot/password', [AuthController::class, 'forgotPassword']);
@@ -139,6 +139,7 @@ Route::group(['prefix' => 'auth', 'middleware' => ['check.balance']], function (
         Route::post('members/add', [MembersController::class, 'store']);
         Route::post('members/list', [MembersController::class, 'list']);
         Route::post('fetch/members', [MembersController::class, 'fetchMembers']);   
+        Route::post('member/detail', [MembersController::class, 'fetchMemberDetail']);
         Route::post('connect/transfer-call', [TwilioController::class, 'transferCall']);
 
         //invite member routes
