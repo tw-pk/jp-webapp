@@ -29,18 +29,20 @@ class FetchTwilioCallsJob implements ShouldQueue
     public function handle(): void
     {
         $users = User::all();
-        Log::info("inside the fetchController");
+        Log::info("Inside the fetchController");
         $twilio = new Client(env('TWILIO_CLIENT_ID'), env('TWILIO_AUTH_TOKEN'));
         //foreach all users
         //check whether a user is admin or not
         foreach ($users as $user) {
-            if ($user->hasRole('Admin')) {
+
+            //if ($user->hasRole('Admin')) {
                 $numbers = $user->numbers;
                 foreach ($numbers as $number) {
                     $twilioCallsIncoming = $twilio->calls->read(['to' => $number->phone_number], 100);
                     $twilioCallsOutgoing = $twilio->calls->read([ 'from' => $number->phone_number], 100);
                     // Merged results
                     $twilioCalls = array_merge($twilioCallsIncoming, $twilioCallsOutgoing);
+                   
                     foreach ($twilioCalls as $call) {
                         if(!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')){
                             if(!Call::where('sid', $call->sid)->first()){
@@ -59,7 +61,10 @@ class FetchTwilioCallsJob implements ShouldQueue
                         }
                     }
                 }
-            }
+            //}
+
+
+
         }
     }
 }

@@ -9,6 +9,7 @@ use App\Models\AssignNumber;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class MembersController extends Controller
@@ -81,7 +82,7 @@ class MembersController extends Controller
         $options = $request->input('options');
 
         $query = Invitation::with(['invitationAccept:id,email', 'invitationAccept.profile:id,user_id,avatar', 'roleInfo:id,name'])
-            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'role', 'number', 'can_have_new_number')
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'role', 'number', 'can_have_new_number', 'registered')
             ->where('user_id', Auth::user()->id);
 
         if ($searchQuery) {

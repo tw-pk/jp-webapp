@@ -54,7 +54,10 @@ const headers = [
     title: 'ROLE',
     key: 'role',
   },
-
+  {
+    title: 'Registered',
+    key: 'registered',
+  },
   {
     title: 'ACTION',
     key: 'action',
@@ -154,6 +157,19 @@ const resolveUserRoleVariant = status => {
     return {
       color: 'info',
       text: 'Subscriber',
+    }
+}
+
+const resolveUserRegistered = val => {
+  if (val == 1)
+    return {
+      color: 'primary',
+      text: 'True',
+    }
+  else
+    return {
+      color: 'error',
+      text: 'False',
     }
 }
 
@@ -506,6 +522,16 @@ watch(assignNumber, value => {
                   class="text-capitalize"
                 >{{ item.raw.role_info.name }}</span>
               </div>
+            </template>
+
+            <template #item.registered="{ item }">
+              <VChip
+                label
+                :color="resolveUserRegistered(item.raw.registered).color"
+                size="small"
+              >
+                {{ resolveUserRegistered(item.raw.registered).text }}
+              </VChip>
             </template>
 
             <!-- Actions -->
