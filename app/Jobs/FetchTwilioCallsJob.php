@@ -42,7 +42,6 @@ class FetchTwilioCallsJob implements ShouldQueue
                     $twilioCallsOutgoing = $twilio->calls->read([ 'from' => $number->phone_number], 100);
                     // Merged results
                     $twilioCalls = array_merge($twilioCallsIncoming, $twilioCallsOutgoing);
-                   
                     foreach ($twilioCalls as $call) {
                         if(!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')){
                             if(!Call::where('sid', $call->sid)->first()){

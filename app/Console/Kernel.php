@@ -35,7 +35,7 @@ class Kernel extends ConsoleKernel
                         ->first();
 
                     // Check if the user's credit is below the threshold value
-                    if ($user->credit->credit < $thresholdValue) {
+                    if ($user->credit->credit < $thresholdValue && $user->credit->threshold_enabled == '1') {
                         $service->checkAndTopUp($user);
                     }
                 }
