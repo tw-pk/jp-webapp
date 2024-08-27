@@ -111,7 +111,34 @@ class VoiceController extends Controller
 
     public function recent_calls(Request $request)
     {
-        if (!Auth::user()->numbers->count()) {
+        $phoneNumberArray = [];
+        $phoneNumbers = Auth::user()->numbers->pluck('phone_number');
+        if (!empty($phoneNumbers)) {
+            $phoneNumberArray = array_merge($phoneNumberArray, $phoneNumbers->toArray());
+        }
+
+        $userId = Auth::user()->id;
+        $invitation = Invitation::with(['assignedNumbers', 'assignedInvitationTeam'])->where('member_id', $userId)->first();
+        if($invitation){
+            $invitation->can_have_new_number == 0 ? $phoneNumberArray[] = $invitation->number :NULL;
+
+            $assignedPhoneNumbers = $invitation->assignedNumbers?->pluck('phone_number');
+            if (!empty($assignedPhoneNumbers)) {
+                $phoneNumberArray = array_merge($phoneNumberArray, $assignedPhoneNumbers->toArray());
+            }
+
+            $assignedTeamIds = $invitation->assignedInvitationTeam?->pluck('id');
+            if (!empty($assignedTeamIds)) {
+                $teamPhoneNumbers = $invitation->assignedNumbersForTeam($invitation->id, $assignedTeamIds);
+                if (!empty($teamPhoneNumbers)) {
+                    $phoneNumberArray = array_merge($phoneNumberArray, $teamPhoneNumbers);
+                }
+            }
+            
+        }
+        $phoneNumberArray = array_unique($phoneNumberArray);
+        
+        if (count($phoneNumberArray) === 0) {
             return response()->json([
                 'status' => false,
                 'message' => "You don't have any active number, please verify if you have an active number",
