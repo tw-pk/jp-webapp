@@ -164,14 +164,6 @@ class VoiceController extends Controller
                 $filter['status'] = $callTrait;
             }
 
-            // if (!empty($dateRange) && is_array($dateRange)) {
-            //     // $start_date = $dateRange[0] ?? '';
-            //     // $end_date = $dateRange[1] ?? '';
-            //     // $filter['startTimeBefore'] = $start_date;
-            //     // $filter['startTimeAfter'] = $end_date;
-            //     $filter = [];
-            //     dd($dateRange);
-            // } 
             if (!empty($dateRange) && is_string($dateRange)) {
 
                 $dateArray = explode('to', $dateRange);
@@ -197,32 +189,67 @@ class VoiceController extends Controller
                 $filter = [];
             }
 
+
+            $twilioCalls = Call::where(function ($query) use ($phoneNumberArray) {
+                    $query->whereIn('to', $phoneNumberArray)
+                        ->orWhereIn('from', $phoneNumberArray);
+                })
+                ->when($searchQuery, function ($query, $searchQuery) {
+                    $query->where('to', 'LIKE', "%{$searchQuery}%");
+                })
+                ->when($filter, function ($query) use ($filter) {
+                    // Apply filters if provided
+                    if (!empty($filter['startTimeBefore'])) {
+                        $query->where(function($query) use ($filter) {
+                            $query->whereRaw("STR_TO_DATE(SUBSTRING_INDEX(SUBSTRING_INDEX(date_time, ' - ', 1), ' ', -3), '%d %b, %Y %r') <= ?", [$filter['startTimeBefore']]);
+                        });
+                    }
+                    if (!empty($filter['startTimeAfter'])) {
+                        $query->where(function($query) use ($filter) {
+                            $query->whereRaw("STR_TO_DATE(SUBSTRING_INDEX(SUBSTRING_INDEX(date_time, ' - ', 1), ' ', -3), '%d %b, %Y %r') >= ?", [$filter['startTimeAfter']]);
+                        });
+                    }
+                    if (!empty($filter['status'])) {
+                        $query->whereIn('status', (array) $filter['status']);
+                    }
+                })
+                ->orderByDesc('created_at')
+                ->get();
             
-            $twilioCalls = $this->twilio->calls->read($filter, 100);
-            $totalRecord = count($twilioCalls);
+            $twilioCalls = $this->formattedDateTime($twilioCalls);
+            $totalRecord = $twilioCalls->count(); 
             $totalPage = ceil($totalRecord / $perPage);
 
             $allCalls = [];
             foreach ($twilioCalls as $call) {
-
+               
                 //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
                 //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
-                $recordingUrl = $call->sid? asset('storage/voicemail/' . $call->sid) : '-';
+                $recordingUrl = $call->sid ? asset('storage/voicemail/' . $call->sid) : '-';
+
+                if($call->direction == 'inbound'){
+                    $teamdialerNumber = $call->to;
+                    $number = $call->from;
+                }else{
+                    $teamdialerNumber = $call->from;
+                    $number = $call->to;
+                }
 
                 $allCalls[] = [
                     'call_sid' => $call->sid,
-                    'teamdialer_number' => $call->from,
-                    'number' => $call->to,
+                    'teamdialer_number' => $teamdialerNumber,
+                    'number' => $number,
                     'status' => $call->status ?? '-',
                     'direction' => $call->direction,
-                    'date' => Auth::user()->calls->where('sid', $call->sid)->first() ? Carbon::parse(Auth::user()->calls->where('sid', $call->sid)->first()->created_at)->setTimezone('Asia/Karachi')->diffForHumans() : Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->diffForHumans(),
-                    'duration' => $call->duration . " seconds" ?? '-',
+                    'date' => Carbon::parse($call->created_at)->setTimezone('Asia/Karachi')->diffForHumans(),
+                    'duration' => $call->duration ?? '-',
                     'notes' => '',
                     'rating' => '-',
                     'disposition' => '-',
                     'record' => $recordingUrl
                 ];
             }
+
             $startIndex = ($currentPage - 1) * $perPage;
             $slicedCalls = array_slice($allCalls, $startIndex, $perPage);
             return response()->json([
@@ -232,6 +259,7 @@ class VoiceController extends Controller
                 'totalRecord' => $totalRecord,
                 'page' => $currentPage,
             ]);
+            
         } catch (TwilioException $e) {
             return response()->json([
                 'status' => false,
