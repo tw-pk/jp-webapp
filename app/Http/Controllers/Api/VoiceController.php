@@ -196,6 +196,8 @@ class VoiceController extends Controller
                 // $filter['from'] = $allMembers;
                 $filter = [];
             }
+
+            
             $twilioCalls = $this->twilio->calls->read($filter, 100);
             $totalRecord = count($twilioCalls);
             $totalPage = ceil($totalRecord / $perPage);
