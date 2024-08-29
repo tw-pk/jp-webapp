@@ -23,10 +23,10 @@ const form = ref()
 const calls = ref([])
 const totalPage = ref(1)
 const totalRecord = ref(0)
-const items = ['Default', 'Outbound', 'Inbound', 'Missed', 'Voicemail']
+const items = ['Default', 'Outbound', 'Inbound']
 const selectedItem = ref(items[0])
 const callTrait = ref(null)
-const callTraits = ['Queued', 'ringing', 'in-progress', 'canceled', 'completed', 'failed', 'busy', 'no-answer']
+const callTraits = ['Queued', 'ringing', 'in-progress', 'Missed', 'canceled', 'completed', 'Voicemail', 'failed', 'busy', 'no-answer']
 const dateRange = ref([new Date().toISOString(), new Date().toISOString()])
 const members = ref([])
 const member = ref(null)
@@ -263,7 +263,7 @@ const playRecording = url => {
             >
               <AppTextField
                 v-model="searchQuery"
-                placeholder="Search Number"
+                placeholder="Search JotPhone"
                 density="compact"
                 append-inner-icon="tabler-search"
                 single-line
@@ -306,7 +306,7 @@ const playRecording = url => {
                   <!-- 👉 outlined variant -->
                   <AppDateTimePicker
                     v-model="dateRange"
-                    :config="{ mode: 'range', dateFormat: 'F j, Y' }"
+                    :config="{ mode: 'range', dateFormat: 'j F, Y' }"
                   />
                 </VCol>
                 <VCol

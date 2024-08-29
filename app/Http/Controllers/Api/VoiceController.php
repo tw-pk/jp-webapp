@@ -151,36 +151,32 @@ class VoiceController extends Controller
         $member = $request->input('member');
         $searchQuery = $request->input('q');
         $options = $request->input('options');
-
+        //dd($request->all());
         try {
             $perPage = $options['itemsPerPage'];
             $currentPage = $options['page'] ?? 1;
             $filter = [];
 
-            if (!empty($searchQuery)) {
-                $filter['to'] = $searchQuery;
-            }
             if (!empty($callTrait) && is_array($callTrait)) {
                 $filter['status'] = $callTrait;
             }
 
             if (!empty($dateRange) && is_string($dateRange)) {
-
                 $dateArray = explode('to', $dateRange);
                 if (!empty($dateArray[0])) {
                     $str_start_date = $dateArray[0];
-                    $sdateTime = new \DateTime($str_start_date);
-                    $start_date = $sdateTime->format("Y-m-d");
-                    $filter['startTimeBefore'] = $start_date;
+                    //$sdateTime = new \DateTime($str_start_date);
+                    //$start_date = $sdateTime->format("Y-m-d");
+                    $filter['startTimeBefore'] = $str_start_date;
                     if (count($dateArray) === 1) {
                         $filter['status'] = "completed";
                     }
                 }
                 if (!empty($dateArray[1])) {
                     $str_end_date = $dateArray[1];
-                    $edateTime = new \DateTime($str_end_date);
-                    $end_date = $edateTime->format("Y-m-d");
-                    $filter['startTimeAfter'] = $end_date;
+                    //$edateTime = new \DateTime($str_end_date);
+                    //$end_date = $edateTime->format("Y-m-d");
+                    $filter['startTimeAfter'] = $str_end_date;
                 }
             }
             if ($member === 'All members') {
@@ -196,6 +192,9 @@ class VoiceController extends Controller
                 })
                 ->when($searchQuery, function ($query, $searchQuery) {
                     $query->where('to', 'LIKE', "%{$searchQuery}%");
+                })
+                ->when($selectedItem !== 'Default', function ($query) use ($selectedItem) {
+                    $query->where('direction', 'LIKE', "%{$selectedItem}%");
                 })
                 ->when($filter, function ($query) use ($filter) {
                     // Apply filters if provided
@@ -222,7 +221,6 @@ class VoiceController extends Controller
 
             $allCalls = [];
             foreach ($twilioCalls as $call) {
-               
                 //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
                 //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
                 $recordingUrl = $call->sid ? asset('storage/voicemail/' . $call->sid) : '-';
@@ -234,7 +232,6 @@ class VoiceController extends Controller
                     $teamdialerNumber = $call->from;
                     $number = $call->to;
                 }
-
                 $allCalls[] = [
                     'call_sid' => $call->sid,
                     'teamdialer_number' => $teamdialerNumber,
