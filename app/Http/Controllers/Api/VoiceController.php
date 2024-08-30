@@ -151,7 +151,6 @@ class VoiceController extends Controller
         $member = $request->input('member');
         $searchQuery = $request->input('q');
         $options = $request->input('options');
-        //dd($request->all());
         try {
             $perPage = $options['itemsPerPage'];
             $currentPage = $options['page'] ?? 1;
@@ -164,19 +163,12 @@ class VoiceController extends Controller
             if (!empty($dateRange) && is_string($dateRange)) {
                 $dateArray = explode('to', $dateRange);
                 if (!empty($dateArray[0])) {
-                    $str_start_date = $dateArray[0];
-                    //$sdateTime = new \DateTime($str_start_date);
-                    //$start_date = $sdateTime->format("Y-m-d");
-                    $filter['startTimeBefore'] = $str_start_date;
-                    if (count($dateArray) === 1) {
-                        $filter['status'] = "completed";
-                    }
+                    $startTimeBefore = $dateArray[0];
+                    $filter['startTimeBefore'] = Carbon::parse($startTimeBefore)->format('Y-m-d H:i:s');
                 }
                 if (!empty($dateArray[1])) {
-                    $str_end_date = $dateArray[1];
-                    //$edateTime = new \DateTime($str_end_date);
-                    //$end_date = $edateTime->format("Y-m-d");
-                    $filter['startTimeAfter'] = $str_end_date;
+                    $startTimeAfter = $dateArray[1];
+                    $filter['startTimeAfter'] = Carbon::parse($startTimeAfter)->format('Y-m-d H:i:s');
                 }
             }
             if ($member === 'All members') {
@@ -198,16 +190,14 @@ class VoiceController extends Controller
                 })
                 ->when($filter, function ($query) use ($filter) {
                     // Apply filters if provided
-                    if (!empty($filter['startTimeBefore'])) {
-                        $query->where(function($query) use ($filter) {
-                            $query->whereRaw("STR_TO_DATE(SUBSTRING_INDEX(SUBSTRING_INDEX(date_time, ' - ', 1), ' ', -3), '%d %b, %Y %r') <= ?", [$filter['startTimeBefore']]);
-                        });
+                    if (!empty($filter['startTimeBefore']) && empty($filter['startTimeAfter'])) {
+                        $query->where('created_at', '<=', $filter['startTimeBefore']);
                     }
-                    if (!empty($filter['startTimeAfter'])) {
-                        $query->where(function($query) use ($filter) {
-                            $query->whereRaw("STR_TO_DATE(SUBSTRING_INDEX(SUBSTRING_INDEX(date_time, ' - ', 1), ' ', -3), '%d %b, %Y %r') >= ?", [$filter['startTimeAfter']]);
-                        });
+
+                    if (!empty($filter['startTimeBefore']) && !empty($filter['startTimeAfter'])) {
+                        $query->whereBetween('created_at', [$filter['startTimeBefore'], $filter['startTimeAfter']]);
                     }
+
                     if (!empty($filter['status'])) {
                         $query->whereIn('status', (array) $filter['status']);
                     }

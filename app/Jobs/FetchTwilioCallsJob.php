@@ -29,12 +29,13 @@ class FetchTwilioCallsJob implements ShouldQueue
     public function handle(): void
     {
         $users = User::all();
-        Log::info("Inside the fetchController");
-        $twilio = new Client(env('TWILIO_CLIENT_ID'), env('TWILIO_AUTH_TOKEN'));
-        //foreach all users
+        Log::info("Inside the FetchTwilioCallsJob");
+
+        $sid = config('app.TWILIO_CLIENT_ID');
+        $token = config('app.TWILIO_AUTH_TOKEN');
+        $twilio = new Client($sid, $token);
         //check whether a user is admin or not
         foreach ($users as $user) {
-
             //if ($user->hasRole('Admin')) {
                 $numbers = $user->numbers;
                 foreach ($numbers as $number) {
@@ -61,9 +62,6 @@ class FetchTwilioCallsJob implements ShouldQueue
                     }
                 }
             //}
-
-
-
         }
     }
 }
