@@ -71,7 +71,7 @@ class VoiceController extends Controller
             'from' => Auth::user()->numbers->where('active', true)->first()->phone_number
         ]);
 
-        Log::info('inside VOiceController');
+        Log::info('inside VoiceController');
         
         if ($call_created) {
             return response()->json([
