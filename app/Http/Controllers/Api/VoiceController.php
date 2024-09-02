@@ -111,13 +111,26 @@ class VoiceController extends Controller
 
     public function recent_calls(Request $request)
     {
+        $selectedItem = $request->input('selectedItem');
+        $callTrait = $request->input('callTrait');
+        $dateRange = $request->input('dateRange');
+        $member = $request->input('member');
+        $searchQuery = $request->input('q');
+        $options = $request->input('options');
+
         $phoneNumberArray = [];
-        $phoneNumbers = Auth::user()->numbers->pluck('phone_number');
+        $user = Auth::user();
+
+        if (!empty($member)) {
+            $user = User::find($member);
+        }
+       
+        $phoneNumbers = $user->numbers->pluck('phone_number');
         if (!empty($phoneNumbers)) {
             $phoneNumberArray = array_merge($phoneNumberArray, $phoneNumbers->toArray());
         }
 
-        $userId = Auth::user()->id;
+        $userId = $user->id;
         $invitation = Invitation::with(['assignedNumbers', 'assignedInvitationTeam'])->where('member_id', $userId)->first();
         if($invitation){
             $invitation->can_have_new_number == 0 ? $phoneNumberArray[] = $invitation->number :NULL;
@@ -145,12 +158,6 @@ class VoiceController extends Controller
             ], 404);
         }
 
-        $selectedItem = $request->input('selectedItem');
-        $callTrait = $request->input('callTrait');
-        $dateRange = $request->input('dateRange');
-        $member = $request->input('member');
-        $searchQuery = $request->input('q');
-        $options = $request->input('options');
         try {
             $perPage = $options['itemsPerPage'];
             $currentPage = $options['page'] ?? 1;
@@ -171,13 +178,7 @@ class VoiceController extends Controller
                     $filter['startTimeAfter'] = Carbon::parse($startTimeAfter)->format('Y-m-d H:i:s');
                 }
             }
-            if ($member === 'All members') {
-                // $allMembers = ['member_phone_number_1', 'member_phone_number_2',];
-                // $filter['from'] = $allMembers;
-                $filter = [];
-            }
-
-
+            
             $twilioCalls = Call::where(function ($query) use ($phoneNumberArray) {
                     $query->whereIn('to', $phoneNumberArray)
                         ->orWhereIn('from', $phoneNumberArray);

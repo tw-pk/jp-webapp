@@ -319,7 +319,7 @@ const playRecording = url => {
                     label="Select members"
                     :items="members"
                     item-title="fullname"
-                    item-value="fullname"
+                    item-value="id"
                   />
                 </VCol>
                 <IconBtn @click.prevent="">
