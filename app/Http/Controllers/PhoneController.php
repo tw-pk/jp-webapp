@@ -38,8 +38,8 @@ class PhoneController extends Controller
                 ->select(['user_id', 'phone_number', 'country']);
         }
          
-        $roleName = Auth::user()->getRoleNames()->first();
-        if($roleName =='Member'){
+        //$roleName = Auth::user()->getRoleNames()->first();
+        //if($roleName =='Member'){
             $userId = Auth::user()->id; 
             $userPhoneNumbers = AssignNumber::whereHas('invitation', function ($query) use ($userId) {
                 $query->where('member_id', $userId);
@@ -49,7 +49,7 @@ class PhoneController extends Controller
             if(!empty($userNumbersQuery)){
                 $query->union($userNumbersQuery)->distinct();
             }
-        }
+        //}
         
         $totalRecord = $query->count();
         $numbers = $query->paginate($perPage, ['*'], 'page', $currentPage);
@@ -64,9 +64,16 @@ class PhoneController extends Controller
         }
         
         $numbers->map(function ($userNumber) {
+
+            $isShared = 'shared';
+            if($userNumber->user_id == Auth::user()->id){
+                $isShared = 'personal';
+            }
+            $userNumber['isShared'] = $isShared;
+
             $userNumber->makeHidden(['user']);
             $invitations = $userNumber->user->userInvitations;
-            
+
             $shareWith = [];
             foreach ($invitations as $key => $invitation) {
                
@@ -84,7 +91,6 @@ class PhoneController extends Controller
 
             $userNumber->shared = $shareWith;
             $userNumber['ownerFullName'] = $userNumber->user->fullName();
-
             return $userNumber;
         });
         return response()->json([
@@ -97,11 +103,21 @@ class PhoneController extends Controller
 
     public function fetchAssignNumber(Request $request)
     {
-        $assignNumber = AssignNumber::select('team_id', 'invitation_id')->where('phone_number', $request->number)->get();
-        return response()->json([
-            'message' => 'Assign phone fetched successfully',
-            'assigned' => $assignNumber
-        ]);
+        if (Auth::user()->numbers()->where('phone_number', $request->number)->exists()) {
+
+            $assignNumber = AssignNumber::select('team_id', 'invitation_id')->where('phone_number', $request->number)->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Assign phone fetched successfully',
+                'assigned' => $assignNumber
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not authorized'
+            ]);
+        }
     }
 
     public function phone_assign(Request $request)

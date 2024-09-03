@@ -211,11 +211,16 @@ onMounted(fetchPhoneNumbers)
                   class="me-3"
                 >
                   <RouterLink
+                    v-if="item.raw.isShared == 'personal'"
                     :to="{ name: 'pages-phone-setting-number', params: { number: item.raw.phone_number } }"
                     class="font-weight-medium user-list-name"
                   >
                     <span class="ms-4">{{ formatePhoneNumber(item.raw.phone_number) }}</span>
                   </RouterLink>
+                  <span
+                    v-else
+                    class="font-weight-medium user-list-name ms-4"
+                  >{{ formatePhoneNumber(item.raw.phone_number) }}</span>
                 </VBadge>
                 <span class="text-sm"><small>{{ formatePhoneNumber(item.raw.phone_number) }}-GP-Sny</small></span>
               </div>
