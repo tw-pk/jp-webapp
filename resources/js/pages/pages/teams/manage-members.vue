@@ -31,6 +31,7 @@ const defaultTitle = ref('Add New Member')
 const defaultButton = ref('Submit')
 const assignNumber = ref()
 const existingNumberOptionSelected = ref(false)
+const userPermission = ref(false)
 
 const options = ref({
   page: 1,
@@ -67,11 +68,17 @@ const headers = [
 
 // 👉 Fetching phone numbers
 const fetchNumbers = () => {
-  memberListStore.fetchNumbers().then(response => {
-    numbers.value = response.data.userNumber
-  }).catch(error => {
-    console.error(error)
-  })
+  memberListStore.fetchNumbers()
+    .then(response => {
+      if(response.data.status){
+        numbers.value = response.data.userNumber
+        userPermission.value = false
+      }else{
+        userPermission.value = response.data.message
+      }
+    }).catch(error => {
+      console.error(error)
+    })
 }
 
 // 👉 Fetching roles
@@ -301,7 +308,24 @@ watch(assignNumber, value => {
                   max-width="610"
                 >
                   <!-- Dialog Activator -->
-                  <template #activator="{ props }">
+                  <template
+                    v-if="userPermission"
+                    #activator="{ props }"
+                  >
+                    <VAlert
+                    
+                      border="start"
+                      color="primary"
+                      variant="tonal"
+                    >
+                      {{ userPermission }}
+                    </VAlert>
+                  </template>
+                  
+                  <template
+                    v-if="!userPermission"
+                    #activator="{ props }"
+                  >
                     <VBtn
                       v-bind="props"
                       class="mr-2"
@@ -443,7 +467,10 @@ watch(assignNumber, value => {
                     </VCardText>
                   </VCard>
                 </VDialog>
-                <IconBtn @click.prevent="">
+                <IconBtn
+                  v-if="!userPermission"
+                  @click.prevent=""
+                >
                   <VIcon icon="tabler-download" />
                 </IconBtn>
               </VRow>

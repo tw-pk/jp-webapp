@@ -121,10 +121,19 @@ class TeamController extends Controller
 
     public function fetch_numbers()
     {
-        $userNumber = UserNumber::select('phone_number')->where('user_id', Auth::user()->id)->get();
+        $userNumbers = Auth::user()->numbers()->pluck('phone_number');
+
+        $roleName = Auth::user()->getRoleNames()->first();
+        if($roleName =='Admin' && $userNumbers->isEmpty()){
+            return response()->json([
+                'status' => false,
+                'message' => 'If you want to send an invitation to someone or create your own team, then you need to purchase your number from the phone number menu.'
+            ]);
+        }
         return response()->json([
+            'status' => true,
             'message' => 'Phone numbers fetched successfully',
-            'userNumber' => $userNumber
+            'userNumber' => $userNumbers
         ]);
     }
 
