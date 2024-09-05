@@ -11,6 +11,7 @@ use App\Models\UserProfile;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Services\AssignPhoneNumberService;
 
 class TeamController extends Controller
 {
@@ -107,16 +108,16 @@ class TeamController extends Controller
         ]);
     }
 
-    public function ownedActiveNumbers(){
-        $numbers = Auth::user()->numbers;
-        $numbers = $numbers->map(function ($number){
-           return [
-               'number' => $number->phone_number,
-               'active' => $number->active
-           ];
-        });
-
-        return response()->json($numbers);
+    public function ownedActiveNumbers()
+    {
+        $userId = Auth::user()->id;
+        $assignPhoneNumberService = new AssignPhoneNumberService();
+        $numbers = $assignPhoneNumberService->getAssignPhoneNumbers($userId);
+        $userNumbers = UserNumber::select('phone_number as number', 'active')
+            ->whereIn('phone_number', $numbers)
+            ->get()->toArray();
+            
+        return response()->json($userNumbers);
     }
 
     public function fetch_numbers()

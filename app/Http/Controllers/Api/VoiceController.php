@@ -19,6 +19,7 @@ use Twilio\Rest\Client;
 use Illuminate\Http\Response;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
+use App\Services\AssignPhoneNumberService;
 use Illuminate\Support\Str;
 
 class VoiceController extends Controller
@@ -118,40 +119,15 @@ class VoiceController extends Controller
         $searchQuery = $request->input('q');
         $options = $request->input('options');
 
-        $phoneNumberArray = [];
         $user = Auth::user();
 
         if (!empty($member)) {
             $user = User::find($member);
         }
-       
-        $phoneNumbers = $user->numbers->pluck('phone_number');
-        if (!empty($phoneNumbers)) {
-            $phoneNumberArray = array_merge($phoneNumberArray, $phoneNumbers->toArray());
-        }
 
-        $userId = $user->id;
-        $invitation = Invitation::with(['assignedNumbers', 'assignedInvitationTeam'])->where('member_id', $userId)->first();
-        if($invitation){
-            $invitation->can_have_new_number == 0 ? $phoneNumberArray[] = $invitation->number :NULL;
-
-            $assignedPhoneNumbers = $invitation->assignedNumbers?->pluck('phone_number');
-            if (!empty($assignedPhoneNumbers)) {
-                $phoneNumberArray = array_merge($phoneNumberArray, $assignedPhoneNumbers->toArray());
-            }
-
-            $assignedTeamIds = $invitation->assignedInvitationTeam?->pluck('id');
-            if (!empty($assignedTeamIds)) {
-                $teamPhoneNumbers = $invitation->assignedNumbersForTeam($invitation->id, $assignedTeamIds);
-                if (!empty($teamPhoneNumbers)) {
-                    $phoneNumberArray = array_merge($phoneNumberArray, $teamPhoneNumbers);
-                }
-            }
-            
-        }
-        $phoneNumberArray = array_unique($phoneNumberArray);
-        
-        if (count($phoneNumberArray) === 0) {
+        $assignPhoneNumberService = new AssignPhoneNumberService();
+        $assignPhoneNumbers = $assignPhoneNumberService->getAssignPhoneNumbers($user->id);
+        if (count($assignPhoneNumbers) === 0) {
             return response()->json([
                 'status' => false,
                 'message' => "You don't have any active number, please verify if you have an active number",
@@ -179,9 +155,9 @@ class VoiceController extends Controller
                 }
             }
             
-            $twilioCalls = Call::where(function ($query) use ($phoneNumberArray) {
-                    $query->whereIn('to', $phoneNumberArray)
-                        ->orWhereIn('from', $phoneNumberArray);
+            $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
+                    $query->whereIn('to', $assignPhoneNumbers)
+                        ->orWhereIn('from', $assignPhoneNumbers);
                 })
                 ->when($searchQuery, function ($query, $searchQuery) {
                     $query->where('to', 'LIKE', "%{$searchQuery}%");
