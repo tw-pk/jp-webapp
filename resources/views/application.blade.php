@@ -5,7 +5,7 @@
     <meta charset="UTF-8"/>
     <link rel="icon" href="{{ asset('vuexy-logo.svg') }}"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>JustDialer</title>
+    <title>JotPhone</title>
     <link rel="stylesheet" type="text/css" href="{{ asset('loader.css') }}"/>
     <script src="https://js.stripe.com/v3/"></script>
     @vite(['resources/js/main.js'])

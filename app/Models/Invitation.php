@@ -22,6 +22,9 @@ class Invitation extends Model
         'user_id'
     ];
 
+    public function fullName(){
+        return $this->firstname." ".$this->lastname;
+    }
 
     public function user(): BelongsTo
     {
@@ -57,4 +60,26 @@ class Invitation extends Model
     {
         return $this->hasMany(AssignNumber::class, 'invitation_id');
     }
+
+    public function assignedInvitationTeam()
+    {
+        return $this->hasMany(Team::class, 'user_id', 'user_id');
+    }
+
+    public function assignedNumbersForTeam($invitationId=null, $assignedTeamIds=[])
+    {
+        $teamMemberExists = TeamMember::where('invitation_id', $invitationId)
+        ->whereIn('team_id', $assignedTeamIds)
+        ->exists();
+
+        if ($teamMemberExists) {
+            $phoneNumbers = AssignNumber::whereIn('team_id', $assignedTeamIds)
+                ->pluck('phone_number')
+                ->toArray();
+            return $phoneNumbers;
+        }
+
+        return false;
+    }
+
 }

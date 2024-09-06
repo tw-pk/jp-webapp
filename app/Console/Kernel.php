@@ -19,9 +19,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->job(new FetchTwilioCallsJob())
-                 ->everyFiveMinutes()
-                 ->name('fetch-twilio-calls-job')
-                 ->withoutOverlapping();
+                ->everyFiveMinutes()
+                //->everyMinute()
+                ->name('fetch-twilio-calls-job')
+                ->withoutOverlapping();
                  
         $schedule->call(function () {
             $service = new AutoTopUpPaymentService();
@@ -34,7 +35,7 @@ class Kernel extends ConsoleKernel
                         ->first();
 
                     // Check if the user's credit is below the threshold value
-                    if ($user->credit->credit < $thresholdValue) {
+                    if ($user->credit->credit < $thresholdValue && $user->credit->threshold_enabled == '1') {
                         $service->checkAndTopUp($user);
                     }
                 }

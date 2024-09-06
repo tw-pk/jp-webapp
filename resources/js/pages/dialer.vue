@@ -33,7 +33,7 @@ const onForward = ref(false)
 const selectedTeamMember = ref(null)
 const teamMembers = ref([])
 const log = ref('Connecting...')
-const CallTimer = ref(0);
+const CallTimer = ref(0)
 const connection = ref(null)
 const connected = ref(false)
 const dropdownContainer = ref(null)
@@ -82,10 +82,10 @@ const conferenceMsg = ref('');
 // Chat message
 const msg = ref('')
 
-const callStartTime = ref(null);
-const currentTime = ref(null);
-const timerInterval = ref(null);
-const isCallAccepted = ref(false);
+const callStartTime = ref(null)
+const currentTime = ref(null)
+const timerInterval = ref(null)
+const isCallAccepted = ref(false)
 
 // file input
 const refInputEl = ref()
@@ -275,10 +275,11 @@ const fetchCountries = () => {
 const fetchTeamMembers = async () => {
   try {
     const res = await dialerStore.fetchMemberList()
-    console.log(res, 'here is the response of invite memeber');
+
+    console.log(res, 'here is the response of invite memeber')
     teamMembers.value = res.map(member => ({
       title: member.fullname,
-      value: member.id
+      value: member.id,
     }))
   } catch (error) {
     console.error('Failed to fetch team members:', error)
@@ -298,7 +299,7 @@ const validPhone = computed(() => {
 })
     
 const handleSuccessfulRegistration = device => {
-  console.log(device, 'here is device values');
+  console.log(device, 'here is device values')
   log.value = 'Connected'
   connected.value = true
   console.log('The device is ready to receive incoming calls.')
@@ -411,77 +412,77 @@ const forwardCall = () => {
   }
 
 const callDuration = computed(() => {
-  if (!callStartTime.value || !currentTime.value) return '00:00:00';
+  if (!callStartTime.value || !currentTime.value) return '00:00:00'
   
-  const diff = Math.floor((currentTime.value - callStartTime.value) / 1000);
-  const hours = Math.floor(diff / 3600).toString().padStart(2, '0');
-  const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
-  const seconds = (diff % 60).toString().padStart(2, '0');
+  const diff = Math.floor((currentTime.value - callStartTime.value) / 1000)
+  const hours = Math.floor(diff / 3600).toString().padStart(2, '0')
+  const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0')
+  const seconds = (diff % 60).toString().padStart(2, '0')
   
-  return `${hours}:${minutes}:${seconds}`;
-});
+  return `${hours}:${minutes}:${seconds}`
+})
 
 const startTimer = () => {
-  callStartTime.value = Date.now();
-  currentTime.value = Date.now();
+  callStartTime.value = Date.now()
+  currentTime.value = Date.now()
   timerInterval.value = setInterval(() => {
-    currentTime.value = Date.now();
-  }, 1000);
-};
+    currentTime.value = Date.now()
+  }, 1000)
+}
 
 const stopTimer = () => {
   if (timerInterval.value) {
-    clearInterval(timerInterval.value);
-    timerInterval.value = null;
+    clearInterval(timerInterval.value)
+    timerInterval.value = null
   }
-  callStartTime.value = null;
-  currentTime.value = null;
-  isCallAccepted.value = false;
-};
+  callStartTime.value = null
+  currentTime.value = null
+  isCallAccepted.value = false
+}
 
 
 
-const toggleCall = async (event) => {
-  event.preventDefault();
+const toggleCall = async event => {
+  event.preventDefault()
 
   // Code for making outbound call...
-  const user = await User.auth();
-  const device = dialerStore.twilioDevice;
-  const userId = user.data.id;
+  const user = await User.auth()
+  const device = dialerStore.twilioDevice
+  const userId = user.data.id
 
   // Function to check the user's credit balance
-  const checkBalance = async (userId) => {
+  const checkBalance = async userId => {
     try {
-      const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`);            
+      const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`)            
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
             
-      const contentType = response.headers.get('content-type');
+      const contentType = response.headers.get('content-type')
       if (!contentType || !contentType.includes('application/json')) {
-        throw new TypeError("Received non-JSON response");
+        throw new TypeError("Received non-JSON response")
       }
       
-      const result = await response.json();
-      return result;
+      return await response.json()
     } catch (error) {
-      console.error('Error checking balance:', error);
-      return null;
+      console.error('Error checking balance:', error)
+      
+      return null
     }
-    };
+  }
 
   if (!onPhone.value) {
-    muted.value = false;
-    onPhone.value = true;
+    muted.value = false
+    onPhone.value = true
 
     // Check user's balance
-    const balanceResult = await checkBalance(userId);
+    const balanceResult = await checkBalance(userId)
     if (balanceResult && balanceResult.lowBalance) {
       // Show low balance message        
-      connected.value = false;
-      log.value = 'Your balance is currently low. Please contact your team lead.';
-      onPhone.value = false;
-      muted.value = true;      
+      connected.value = false
+      log.value = 'Your balance is currently low. Please contact your team lead.'
+      onPhone.value = false
+      muted.value = true      
     } else {
       // Make outbound call with current number
       userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '');      
@@ -539,7 +540,7 @@ const toggleCall = async (event) => {
         
         
       } catch (error) {
-        console.error('Error connecting:', error);
+        console.error('Error connecting:', error)
       }
     }
   } else {
@@ -549,11 +550,11 @@ const toggleCall = async (event) => {
     muted.value = true;
     onPhone.value = false;
   }
-};
+}
 
 
 
-  const playIncomingCallSound = connection => {
+const playIncomingCallSound = connection => {
   incomingCallSound.value = new Audio(defaultRingtone)
   incomingCallSound.value.play()
 }
@@ -767,7 +768,8 @@ const activeTab = ref('Dialer - JotPhone')
     
 const onMountedFunction = async () => { 
   fetchCountries()
-  currentNumber.value = '+' + selectedCountry.value.phone_code
+
+  //currentNumber.value = '+' + selectedCountry.value.phone_code
   
   const userDefaultNumber = await dialerStore.fetchSetting()
     .then(res => {    
@@ -873,7 +875,7 @@ const fetchSetting = () => {
     })
     .catch(error => {
       loading.value = false
-      console.log(error,'here is setting')
+      console.log(error, 'here is setting')
     })
 }
 
@@ -1308,7 +1310,7 @@ const moreList = [
           <input
             v-model="currentNumber"
             type="tel"
-            placeholder="Enter phone number"
+            placeholder="Enter Phone No +1XXXXXXXXXXX"
             class="phone-input"
           >
           <button
@@ -1343,7 +1345,10 @@ const moreList = [
           </VChip>
         </div>
 
-        <div v-if="isCallAccepted" class="d-flex flex-row justify-center status-container mt-4">          
+        <div
+          v-if="isCallAccepted"
+          class="d-flex flex-row justify-center status-container mt-4"
+        >          
           <VChip
             label
             :color="isCallAccepted ? 'success' : 'error'"
@@ -1360,7 +1365,10 @@ const moreList = [
           </VChip>            
         </div>
 
-        <div v-if="onForward" class="d-flex flex-row justify-center align-items-center status-container mt-4 mr-4 ml-4 gap-4">          
+        <div
+          v-if="onForward"
+          class="d-flex flex-row justify-center align-items-center status-container mt-4 mr-4 ml-4 gap-4"
+        >          
           <VSelect
             v-model="selectedTeamMember"
             label="Select Team Member"
@@ -1431,9 +1439,6 @@ const moreList = [
               title="Hold"
               @click="toggleHold">              
             </VBtn>
-    
-            
-
           </div>
         </div>
 

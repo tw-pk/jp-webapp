@@ -437,6 +437,7 @@ class AuthController extends Controller
 
         if (!$check_password) {
             return response()->json([
+                'status' => false,
                 'message' => 'Invalid token!'
             ], 400);
         }
@@ -448,6 +449,7 @@ class AuthController extends Controller
         \DB::table('password_reset_tokens')->where(['email' => $request->email])->delete();
 
         return response()->json([
+            'status' => true,
             'message' => 'Password updated successfully'
         ]);
     }

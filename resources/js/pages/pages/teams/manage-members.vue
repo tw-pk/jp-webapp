@@ -31,6 +31,7 @@ const defaultTitle = ref('Add New Member')
 const defaultButton = ref('Submit')
 const assignNumber = ref()
 const existingNumberOptionSelected = ref(false)
+const userPermission = ref(false)
 
 const options = ref({
   page: 1,
@@ -54,7 +55,10 @@ const headers = [
     title: 'ROLE',
     key: 'role',
   },
-
+  {
+    title: 'Registered',
+    key: 'registered',
+  },
   {
     title: 'ACTION',
     key: 'action',
@@ -64,11 +68,17 @@ const headers = [
 
 // 👉 Fetching phone numbers
 const fetchNumbers = () => {
-  memberListStore.fetchNumbers().then(response => {
-    numbers.value = response.data.userNumber
-  }).catch(error => {
-    console.error(error)
-  })
+  memberListStore.fetchNumbers()
+    .then(response => {
+      if(response.data.status){
+        numbers.value = response.data.userNumber
+        userPermission.value = false
+      }else{
+        userPermission.value = response.data.message
+      }
+    }).catch(error => {
+      console.error(error)
+    })
 }
 
 // 👉 Fetching roles
@@ -154,6 +164,19 @@ const resolveUserRoleVariant = status => {
     return {
       color: 'info',
       text: 'Subscriber',
+    }
+}
+
+const resolveUserRegistered = val => {
+  if (val == 1)
+    return {
+      color: 'primary',
+      text: 'True',
+    }
+  else
+    return {
+      color: 'error',
+      text: 'False',
     }
 }
 
@@ -285,7 +308,24 @@ watch(assignNumber, value => {
                   max-width="610"
                 >
                   <!-- Dialog Activator -->
-                  <template #activator="{ props }">
+                  <template
+                    v-if="userPermission"
+                    #activator="{ props }"
+                  >
+                    <VAlert
+                    
+                      border="start"
+                      color="primary"
+                      variant="tonal"
+                    >
+                      {{ userPermission }}
+                    </VAlert>
+                  </template>
+                  
+                  <template
+                    v-if="!userPermission"
+                    #activator="{ props }"
+                  >
                     <VBtn
                       v-bind="props"
                       class="mr-2"
@@ -427,7 +467,10 @@ watch(assignNumber, value => {
                     </VCardText>
                   </VCard>
                 </VDialog>
-                <IconBtn @click.prevent="">
+                <IconBtn
+                  v-if="!userPermission"
+                  @click.prevent=""
+                >
                   <VIcon icon="tabler-download" />
                 </IconBtn>
               </VRow>
@@ -475,7 +518,7 @@ watch(assignNumber, value => {
                 <div class="d-flex flex-column">
                   <h6 class="text-base">
                     <RouterLink
-                      :to="{ name: 'apps-user-view-id', params: { id: item.raw.id } }"
+                      :to="{ name: 'pages-member-view-id', params: { id: item.raw.id } }"
                       class="font-weight-medium user-list-name"
                     >
                       {{ item.raw.firstname }} {{ item.raw.lastname }}
@@ -506,6 +549,16 @@ watch(assignNumber, value => {
                   class="text-capitalize"
                 >{{ item.raw.role_info.name }}</span>
               </div>
+            </template>
+
+            <template #item.registered="{ item }">
+              <VChip
+                label
+                :color="resolveUserRegistered(item.raw.registered).color"
+                size="small"
+              >
+                {{ resolveUserRegistered(item.raw.registered).text }}
+              </VChip>
             </template>
 
             <!-- Actions -->

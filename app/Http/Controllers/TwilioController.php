@@ -60,6 +60,7 @@ class TwilioController extends Controller
         $userId = $id;
         $user = User::with('invitationsMember')->where('id', $userId)->first();
 
+
         $teamleadId;
         if ($user->hasRole('Admin')) {            
             $teamleadId = $userId;
@@ -69,7 +70,11 @@ class TwilioController extends Controller
         }
 
         $creditInformation = UserCredit::where('user_id', $teamleadId)->first();
-        
+    
+        if($thresholdEnabled->threshold_enabled == '1'){
+            $this->autoTopUpPaymentService->checkAndTopUp($user);
+            
+        }
         // Check if $creditInformation is null
         if (!$creditInformation) {
             return response()->json([
@@ -79,6 +84,7 @@ class TwilioController extends Controller
     
         $thresholdValue = CreditProduct::where('price_id', $creditInformation->threshold_value)->pluck('price')->first();
     
+
         // Check if $thresholdValue is null
         if (is_null($thresholdValue)) {
             return response()->json([
@@ -407,5 +413,6 @@ class TwilioController extends Controller
             ], 404);            
         }
     }
+
 
 }

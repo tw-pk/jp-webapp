@@ -6,7 +6,7 @@ import { useRoute } from "vue-router"
 import About from "./About.vue"
 
 const props = defineProps({
-  contactData: {
+  memberDetail: {
     type: Object,
     required: true,
   },
@@ -16,10 +16,10 @@ const profileHeaderData = ref()
 const route = useRoute()
 
 const fetchHeaderData = () => {
-  axiosIns.post('/api/auth/contact/details', {
-    contact_id: route.params.id,
+  axiosIns.post('/api/auth/member/detail', {
+    member_id: Number(route.params.id),
   }).then(response => {
-    profileHeaderData.value = response.data.contactData
+    profileHeaderData.value = response.data.memberDetail
     profileHeaderData.value.coverImg = UserProfileHeaderBg
   })
 }
@@ -56,36 +56,24 @@ fetchHeaderData()
             <span class="d-flex">
               <VIcon
                 size="20"
-                icon="tabler-address-book"
+                icon="tabler-users-group"
                 class="me-1"
               />
               
               <span class="text-body-1">
-                Contact
+                Member
               </span>
             </span>
-
-            <!--
-              <span class="d-flex align-center">
-              <VIcon
-              size="20"
-              icon="tabler-map-pin"
-              class="me-2"
-              />
-              <span class="text-body-1">
-              {{ profileHeaderData?.address_home }}
-              </span>
-              </span>
-            -->
 
             <span class="d-flex align-center">
               <VIcon
                 size="20"
-                icon="tabler-calendar"
+                icon="tabler-calendar-clock"
                 class="me-2"
               />
+              
               <span class="text-body-1">
-                {{ profileHeaderData?.joinedAt }}
+                {{ profileHeaderData?.invitationDate }}
               </span>
             </span>
           </div>
@@ -94,7 +82,7 @@ fetchHeaderData()
     </VCardText>
     <VCardText class="d-flex flex-sm-row flex-column justify-end align-top about-container">
       <div class="about-scroll-container">
-        <About :data="contactData" />
+        <About :data="memberDetail" />
       </div>
     </VCardText>
   </VCard>

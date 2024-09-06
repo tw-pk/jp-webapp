@@ -1,8 +1,10 @@
 <script setup>
 import { useAssignStore } from "@/views/apps/number/useAssignStore"
 import { defineProps, ref, watch } from 'vue'
+import { useRouter } from "vue-router"
 
 const props = defineProps(['phoneNumber'])
+const router = useRouter()
 const assignStore = useAssignStore()
 
 const member = ref(null)
@@ -55,21 +57,26 @@ const fetchAssignNumber = () => {
   assignStore.fetchAssignNumber({
     number: props.phoneNumber,
   }).then(response => {
-    member.value = response.data.assigned
-      .filter(item => item.invitation_id != null)
-      .map(item => {
-        const matchingMember = memberList.value.find(member => member.id === item.invitation_id)
+    if(response.data.status){
+      member.value = response.data.assigned
+        .filter(item => item.invitation_id != null)
+        .map(item => {
+          const matchingMember = memberList.value.find(member => member.id === item.invitation_id)
         
-        return matchingMember ? matchingMember : null
-      })
+          return matchingMember ? matchingMember : null
+        })
 
-    if (response.data.assigned.every(item => !item.invitation_id)) {
-      team.value = response.data.assigned.map(item => {
-        let matchingTeam = teamList.value.find(team => team.id === item.team_id)
+      if (response.data.assigned.every(item => !item.invitation_id)) {
+        team.value = response.data.assigned.map(item => {
+          let matchingTeam = teamList.value.find(team => team.id === item.team_id)
         
-        return matchingTeam ? matchingTeam : null
-      })
+          return matchingTeam ? matchingTeam : null
+        })
+      }
+    }else{
+      router.replace({ name: 'not-authorized' })
     }
+    
     
   }).catch(error => {
     console.error(error)

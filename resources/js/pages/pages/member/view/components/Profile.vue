@@ -45,27 +45,22 @@ const tabTitles = [
   {
     icon: 'tabler-phone-call',
     title: 'All',
-    
   },
   {
     icon: 'tabler-phone-outgoing',
     title: 'Outbound',
-    
   },
   {
     icon: 'tabler-phone-incoming',
     title: 'Inbound',
-    
   },
   {
     icon: 'tabler-phone-pause',
     title: 'Missed',
-    
   },
   {
     icon: 'tabler-record-mail',
     title: 'Voicemail',
-    
   },
 ]
 
