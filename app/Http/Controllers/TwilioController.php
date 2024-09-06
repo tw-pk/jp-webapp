@@ -69,7 +69,7 @@ class TwilioController extends Controller
         }
 
         $creditInformation = UserCredit::where('user_id', $teamleadId)->first();
-    
+        
         // Check if $creditInformation is null
         if (!$creditInformation) {
             return response()->json([
@@ -121,7 +121,9 @@ class TwilioController extends Controller
                 $this->webhookCallstatus($data, $number);
             }
             
-            echo $response;
+            $response->enqueue('supportRoom');
+            return response($response)->header('Content-Type', 'text/xml');            
+            
         } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage()
@@ -131,7 +133,7 @@ class TwilioController extends Controller
     }
 
     public function incomingCall(Request $request){
-
+        \Log::info("here is the incoming call =>". $request->all());
         $response = new VoiceResponse();        
         $UserNumber = UserNumber::where('active', true)->where('phone_number', $request->To)->first();
         if (!empty($UserNumber)) {
@@ -187,37 +189,14 @@ class TwilioController extends Controller
                 $response->say('Thank you for your message. Goodbye!');
                 $response->hangup();
             }
-
-            
-           //dd($phoneSetting);
-            // $data['broadcaster'] = $request->broadcaster;
-            // $data['receiver'] = $request->receiver;
-            // $data['offer'] = $request->offer;
-
-            // event(new StreamOffer($data));
             $dial = $response->dial();
             $dial->client('browser-client-identifier');
-            event(new IncomingCallEvent($request->all()));
-            //return response($response)->header('Content-Type', 'text/xml');
-
-            ////
-            // $response->say('Hello! Kindly wait call is being forwarded to admin....');
-            // //These static names and phonenumbers should become dynamic in the coming days when the functionalify is complete.
-            // $client_name = 'Usman Ghani';
-            // $number = Str::replaceFirst('+', '', '923447431371');
-            
-            // $dial = $response->dial('', ['callerId' => $request->input('From')]);
-            // $dial->client($client_name);
-            // $dial->number($number);
-           
+            event(new IncomingCallEvent($request->all()));           
         } else {
     
             $response->say('Sorry! The number you are calling is not currently active for a user.');
         }
-        // Answer the incoming call
         $response->say('Call ended....');
-
-        // Render the TwiML response
         echo $response;
     }
 
@@ -271,9 +250,6 @@ class TwilioController extends Controller
         // Handle transcription if needed
         $transcriptionText = $request->input('TranscriptionText');
         $recordingSid = $request->input('RecordingSid');
-
-        // Store transcription details in the database or perform any other logic
-
         return response('Transcription handled', 200);
     }
 
@@ -414,15 +390,7 @@ class TwilioController extends Controller
         
         try {
             $id =  $request->input('id');
-            // $from = $request->input('number');                        
-            $assignedNumber = AssignNumber::where('invitation_id', (string)$id)->first();   
-            // if ($assignedNumber) {                
-            //     $response = new VoiceResponse();
-            //     $dial = $response->dial('', ['callerId' => $from]);                
-            //     $dial->number($assignedNumber->phone_number);
-            // } else {
-            //     Log::error("No assigned number found for invitation_id: " . $id);
-            // }
+            $assignedNumber = AssignNumber::where('invitation_id', (string)$id)->first();               
 
             $response = new VoiceResponse();
 
