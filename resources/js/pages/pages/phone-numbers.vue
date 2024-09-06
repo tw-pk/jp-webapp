@@ -69,11 +69,6 @@ const resolveStatusVariant = status => {
     }
 }
 
-onMounted(() => {
-  //numbers.value = []
-  //fetchPhoneNumbers()
-})
-
 // 👉 Fetching users
 const fetchPhoneNumbers = () => {
   isProcessing.value = true

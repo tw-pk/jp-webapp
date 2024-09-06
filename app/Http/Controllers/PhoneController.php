@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Contact;
 use App\Models\AssignNumber;
 use Illuminate\Support\Facades\Auth;
+use App\Services\AssignPhoneNumberService;
 
 class PhoneController extends Controller
 {
@@ -19,72 +20,59 @@ class PhoneController extends Controller
         $searchQuery = $request->input('q');
         $options = $request->input('options');
 
-        $perPage = 10;
+        $perPage = $options['itemsPerPage'] ?? 10;
         $currentPage = $options['page'] ?? 1;
 
-        if (!$searchQuery) {
-            $query = Auth::user()->numbers()->select(['user_id', 'phone_number', 'country']);
-        } else {
-            $query = Auth::user()->numbers()
-                ->where(function ($q) use ($searchQuery) {
-                    $q->where('phone_number', 'like', '%' . $searchQuery . '%')
-                        ->orWhere('country', 'like', '%' . $searchQuery . '%')
-                        ->orWhereHas('user', function ($query) use ($searchQuery) {
-                            $query->whereRaw("CONCAT(firstname, ' ', lastname) like ?", ['%' . $searchQuery . '%'])
-                                ->orWhere('firstname', 'like', '%' . $searchQuery . '%')
-                                ->orWhere('lastname', 'like', '%' . $searchQuery . '%');
-                        });
-                })
-                ->select(['user_id', 'phone_number', 'country']);
-        }
-         
-        //$roleName = Auth::user()->getRoleNames()->first();
-        //if($roleName =='Member'){
-            $userId = Auth::user()->id; 
-            $userPhoneNumbers = AssignNumber::whereHas('invitation', function ($query) use ($userId) {
-                $query->where('member_id', $userId);
-            })->pluck('phone_number')->unique()->toArray();
-            $userNumbersQuery = UserNumber::select('user_id', 'phone_number', 'country')
-                ->whereIn('phone_number', $userPhoneNumbers);
-            if(!empty($userNumbersQuery)){
-                $query->union($userNumbersQuery)->distinct();
-            }
-        //}
-        
-        $totalRecord = $query->count();
-        $numbers = $query->paginate($perPage, ['*'], 'page', $currentPage);
-        $totalPage = ceil($totalRecord / $perPage);
+        $userId = Auth::user()->id;
+        $assignPhoneNumberService = new AssignPhoneNumberService();
+        $numbers = $assignPhoneNumberService->getAssignPhoneNumbers($userId);
+    
+        $userNumbers = UserNumber::with('user.userInvitations')
+            ->select('user_id', 'phone_number', 'country')
+            ->whereIn('phone_number', $numbers);  
 
+        if ($searchQuery) {
+            $userNumbers->where(function ($q) use ($searchQuery) {
+                $q->where('phone_number', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('country', 'like', '%' . $searchQuery . '%')
+                    ->orWhereHas('user', function ($query) use ($searchQuery) {
+                        $query->whereRaw("CONCAT(firstname, ' ', lastname) like ?", ['%' . $searchQuery . '%'])
+                            ->orWhere('firstname', 'like', '%' . $searchQuery . '%')
+                            ->orWhere('lastname', 'like', '%' . $searchQuery . '%');
+                    });
+            });
+        }
+
+        $totalRecord = $userNumbers->count();
         if (!empty($options['sortBy']) && is_array($options['sortBy'])) {
             foreach ($options['sortBy'] as $sort) {
                 $key = $sort['key'];
                 $order = strtolower($sort['order']) === 'asc' ? 'asc' : 'desc';
-                $query->orderBy($key, $order);
+                $userNumbers->orderBy($key, $order);
             }
         }
         
-        $numbers->map(function ($userNumber) {
+        $numbersPaginated = $userNumbers->paginate($perPage, ['*'], 'page', $currentPage);
+        $totalPage = ceil($totalRecord / $perPage);
 
+        $numbersPaginated->map(function ($userNumber) {
             $isShared = 'shared';
-            if($userNumber->user_id == Auth::user()->id){
+            if ($userNumber->user_id == Auth::user()->id) {
                 $isShared = 'personal';
             }
             $userNumber['isShared'] = $isShared;
-
+        
             $userNumber->makeHidden(['user']);
             $invitations = $userNumber->user->userInvitations;
-
+            
             $shareWith = [];
             foreach ($invitations as $key => $invitation) {
-               
                 $user = User::where('id', $invitation->member_id)
                     ->select(['id', 'email', 'firstname', 'lastname'])
                     ->first();
-
                 if (!empty($user->profile?->avatar)) {
-                    $shareWith[$key]['avatar_url'] = asset('storage/avatars/' .$user->profile->avatar);
+                    $shareWith[$key]['avatar_url'] = asset('storage/avatars/' . $user->profile->avatar);
                 }
-
                 $shareWith[$key]['firstname'] = $user?->firstname ? $user->firstname : $invitation->firstname;
                 $shareWith[$key]['lastname'] = $user?->lastname ? $user?->lastname : $invitation->lastname;
             }
@@ -93,8 +81,9 @@ class PhoneController extends Controller
             $userNumber['ownerFullName'] = $userNumber->user->fullName();
             return $userNumber;
         });
+        
         return response()->json([
-            'numbers' => $numbers,
+            'numbers' => $numbersPaginated,
             'totalPage' => $totalPage,
             'totalRecord' => $totalRecord,
             'page' => $currentPage,
