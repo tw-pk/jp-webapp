@@ -526,7 +526,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => false,
                 'errors' => [
-                    'currentPassword' => 'Invalid current password, does not match your actual password!'
+                    'currentPassword' => 'Invalid current password, does not match your actual password.'
                 ]
             ], 422);
         }
@@ -537,7 +537,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Password updated successfully'
+            'message' => 'Password has been updated successfully.'
         ]);
     }
 

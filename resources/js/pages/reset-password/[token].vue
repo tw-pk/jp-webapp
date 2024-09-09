@@ -46,8 +46,6 @@ const resetPassword = () => {
   })
     .then(res => {
       isDisabled.value = false
-      console.log(res)
-      
       if(res.data.status){
         authStore.setVerificationMessage(res.data.message)
         router.push('/login')
