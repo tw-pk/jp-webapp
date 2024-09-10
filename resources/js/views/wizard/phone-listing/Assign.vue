@@ -115,11 +115,10 @@ const addAssignNumber = event => {
       // team.value = null
     })
       .catch(error => {
-        console.log(error)
-        snackbarMessage.value = error.message
+        let alertMsg = error?.response?.data?.message ?? error?.message
+        snackbarMessage.value = alertMsg
         snackbarActionColor.value = `error`
         isSnackbarVisible.value = true
-       
       })
   } else {
     errorMemberMsg.value = 'At least one field is required'

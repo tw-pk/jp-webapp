@@ -69,15 +69,16 @@ const searchLogs = ref('')
 const searchContact = ref('')
 const activeTabName = ref('home')
 const incomingCall = ref(null)
-const callSid = ref('');
-const childCallSid = ref('');
-const userNumber  = ref('');
-const phoneNumbers = ref('');
-const dialog = ref(false);
+const callSid = ref('')
+const childCallSid = ref('')
+const userNumber  = ref('')
+const phoneNumbers = ref('')
+const dialog = ref(false)
+
 //hold track
 const onHold = ref(false) 
-const phoneNumbersMsg = ref(false);
-const conferenceMsg = ref('');
+const phoneNumbersMsg = ref(false)
+const conferenceMsg = ref('')
 
 // Chat message
 const msg = ref('')
@@ -317,99 +318,103 @@ const toggleMute = () => {
 
 
 const forwardCall = () => {  
-  onForward.value = true;
+  onForward.value = true
 
 }    
 
-  // Function to toggle hold and resume
-  const toggleHold = () => {
-      if (onHold.value) {
-        resumeCall();
-      } else {
-        holdCall();
-      }
-    };
-
-    // Function to hold the call
-    const holdCall = async () => {
-      const user = await User.auth();      
-      const userId = user.data.id;
-      axiosIns.post('/place-on-hold', {
-          callSid: callSid.value,
-          to: userNumber.value,
-          From: from.value,
-      })
-      .then(response => {
-          onHold.value = true;                    
-          childCallSid.value = response.data.childCallSid;
-          console.log(response, 'here is response');
-          
-          console.log(childCallSid.value, 'here is childCallSid');
-                                    
-      })
-      .catch(error => {
-          console.error(error.response.data.error);
-      });
-    }
-    // Function to resume the call
-    const resumeCall = () => {      
-      console.log('inside resume function => ', childCallSid.value);
-      
-      axiosIns.post('/resume-from-hold', { 
-          callSid: callSid.value,
-          childCallSid: childCallSid.value,
-          to: userNumber.value,
-          From: from.value,
-      })
-      .then(response => {
-          onHold.value = false;         
-          console.log(response);
-           
-        })
-        .catch(error => {
-          console.error("Error resuming the call:", error);
-        });
-    };
-
-
-    const connectForwardCall = () => {
-      console.log('her we are hhhshh');
-      
-      const id = selectedTeamMember.value;
-      const number = '+' + currentNumber.value.replace(/\D/g, '');
-      try {    
-        const data = { id, number };
-        const response = dialerStore.connectTransferCall(data);
-        if (response.data.success) {
-          log.value('Call transferred successfully');
-        } else {
-          log.value('Failed to transfer call:', response.data.message);
-        }
-      } catch (error) {
-        console.error('Failed to transfer call:', error);
-      }
-      
-    };
-
-  const  openConferenceDialog = () => {
-    dialog.value = true;
-  } 
-
-  const createConference = () => {      
-      const numbers = (phoneNumbers.value).split(',').map(num => num.trim());         
-      axiosIns.post('/create-conference', { 
-        numbers: numbers ,
-        from :from.value,
-      })
-      .then(response => {                  
-          console.log(response);           
-        })
-        .catch(error => {
-          console.error("Error resuming the call:", error.response.data.errors.message);
-          conferenceMsg.value = error.response.data.errors.message;
-
-        });
+// Function to toggle hold and resume
+const toggleHold = () => {
+  if (onHold.value) {
+    resumeCall()
+  } else {
+    holdCall()
   }
+}
+
+// Function to hold the call
+const holdCall = async () => {
+  const user = await User.auth()      
+  const userId = user.data.id
+
+  axiosIns.post('/place-on-hold', {
+    callSid: callSid.value,
+    to: userNumber.value,
+    From: from.value,
+  })
+    .then(response => {
+      onHold.value = true                    
+      childCallSid.value = response.data.childCallSid
+      console.log(response, 'here is response')
+          
+      console.log(childCallSid.value, 'here is childCallSid')
+                                    
+    })
+    .catch(error => {
+      console.error(error.response.data.error)
+    })
+}
+
+
+// Function to resume the call
+const resumeCall = () => {      
+  console.log('inside resume function => ', childCallSid.value)
+      
+  axiosIns.post('/resume-from-hold', { 
+    callSid: callSid.value,
+    childCallSid: childCallSid.value,
+    to: userNumber.value,
+    From: from.value,
+  })
+    .then(response => {
+      onHold.value = false         
+      console.log(response)
+           
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error)
+    })
+}
+
+
+const connectForwardCall = () => {
+  console.log('her we are hhhshh')
+      
+  const id = selectedTeamMember.value
+  const number = '+' + currentNumber.value.replace(/\D/g, '')
+  try {    
+    const data = { id, number }
+    const response = dialerStore.connectTransferCall(data)
+    if (response.data.success) {
+      log.value('Call transferred successfully')
+    } else {
+      log.value('Failed to transfer call:', response.data.message)
+    }
+  } catch (error) {
+    console.error('Failed to transfer call:', error)
+  }
+      
+}
+
+const  openConferenceDialog = () => {
+  dialog.value = true
+} 
+
+const createConference = () => {      
+  const numbers = (phoneNumbers.value).split(',').map(num => num.trim())
+         
+  axiosIns.post('/create-conference', { 
+    numbers: numbers,
+    from: from.value,
+  })
+    .then(response => {                  
+      console.log(response)           
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error.response.data.errors.message)
+      conferenceMsg.value = error.response.data.errors.message
+
+    })
+}
 
 const callDuration = computed(() => {
   if (!callStartTime.value || !currentTime.value) return '00:00:00'
@@ -485,58 +490,58 @@ const toggleCall = async event => {
       muted.value = true      
     } else {
       // Make outbound call with current number
-      userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '');      
+      userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '')      
 
 
       try {                
 
-         const call = await device.connect({
+        const call = await device.connect({
           params: {
             To: userNumber.value,
             agent: JSON.stringify(userId),
             From: from.value,
           },
-        });      
+        })      
 
 
         call.on('ringing', () => {                                 
-          log.value = 'Call in queued';
-          isCallAccepted.value = true;          
-        });         
+          log.value = 'Call in queued'
+          isCallAccepted.value = true          
+        })         
         
         
         call.on('in-progress', () => {                                                       
-          log.value = 'Call in progress';          
-        });        
+          log.value = 'Call in progress'          
+        })        
 
         call.on('accept', () => {                                               
           // call.accept();
-          log.value = 'Call in accept';
+          log.value = 'Call in accept'
           if (call.parameters && call.parameters.CallSid) {
-            callSid.value = call.parameters.CallSid;    
-            console.log(callSid.value, 'here is dialer CallSid ');
+            callSid.value = call.parameters.CallSid    
+            console.log(callSid.value, 'here is dialer CallSid ')
                                                    
           }          
-          isCallAccepted.value = true;
-          startTimer();
-        });                                    
+          isCallAccepted.value = true
+          startTimer()
+        })                                    
 
         call.on('disconnect', () => {
-          onPhone.value = false;
-          connected.value = false;
-          callSid.value = null;
-          log.value = 'Call has ended';
+          onPhone.value = false
+          connected.value = false
+          callSid.value = null
+          log.value = 'Call has ended'
           userNumber.value = null
-          isCallAccepted.value = false;          
-          stopTimer();
-          device.disconnectAll();
-          muted.value = true;
+          isCallAccepted.value = false          
+          stopTimer()
+          device.disconnectAll()
+          muted.value = true
           setTimeout(() => {
-            connected.value = true;
-            log.value = 'Connected';
-            callSid.value = '';
-          }, 5000);
-        });        
+            connected.value = true
+            log.value = 'Connected'
+            callSid.value = ''
+          }, 5000)
+        })        
         
         
       } catch (error) {
@@ -544,11 +549,11 @@ const toggleCall = async event => {
       }
     }
   } else {
-    log.value = 'Hanging Up';
-    device.disconnectAll();
-    log.value = 'Connected';
-    muted.value = true;
-    onPhone.value = false;
+    log.value = 'Hanging Up'
+    device.disconnectAll()
+    log.value = 'Connected'
+    muted.value = true
+    onPhone.value = false
   }
 }
 
@@ -785,7 +790,6 @@ const onMountedFunction = async () => {
       filteredNumbers.value = userNumbers.value.filter(item => item.number)
 
       if(userDefaultNumber){
-        console.log(userDefaultNumber, 'userDEfaultnumber')
         from.value = userDefaultNumber
       }else{
         const activeNumber = filteredNumbers.value.map(item => item.active ? item.number : '')
@@ -1435,10 +1439,10 @@ const moreList = [
             <VBtn
               v-if="onPhone"
               class="ml-3"
-              :icon= "onHold  ? 'tabler-letter-r' : 'tabler-letter-h'"
+              :icon="onHold ? 'tabler-letter-r' : 'tabler-letter-h'"
               title="Hold"
-              @click="toggleHold">              
-            </VBtn>
+              @click="toggleHold"
+            />
           </div>
         </div>
 
