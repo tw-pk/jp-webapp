@@ -69,11 +69,12 @@ const searchLogs = ref('')
 const searchContact = ref('')
 const activeTabName = ref('home')
 const incomingCall = ref(null)
-const callSid = ref('');
-const childCallSid = ref('');
-const userNumber  = ref('');
-const phoneNumbers = ref('');
-const dialog = ref(false);
+const callSid = ref('')
+const childCallSid = ref('')
+const userNumber  = ref('')
+const phoneNumbers = ref('')
+const dialog = ref(false)
+
 //hold track
 const onHold = ref(false) 
 const phoneNumbersMsg = ref(false);
@@ -325,55 +326,58 @@ const toggleConference = () => {
   isConference.value = true;
 }
 
-  // Function to toggle hold and resume
-  const toggleHold = () => {
-      if (onHold.value) {
-        resumeCall();
-      } else {
-        holdCall();
-      }
-    };
+// Function to toggle hold and resume
+const toggleHold = () => {
+  if (onHold.value) {
+    resumeCall()
+  } else {
+    holdCall()
+  }
+}
 
-    // Function to hold the call
-    const holdCall = async () => {
-      const user = await User.auth();      
-      const userId = user.data.id;
-      axiosIns.post('/place-on-hold', {
-          callSid: callSid.value,
-          to: userNumber.value,
-          From: from.value,
-      })
-      .then(response => {
-          onHold.value = true;                    
-          childCallSid.value = response.data.childCallSid;
-          console.log(response, 'here is response');
+// Function to hold the call
+const holdCall = async () => {
+  const user = await User.auth()      
+  const userId = user.data.id
+
+  axiosIns.post('/place-on-hold', {
+    callSid: callSid.value,
+    to: userNumber.value,
+    From: from.value,
+  })
+    .then(response => {
+      onHold.value = true                    
+      childCallSid.value = response.data.childCallSid
+      console.log(response, 'here is response')
           
-          console.log(childCallSid.value, 'here is childCallSid');
+      console.log(childCallSid.value, 'here is childCallSid')
                                     
-      })
-      .catch(error => {
-          console.error(error.response.data.error);
-      });
-    }
-    // Function to resume the call
-    const resumeCall = () => {      
-      console.log('inside resume function => ', childCallSid.value);
+    })
+    .catch(error => {
+      console.error(error.response.data.error)
+    })
+}
+
+
+// Function to resume the call
+const resumeCall = () => {      
+  console.log('inside resume function => ', childCallSid.value)
       
-      axiosIns.post('/resume-from-hold', { 
-          callSid: callSid.value,
-          childCallSid: childCallSid.value,
-          to: userNumber.value,
-          From: from.value,
-      })
-      .then(response => {
-          onHold.value = false;         
-          console.log(response);
+  axiosIns.post('/resume-from-hold', { 
+    callSid: callSid.value,
+    childCallSid: childCallSid.value,
+    to: userNumber.value,
+    From: from.value,
+  })
+    .then(response => {
+      onHold.value = false         
+      console.log(response)
            
-        })
-        .catch(error => {
-          console.error("Error resuming the call:", error);
-        });
-    };
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error)
+    })
+}
 
 
     const connectForwardCall = () => {      
@@ -391,11 +395,11 @@ const toggleConference = () => {
         console.error('Failed to transfer call:', error);
       }
       
-    };
+}
 
-  const  openConferenceDialog = () => {
-    dialog.value = true;
-  } 
+const  openConferenceDialog = () => {
+  dialog.value = true
+} 
 
   const createConference = () => {      
       const numbers = (phoneNumbers.value).split(',').map(number => number.trim());
@@ -414,8 +418,8 @@ const toggleConference = () => {
           console.error("Error resuming the call:", error.response.data.errors.message);
           conferenceMsg.value = error.response.data.errors.message;
 
-        });
-  }
+    })
+}
 
 const callDuration = computed(() => {
   if (!callStartTime.value || !currentTime.value) return '00:00:00'
@@ -491,47 +495,47 @@ const toggleCall = async event => {
       muted.value = true      
     } else {
       // Make outbound call with current number
-      userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '');      
+      userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '')      
 
 
       try {                
 
-         const call = await device.connect({
+        const call = await device.connect({
           params: {
             To: userNumber.value,
             agent: JSON.stringify(userId),
             From: from.value,
           },
-        });      
+        })      
 
 
         call.on('ringing', () => {                                 
-          log.value = 'Call in queued';
-          isCallAccepted.value = true;          
-        });         
+          log.value = 'Call in queued'
+          isCallAccepted.value = true          
+        })         
         
         
         call.on('in-progress', () => {                                                       
-          log.value = 'Call in progress';          
-        });        
+          log.value = 'Call in progress'          
+        })        
 
         call.on('accept', () => {                                               
           // call.accept();
-          log.value = 'Call in accept';
+          log.value = 'Call in accept'
           if (call.parameters && call.parameters.CallSid) {
-            callSid.value = call.parameters.CallSid;    
-            console.log(callSid.value, 'here is dialer CallSid ');
+            callSid.value = call.parameters.CallSid    
+            console.log(callSid.value, 'here is dialer CallSid ')
                                                    
           }          
-          isCallAccepted.value = true;
-          startTimer();
-        });                                    
+          isCallAccepted.value = true
+          startTimer()
+        })                                    
 
         call.on('disconnect', () => {
-          onPhone.value = false;
-          connected.value = false;
-          callSid.value = null;
-          log.value = 'Call has ended';
+          onPhone.value = false
+          connected.value = false
+          callSid.value = null
+          log.value = 'Call has ended'
           userNumber.value = null
           isCallAccepted.value = false;         
           isConference.value = false; 
@@ -539,11 +543,11 @@ const toggleCall = async event => {
           device.disconnectAll();
           muted.value = true;
           setTimeout(() => {
-            connected.value = true;
-            log.value = 'Connected';
-            callSid.value = '';
-          }, 5000);
-        });        
+            connected.value = true
+            log.value = 'Connected'
+            callSid.value = ''
+          }, 5000)
+        })        
         
         
       } catch (error) {
@@ -551,11 +555,11 @@ const toggleCall = async event => {
       }
     }
   } else {
-    log.value = 'Hanging Up';
-    device.disconnectAll();
-    log.value = 'Connected';
-    muted.value = true;
-    onPhone.value = false;
+    log.value = 'Hanging Up'
+    device.disconnectAll()
+    log.value = 'Connected'
+    muted.value = true
+    onPhone.value = false
   }
 }
 
@@ -794,7 +798,6 @@ const onMountedFunction = async () => {
       filteredNumbers.value = userNumbers.value.filter(item => item.number)
 
       if(userDefaultNumber){
-        console.log(userDefaultNumber, 'userDEfaultnumber')
         from.value = userDefaultNumber
       }else{
         const activeNumber = filteredNumbers.value.map(item => item.active ? item.number : '')
@@ -1480,18 +1483,18 @@ const moreList = [
               v-if="onPhone"
               class="ml-3"
               :icon= "isConference  ? 'tabler-letter-d' : 'tabler-letter-c'"
-              title="Hold"
-              @click="toggleConference">              
-            </VBtn>
+              title="Conference"
+              @click="toggleConference"          
+            />
+            
 
             <VBtn
               v-if="onPhone"
               class="ml-3"
-              :icon= "onHold  ? 'tabler-letter-r' : 'tabler-letter-h'"
+              :icon="onHold ? 'tabler-letter-r' : 'tabler-letter-h'"
               title="Hold"
-              @click="toggleHold">              
-            </VBtn>
-
+              @click="toggleHold"
+            />
           </div>
         </div>
 

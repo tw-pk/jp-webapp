@@ -42,13 +42,14 @@ class DialerSettingController extends Controller
 
     public function dialer_setting()
     {
-        $user = Auth::user();
-        if ($user->hasRole('Admin')) {    
-            $dialerSetting = DialerSetting::where('user_id', Auth::user()->id)?->first();
-        }else{
-            $invitationMember = $user->invitationsMember;            
-            $dialerSetting = DialerSetting::where('user_id', $invitationMember->user_id)?->first();
-        }
+        //$user = Auth::user();
+        // if ($user->hasRole('Admin')) {    
+        //     $dialerSetting = DialerSetting::where('user_id', Auth::user()->id)?->first();
+        // }else{
+        //     $invitationMember = $user->invitationsMember;            
+        //     $dialerSetting = DialerSetting::where('user_id', $invitationMember->user_id)?->first();
+        // }
+        $dialerSetting = DialerSetting::where('user_id', Auth::user()->id)?->first();
         return response()->json([
             'setting' => $dialerSetting
         ]);

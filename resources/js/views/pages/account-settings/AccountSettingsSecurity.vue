@@ -11,14 +11,11 @@ const isConfirmPasswordVisible = ref(false)
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
-
-const changePasswordForm = ref();
-
-const isError = ref(false)
-
-const apiResponse = ref(false)
-
-const responseMessage = ref('')
+const isAlertVisible = ref(false)
+const alertMessage = ref('')
+const alertActionColor = ref(' ')
+const isDisabled = ref(false)
+const refVForm = ref()
 
 const errors = ref({
   currentPassword: undefined,
@@ -59,30 +56,57 @@ const recentDevices = ref([])
 const isOneTimePasswordDialogVisible = ref(false)
 
 const updatePassword = async() => {
+  isDisabled.value = true
   await User.updatePassword({
     "currentPassword": currentPassword.value,
     "newPassword": newPassword.value,
     "confirmPassword": confirmPassword.value,
   })
     .then(res => {
+      isDisabled.value = false
       if(res.data.status){
-        currentPassword.value = ''
-        newPassword.value = ''
-        confirmPassword.value = ''
-        isError.value = false
-        apiResponse.value = true
-        responseMessage.value = res.data.message
+        alertMessage.value = 'Success! ' + res?.data?.message
+        alertActionColor.value = 'success'
+        isAlertVisible.value = true
+      }else{
+        alertMessage.value = 'Error! ' + res?.data?.message
+        alertActionColor.value = 'error'
+        isAlertVisible.value = true
+        errors.value = res?.response?.data?.errors
       }
     })
     .catch(error => {
+      isDisabled.value = false
+      errors.value = error?.response?.data?.errors
       currentPassword.value = ''
       newPassword.value = ''
       confirmPassword.value = ''
-      errors.value = error.response.data.errors
-      apiResponse.value = true
-      isError.value = true
-      responseMessage.value = error.response.data.message
+
+      let alertMsg = error?.response?.data?.message ?? error?.response?.data?.errors?.currentPassword
+      alertMessage.value = 'Error! ' + alertMsg
+      alertActionColor.value = 'error'
+      isAlertVisible.value = true
     })
+}
+
+const onSubmit = () => {
+  isDisabled.value = true
+  event.preventDefault()
+
+  errors.value = {
+    currentPassword: undefined,
+    newPassword: undefined,
+    confirmPassword: undefined,
+  }
+
+  refVForm.value?.validate().then(({ valid: isValid }) => {
+    if (isValid){
+      updatePassword()
+    }else{
+      isDisabled.value = false
+    }
+      
+  })
 }
 
 const twoFactorEnabled = ref(false)
@@ -125,21 +149,20 @@ onMounted(async() => {
   <VRow>
     <!-- SECTION: Change Password -->
     <VCol cols="12">
-      <div
-        v-if="apiResponse"
+      <VAlert
+        v-if="isAlertVisible"
+        border="start"
+        :color="alertActionColor"
+        variant="tonal"
         class="my-3"
       >
-        <VAlert
-          density="compact"
-          :color="isError ? 'error' : 'success'"
-          variant="tonal"
-          closable
-        >
-          {{ responseMessage }}
-        </VAlert>
-      </div>
+        {{ alertMessage }}
+      </VAlert>
       <VCard title="Change Password">
-        <VForm ref='changePasswordForm' @submit.prevent="updatePassword">
+        <VForm
+          ref="refVForm"
+          @submit.prevent="onSubmit"
+        >
           <VCardText class="pt-0">
             <!-- 👉 Current Password -->
             <VRow>
@@ -169,8 +192,10 @@ onMounted(async() => {
                 <!-- 👉 new password -->
                 <AppTextField
                   v-model="newPassword"
+                  autofocus
                   :type="isNewPasswordVisible ? 'text' : 'password'"
                   :rules="[requiredValidator, passwordValidator]"
+                  :error-messages="errors.newPassword"
                   :append-inner-icon="isNewPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   label="New Password"
                   @click:append-inner="isNewPasswordVisible = !isNewPasswordVisible"
@@ -186,6 +211,7 @@ onMounted(async() => {
                   v-model="confirmPassword"
                   :type="isConfirmPasswordVisible ? 'text' : 'password'"
                   :rules="[requiredValidator, passwordValidator, confirmedValidator(confirmPassword, newPassword)]"
+                  :error-messages="errors.confirmPassword"
                   :append-inner-icon="isConfirmPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   label="Confirm New Password"
                   @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
@@ -220,10 +246,14 @@ onMounted(async() => {
 
           <!-- 👉 Action Buttons -->
           <VCardText class="d-flex flex-wrap gap-4">
-            <VBtn type="submit">
+            <VBtn
+              type="submit"
+              :disabled="isDisabled"
+              :loading="isDisabled"
+            >
               Save changes
             </VBtn>
-
+            
             <VBtn
               type="reset"
               color="secondary"
