@@ -21,6 +21,7 @@ class VerifyCsrfToken extends Middleware
         '/make-call',        
         '/get-call-info',
         '/twiml/new-url',        
-        '/twiml/continue-conversation',        
+        '/twiml/continue-conversation',     
+        '/join-conference'   
     ];
 }
