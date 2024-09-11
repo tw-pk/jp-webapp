@@ -77,8 +77,9 @@ const dialog = ref(false)
 
 //hold track
 const onHold = ref(false) 
-const phoneNumbersMsg = ref(false)
-const conferenceMsg = ref('')
+const phoneNumbersMsg = ref(false);
+const conferenceMsg = ref('');
+const isConference = ref(false);
 
 // Chat message
 const msg = ref('')
@@ -318,9 +319,12 @@ const toggleMute = () => {
 
 
 const forwardCall = () => {  
-  onForward.value = true
-
+  onForward.value = true;
 }    
+
+const toggleConference = () => {
+  isConference.value = true;
+}
 
 // Function to toggle hold and resume
 const toggleHold = () => {
@@ -376,22 +380,20 @@ const resumeCall = () => {
 }
 
 
-const connectForwardCall = () => {
-  console.log('her we are hhhshh')
-      
-  const id = selectedTeamMember.value
-  const number = '+' + currentNumber.value.replace(/\D/g, '')
-  try {    
-    const data = { id, number }
-    const response = dialerStore.connectTransferCall(data)
-    if (response.data.success) {
-      log.value('Call transferred successfully')
-    } else {
-      log.value('Failed to transfer call:', response.data.message)
-    }
-  } catch (error) {
-    console.error('Failed to transfer call:', error)
-  }
+    const connectForwardCall = () => {      
+      const id = selectedTeamMember.value;
+      const number = '+' + currentNumber.value.replace(/\D/g, '');
+      try {    
+        const data = { id, number };
+        const response = dialerStore.connectTransferCall(data);
+        if (response.data.success) {
+          log.value('Call transferred successfully');
+        } else {
+          log.value('Failed to transfer call:', response.data.message);
+        }
+      } catch (error) {
+        console.error('Failed to transfer call:', error);
+      }
       
 }
 
@@ -399,19 +401,22 @@ const  openConferenceDialog = () => {
   dialog.value = true
 } 
 
-const createConference = () => {      
-  const numbers = (phoneNumbers.value).split(',').map(num => num.trim())
-         
-  axiosIns.post('/create-conference', { 
-    numbers: numbers,
-    from: from.value,
-  })
-    .then(response => {                  
-      console.log(response)           
-    })
-    .catch(error => {
-      console.error("Error resuming the call:", error.response.data.errors.message)
-      conferenceMsg.value = error.response.data.errors.message
+  const createConference = () => {      
+      const numbers = (phoneNumbers.value).split(',').map(number => number.trim());
+      axiosIns.post('/create-conference', { 
+        numbers: JSON.stringify(numbers),
+        from :from.value,
+        callSid: callSid.value,
+        to: userNumber.value,
+        childCallSid: childCallSid.value
+
+      })
+      .then(response => {                  
+          console.log(response);           
+        })
+        .catch(error => {
+          console.error("Error resuming the call:", error.response.data.errors.message);
+          conferenceMsg.value = error.response.data.errors.message;
 
     })
 }
@@ -532,10 +537,11 @@ const toggleCall = async event => {
           callSid.value = null
           log.value = 'Call has ended'
           userNumber.value = null
-          isCallAccepted.value = false          
-          stopTimer()
-          device.disconnectAll()
-          muted.value = true
+          isCallAccepted.value = false;         
+          isConference.value = false; 
+          stopTimer();
+          device.disconnectAll();
+          muted.value = true;
           setTimeout(() => {
             connected.value = true
             log.value = 'Connected'
@@ -721,6 +727,8 @@ const phoneNumber = ref('')
     
 const clearInput = () => {
   currentNumber.value = currentNumber.value.slice(0, -1)
+  phoneNumbers.value = phoneNumbers.value.slice(0, -1)
+
 }
    
 onMounted(() => {  
@@ -1369,6 +1377,39 @@ const moreList = [
           </VChip>            
         </div>
 
+
+
+        <label v-if="isConference" class="text-info d-flex justify-center pt-2">Enter Numbers separated by commas and use country code</label>
+        <div v-if="isConference" class="p-2 d-flex justify-center mt-5">          
+          <div class="conference-container">
+            <input        
+              v-model="phoneNumbers"
+              type="tel"
+              placeholder="Enter Numbers separated by commas and use country code"
+              class="conference-input"
+            >
+            
+            <button
+              v-if="phoneNumbers"
+              class="clear-button"
+              @click="clearInput"
+            >
+              <VIcon
+                icon="tabler-backspace"
+                class="text-black"  
+                size="20px"
+              />
+            </button>
+          </div>          
+          <VBtn
+              :icon="onPhone ? 'tabler-phone-calling' : 'tabler-phone'"
+              size="small"
+              :color="onPhone ? 'success' : 'error'"              
+              @click.prevent="createConference"
+            />          
+        </div>                
+
+
         <div
           v-if="onForward"
           class="d-flex flex-row justify-center align-items-center status-container mt-4 mr-4 ml-4 gap-4"
@@ -1420,6 +1461,8 @@ const moreList = [
               @click.prevent="toggleCall"
             />
 
+            
+
             <VBtn
               v-if="onPhone"
               :icon="muted ? 'tabler-microphone-off' : 'tabler-microphone'"
@@ -1436,6 +1479,15 @@ const moreList = [
               @click="forwardCall"
             />                  
 
+            <VBtn              
+              v-if="onPhone"
+              class="ml-3"
+              :icon= "isConference  ? 'tabler-letter-d' : 'tabler-letter-c'"
+              title="Conference"
+              @click="toggleConference"          
+            />
+            
+
             <VBtn
               v-if="onPhone"
               class="ml-3"
@@ -1446,7 +1498,7 @@ const moreList = [
           </div>
         </div>
 
-        <div class="d-flex flex-row justify-center mt-3 ml-auto mr-auto align-center">
+        <div class="d-flex flex-row justify-center mt-3 mb-3 ml-auto mr-auto align-center">
           <!-- Dialer input -->
           <small class="mr-2">Call via</small>
           <span :class="[flag]" />
@@ -2286,7 +2338,7 @@ const moreList = [
         >{{ inputDeviceError.msg }}</span>     
       </div>
 
-      <div class="d-flex flex-row align-center position-absolute bottom__0">
+      <div class="d-flex flex-row align-center bottom__0">
         <div
           :class="isHomeActive ? 'tab-button active h-auto' : 'tab-button h-auto'"
           @click="openTab('home')"
