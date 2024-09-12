@@ -156,8 +156,8 @@ class VoiceController extends Controller
             }
             
             $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
-                    $query->whereIn('to', $assignPhoneNumbers)
-                        ->orWhereIn('from', $assignPhoneNumbers);
+                    $query->whereIn('to', $assignPhoneNumbers);
+                        //->orWhereIn('from', $assignPhoneNumbers);
                 })
                 ->when($searchQuery, function ($query, $searchQuery) {
                     $query->where('to', 'LIKE', "%{$searchQuery}%")
@@ -406,8 +406,8 @@ class VoiceController extends Controller
             $filter = [];
 
             $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
-                    $query->whereIn('to', $assignPhoneNumbers)
-                        ->orWhereIn('from', $assignPhoneNumbers);
+                    $query->whereIn('to', $assignPhoneNumbers);
+                        //->orWhereIn('from', $assignPhoneNumbers)
                 })
                 ->when($searchQuery, function ($query, $searchQuery) {
                     $query->where('to', 'LIKE', "%{$searchQuery}%")
