@@ -1,9 +1,9 @@
 <script setup>
-import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
+//import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
 import DashboardRecentCalls from "@/pages/dashboards/components/DashboardRecentCalls.vue"
 import DashboardStatistics from "@/pages/dashboards/components/DashboardStatistics.vue"
 
-import DashboardTMAnalysis from "@/pages/dashboards/components/DashboardTMAnalysis.vue"
+//import DashboardTMAnalysis from "@/pages/dashboards/components/DashboardTMAnalysis.vue"
 import { useLiveCallsStore } from "@/views/apps/dashboard/useLiveCallsStore"
 import ApexChartReportData from '@/views/charts/apex-chart/ApexChartReportData.vue'
 import { getCallsChartConfig } from '@core/libs/apex-chart/apexCharConfig'
@@ -242,7 +242,7 @@ onMounted(fetchData)
             >
               <VCol
                 cols="6"
-                class=" text-center __border-right"
+                class="text-center __border-right"
               >
                 <h5 class="text-h1 text-center">
                   {{ totalOutboundCalls }}
@@ -294,13 +294,17 @@ onMounted(fetchData)
         </VCard>
       </VCol>
       
-      <VCol cols="6">
+      <!--
+        <VCol cols="6">
         <DashboardNAnalysis class="h-100" />
-      </VCol>
+        </VCol>
+      -->
       
-      <VCol cols="6">
+      <!--
+        <VCol cols="6">
         <DashboardTMAnalysis class="h-100" />
-      </VCol>
+        </VCol>
+      -->
       
       <VCol cols="12">
         <DashboardRecentCalls class="h-100" />
