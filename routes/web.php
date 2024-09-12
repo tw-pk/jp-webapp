@@ -58,4 +58,6 @@ Route::post('/twiml/continue-conversation', [CallController::class, 'continueCon
 
 Route::post('/create-conference', [ConferenceController::class, 'createConference']);
 
+Route::post('/join-conference', [ConferenceController::class, 'joinConference'])->name('join-conference');
+
 Route::post('/twilio/conference-status-callback',  [ConferenceController::class, 'conferenceStatusCallback'])->name('twilio.conferenceStatusCallback');
