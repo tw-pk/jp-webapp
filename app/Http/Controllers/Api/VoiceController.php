@@ -156,8 +156,8 @@ class VoiceController extends Controller
             }
             
             $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
-                    $query->whereIn('to', $assignPhoneNumbers);
-                        //->orWhereIn('from', $assignPhoneNumbers);
+                    $query->whereIn('to', $assignPhoneNumbers)
+                        ->orWhereIn('from', $assignPhoneNumbers);
                 })
                 ->when($searchQuery, function ($query, $searchQuery) {
                     $query->where('to', 'LIKE', "%{$searchQuery}%")
@@ -406,8 +406,8 @@ class VoiceController extends Controller
             $filter = [];
 
             $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
-                    $query->whereIn('to', $assignPhoneNumbers);
-                        //->orWhereIn('from', $assignPhoneNumbers)
+                    $query->whereIn('to', $assignPhoneNumbers)
+                        ->orWhereIn('from', $assignPhoneNumbers);
                 })
                 ->when($searchQuery, function ($query, $searchQuery) {
                     $query->where('to', 'LIKE', "%{$searchQuery}%")
@@ -509,7 +509,11 @@ class VoiceController extends Controller
                     SUM(CASE WHEN direction = 'outbound-dial' OR direction = 'outbound-api' THEN 1 ELSE 0 END) AS outbound,
                     SUM(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) AS inbound,
                     SUM(CASE WHEN status = 'no-answer' THEN 1 ELSE 0 END) AS missed
-                ")->where('to', $phoneNumber)->first();
+                ")->where(function($query) use ($phoneNumber) {
+                    $query->where('to', $phoneNumber)
+                          ->orWhere('from', $phoneNumber);
+                })
+                ->first();
 
                 $friendlyName = $this->formatPhoneNumber($phoneNumber);
                 $flagUrl = $this->getCountryFlagUrl($number->country_code);
@@ -547,9 +551,9 @@ class VoiceController extends Controller
         $searchQuery = $request->input('q');
         $options = $request->input('options');
         try {
-            $perPage = $options['itemsPerPage'];
-
+            $perPage = $options['itemsPerPage'] ?? 10;
             $currentPage = $options['page'] ?? 1;
+
             $role = Role::where('name', 'Member')->first();
             if ($role) {
                 if (!empty($searchQuery)) {
