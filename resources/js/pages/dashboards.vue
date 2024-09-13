@@ -1,5 +1,6 @@
 <script setup>
 import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
+
 import DashboardRecentCalls from "@/pages/dashboards/components/DashboardRecentCalls.vue"
 import DashboardStatistics from "@/pages/dashboards/components/DashboardStatistics.vue"
 
@@ -298,9 +299,11 @@ onMounted(fetchData)
         <DashboardNAnalysis class="h-100" />
       </VCol>
       
+      
       <VCol cols="6">
         <DashboardTMAnalysis class="h-100" />
       </VCol>
+      
       
       <VCol cols="12">
         <DashboardRecentCalls class="h-100" />

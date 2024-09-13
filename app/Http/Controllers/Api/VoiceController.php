@@ -470,63 +470,60 @@ class VoiceController extends Controller
 
     }
 
-    public function dash_number_list(Request $request)
+    public function dashNumberAnalysis(Request $request)
     {
         $searchQuery = $request->input('q');
         $options = $request->input('options');
+
         try {
-            $perPage = $options['itemsPerPage'];
+
+            $perPage = $options['itemsPerPage'] ?? 10;
             $currentPage = $options['page'] ?? 1;
 
-            if (!empty($searchQuery)) {
-                $purchasedNumbers = $this->twilio->incomingPhoneNumbers->read([
-                    'phoneNumber' => $searchQuery,
-                    'limit' => 20,
-                ]);
-            } else {
-                $purchasedNumbers = $this->twilio->incomingPhoneNumbers->read([], 20);
+            $userId = Auth::user()->id;
+            $assignPhoneNumberService = new AssignPhoneNumberService();
+            $numbers = $assignPhoneNumberService->getAssignPhoneNumbers($userId);
+            
+            if (empty($numbers )) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No phone numbers assigned to the user.',
+                ], 404);
             }
 
-            $totalRecord = count($purchasedNumbers);
+            $userNumbers = UserNumber::select('user_id', 'phone_number', 'country_code', 'country')
+                ->whereIn('phone_number', $numbers);  
+            
+            if ($searchQuery) {
+                $userNumbers->where('phone_number', 'like', '%' . $searchQuery . '%');
+            }
+            
+            $userNumbers = $userNumbers->get(); 
+            $totalRecord = $userNumbers->count();
             $totalPage = ceil($totalRecord / $perPage);
             $allNumbers = [];
+        
+            foreach ($userNumbers as $number) {
+                $phoneNumber = $number->phone_number;
+                $callRecords = Call::selectRaw("
+                    SUM(CASE WHEN direction = 'outbound-dial' OR direction = 'outbound-api' THEN 1 ELSE 0 END) AS outbound,
+                    SUM(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) AS inbound,
+                    SUM(CASE WHEN status = 'no-answer' THEN 1 ELSE 0 END) AS missed
+                ")->where('to', $phoneNumber)->first();
 
-            foreach ($purchasedNumbers as $number) {
-                $phoneNumber = $number->phoneNumber;
-                $callRecords = $this->twilio->calls->read([
-                    'to' => $phoneNumber,
-                    'limit' => 100,
-                ]);
+                $friendlyName = $this->formatPhoneNumber($phoneNumber);
+                $flagUrl = $this->getCountryFlagUrl($number->country_code);
 
-                $outbound = 0;
-                $inbound = 0;
-                $missed = 0;
-                foreach ($callRecords as $call) {
-                    if ($call->direction === 'outbound-dial' || $call->direction === 'outbound-api') {
-                        $outbound++;
-                    } elseif ($call->direction === 'inbound') {
-                        $inbound++;
-                    } elseif ($call->direction === 'missed') {
-                        $missed++;
-                    }
-                }
-                $flag_url = '';
-                // $countryCode = UserNumber::where('phone_number', $phoneNumber)->value('country_code');
-                $phoneNumberInfo = $this->twilio->lookups->v1->phoneNumbers($phoneNumber)
-                    ->fetch(array('country-code', 'country'));
-                if (!empty($phoneNumberInfo->countryCode)) {
-                    $code = Str::lower($phoneNumberInfo->countryCode);
-                    $flag_url = asset('images/flags/' . $code . '.png');
-                }
                 $allNumbers[] = [
                     'number' => $phoneNumber,
-                    'friendly_name' => $number->friendlyName,
-                    'flag_url' => $flag_url,
-                    'outbound' => $outbound,
-                    'inbound' => $inbound,
-                    'missed' => $missed,
+                    'friendly_name' => $friendlyName,
+                    'flag_url' => $flagUrl,
+                    'outbound' => $callRecords->outbound ?? 0,
+                    'inbound' => $callRecords->inbound ?? 0,
+                    'missed' => $callRecords->missed ?? 0,
                 ];
             }
+            
             $startIndex = ($currentPage - 1) * $perPage;
             $slicedNumbers = array_slice($allNumbers, $startIndex, $perPage);
             return response()->json([
@@ -543,6 +540,7 @@ class VoiceController extends Controller
             ], 500);
         }
     }
+
 
     public function dash_member_list(Request $request)
     {
@@ -735,6 +733,28 @@ class VoiceController extends Controller
             default:
                 return $query;
         }
+    }
+
+    public function formatPhoneNumber($phoneNumber=null)
+    {
+        if (empty($phoneNumber)) {
+            return 'Error: Phone number is required';
+        }
+
+        $cleaned = preg_replace('/\D/', '', $phoneNumber);
+        if (preg_match('/^1?(\d{3})(\d{3})(\d{4})$/', $cleaned, $matches)) {
+            return '(' . $matches[1] . ') ' . $matches[2] . '-' . $matches[3];
+        }
+        return $phoneNumber;
+    }
+
+    private function getCountryFlagUrl($countryCode=null)
+    {
+        if ($countryCode) {
+            $code = Str::lower($countryCode);
+            return asset('images/flags/' . $code . '.png');
+        }
+        return '';
     }
 
     public function fetch_call_logs(Request $request)
