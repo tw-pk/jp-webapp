@@ -550,6 +550,7 @@ class VoiceController extends Controller
     {
         $searchQuery = $request->input('q');
         $options = $request->input('options');
+        
         try {
             $perPage = $options['itemsPerPage'] ?? 10;
             $currentPage = $options['page'] ?? 1;
@@ -570,8 +571,9 @@ class VoiceController extends Controller
                         ->get(['id', 'firstname', 'lastname', 'last_login_at']);
                 }
 
-                $totalRecord = count($teamMembers);
+                $totalRecord = $teamMembers->count(); 
                 $totalPage = ceil($totalRecord / $perPage);
+                
                 foreach ($teamMembers as $member) {
                     $member->fullName = $member->firstname . ' ' . $member->lastname;
                     $member->avatar = $member?->profile?->avatar ? asset('storage/' . $member->profile->avatar) : null;
@@ -586,9 +588,10 @@ class VoiceController extends Controller
                     $member->inboundCalls = $calls->where('direction', 'inbound')->count();
                 }
 
+                $slicedNumbers = $teamMembers->slice(($currentPage - 1) * $perPage, $perPage)->values();
                 return response()->json([
                     'status' => true,
-                    "teamMembers" => $teamMembers,
+                    "teamMembers" => $slicedNumbers,
                     'totalPage' => $totalPage,
                     'totalRecord' => $totalRecord,
                     'page' => $currentPage,
