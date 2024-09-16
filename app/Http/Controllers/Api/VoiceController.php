@@ -160,7 +160,8 @@ class VoiceController extends Controller
                         ->orWhereIn('from', $assignPhoneNumbers);
                 })
                 ->when($searchQuery, function ($query, $searchQuery) {
-                    $query->where('to', 'LIKE', "%{$searchQuery}%");
+                    $query->where('to', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('from', 'LIKE', "%{$searchQuery}%");
                 })
                 ->when($selectedItem !== 'Default', function ($query) use ($selectedItem) {
                     $query->where('direction', 'LIKE', "%{$selectedItem}%");
@@ -379,202 +380,154 @@ class VoiceController extends Controller
 
     public function recent_calls_dash(Request $request)
     {
-        if (!Auth::user()->numbers->count()) {
+        $callType = $request->input('callType');
+        $member = $request->input('member');
+        $searchQuery = $request->input('q');
+        $options = $request->input('options');
+
+        $user = Auth::user();
+
+        if (!empty($member)) {
+            $user = User::find($member);
+        }
+
+        $assignPhoneNumberService = new AssignPhoneNumberService();
+        $assignPhoneNumbers = $assignPhoneNumberService->getAssignPhoneNumbers($user->id);
+        if (count($assignPhoneNumbers) === 0) {
             return response()->json([
                 'status' => false,
                 'message' => "You don't have any active number, please verify if you have an active number",
             ], 404);
         }
 
-        $callType = $request->input('callType');
-        $searchQuery = $request->input('q');
-        $options = $request->input('options');
-
-        if ($this->isUserAdmin()) {
-            try {
-
-                $perPage = $options['itemsPerPage'];
-                $currentPage = $options['page'] ?? 1;
-
-                if (!empty($searchQuery)) {
-                    $twilioCalls = Auth::user()->calls()
-                        ->where('to', 'LIKE', '%' . $searchQuery . '%')
-                        ->paginate($perPage, ['*'], 'page', $currentPage);
-                } else {
-                    if ($callType !== 'all') {
-                        $twilioCalls = Auth::user()->calls()
-                            ->where(fn ($q) => $this->getCallTypeCriteria($q, $callType))
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    } else {
-                        $twilioCalls = Auth::user()->calls()
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    }
-                }
-
-                $totalRecord = $twilioCalls->total();
-                $totalPage = ceil($totalRecord / $perPage);
-                $allCalls = [];
-                foreach ($twilioCalls as $call) {
-                    if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
-                        
-                        //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
-                        //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
-                        $recordingUrl = $call->sid? asset('storage/voicemail/' . $call->sid) : '-';
-
-                        $allCalls[] = [
-                            'call_sid' => $call->sid,
-                            'teamdialer_number' => $this->getTeamsDialerNumber($call),
-                            'number' => $this->getNumber($call),
-                            'status' => $call->status ?? '-',
-                            'direction' => $call->direction,
-                            'date' => $call->date_time,
-                            'duration' => $call->duration . " seconds" ?? '-',
-                            'notes' => '',
-                            'rating' => '-',
-                            'disposition' => '-',
-                            'record' => $recordingUrl
-                        ];
-                    }
-                }
-                //                $startIndex = ($currentPage - 1) * $perPage;
-                //                $slicedCalls = array_slice($allCalls, $startIndex, $perPage);
-                return response()->json([
-                    'status' => true,
-                    "calls" => $allCalls,
-                    'totalPage' => $totalPage,
-                    'totalRecord' => $totalRecord,
-                    'page' => $currentPage,
-                ]);
-            } catch (TwilioException $e) {
-                return response()->json([
-                    'status' => false,
-                    'error' => $e->getMessage(),
-                ], 500);
-            }
-        } else {
-            try {
-
-                $perPage = $options['itemsPerPage'];
-                $currentPage = $options['page'] ?? 1;
-
-                $from = Invitation::where('member_id', Auth::user()->id)->first()?->number;
-                
-                if (!empty($searchQuery)) {
-                    $twilioCalls = Auth::user()->calls()
-                        ->where('to', 'LIKE', '%' . $searchQuery . '%')
-                        ->where('from', $from)
-                        ->paginate($perPage, ['*'], 'page', $currentPage);
-                } else {
-                    if ($callType !== 'all') {
-                        $twilioCalls = Auth::user()->calls()
-                            ->where(fn ($q) => $this->getCallTypeCriteria($q, $callType))
-                            ->where('from', $from)
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    } else {
-                        $twilioCalls = Auth::user()->calls()
-                            ->where('from', $from)
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    }
-                }
-
-                $totalRecord = $twilioCalls->total();
-                $totalPage = ceil($totalRecord / $perPage);
-                $allCalls = [];
-                foreach ($twilioCalls as $call) {
-                    if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
-                        
-                        //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
-                        //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
-                        $recordingUrl = $call->sid? asset('storage/voicemail/' . $call->sid) : '-';
-                        
-                        $allCalls[] = [
-                            'call_sid' => $call->sid,
-                            'teamdialer_number' => $this->getTeamsDialerNumber($call),
-                            'number' => $this->getNumber($call),
-                            'status' => $call->status ?? '-',
-                            'direction' => $call->direction,
-                            'date' => $call->date_time,
-                            'duration' => $call->duration . " seconds" ?? '-',
-                            'notes' => '',
-                            'rating' => '-',
-                            'disposition' => '-',
-                            'record' => $recordingUrl
-                        ];
-                    }
-                }
-                return response()->json([
-                    'status' => true,
-                    "calls" => $allCalls,
-                    'totalPage' => $totalPage,
-                    'totalRecord' => $totalRecord,
-                    'page' => $currentPage,
-                ]);
-            } catch (TwilioException $e) {
-                return response()->json([
-                    'status' => false,
-                    'error' => $e->getMessage(),
-                ], 500);
-            }
-        }
-    }
-
-    public function dash_number_list(Request $request)
-    {
-        $searchQuery = $request->input('q');
-        $options = $request->input('options');
         try {
             $perPage = $options['itemsPerPage'];
             $currentPage = $options['page'] ?? 1;
+            $filter = [];
 
-            if (!empty($searchQuery)) {
-                $purchasedNumbers = $this->twilio->incomingPhoneNumbers->read([
-                    'phoneNumber' => $searchQuery,
-                    'limit' => 20,
-                ]);
-            } else {
-                $purchasedNumbers = $this->twilio->incomingPhoneNumbers->read([], 20);
-            }
-
-            $totalRecord = count($purchasedNumbers);
+            $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
+                    $query->whereIn('to', $assignPhoneNumbers)
+                        ->orWhereIn('from', $assignPhoneNumbers);
+                })
+                ->when($searchQuery, function ($query, $searchQuery) {
+                    $query->where('to', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('from', 'LIKE', "%{$searchQuery}%");
+                })
+                ->when($callType && $callType !== 'all', function ($query) use ($callType) {
+                    $this->getCallTypeCriteria($query, $callType);
+                })
+                ->orderByDesc('created_at')
+                ->get();
+            
+            $twilioCalls = $this->formattedDateTime($twilioCalls);
+            $totalRecord = $twilioCalls->count(); 
             $totalPage = ceil($totalRecord / $perPage);
-            $allNumbers = [];
 
-            foreach ($purchasedNumbers as $number) {
-                $phoneNumber = $number->phoneNumber;
-                $callRecords = $this->twilio->calls->read([
-                    'to' => $phoneNumber,
-                    'limit' => 100,
-                ]);
+            $allCalls = [];
+            foreach ($twilioCalls as $call) {
+                //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
+                //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
+                $recordingUrl = $call->sid ? asset('storage/voicemail/' . $call->sid) : '-';
 
-                $outbound = 0;
-                $inbound = 0;
-                $missed = 0;
-                foreach ($callRecords as $call) {
-                    if ($call->direction === 'outbound-dial' || $call->direction === 'outbound-api') {
-                        $outbound++;
-                    } elseif ($call->direction === 'inbound') {
-                        $inbound++;
-                    } elseif ($call->direction === 'missed') {
-                        $missed++;
-                    }
+                if($call->direction == 'inbound'){
+                    $teamdialerNumber = $call->to;
+                    $number = $call->from;
+                }else{
+                    $teamdialerNumber = $call->from;
+                    $number = $call->to;
                 }
-                $flag_url = '';
-                // $countryCode = UserNumber::where('phone_number', $phoneNumber)->value('country_code');
-                $phoneNumberInfo = $this->twilio->lookups->v1->phoneNumbers($phoneNumber)
-                    ->fetch(array('country-code', 'country'));
-                if (!empty($phoneNumberInfo->countryCode)) {
-                    $code = Str::lower($phoneNumberInfo->countryCode);
-                    $flag_url = asset('images/flags/' . $code . '.png');
-                }
-                $allNumbers[] = [
-                    'number' => $phoneNumber,
-                    'friendly_name' => $number->friendlyName,
-                    'flag_url' => $flag_url,
-                    'outbound' => $outbound,
-                    'inbound' => $inbound,
-                    'missed' => $missed,
+                $allCalls[] = [
+                    'call_sid' => $call->sid,
+                    'teamdialer_number' => $teamdialerNumber,
+                    'number' => $number,
+                    'status' => $call->status ?? '-',
+                    'direction' => $call->direction,
+                    'date' => Carbon::parse($call->created_at)->setTimezone('Asia/Karachi')->diffForHumans(),
+                    'duration' => $call->duration ?? '-',
+                    'notes' => '',
+                    'rating' => '-',
+                    'disposition' => '-',
+                    'record' => $recordingUrl
                 ];
             }
+
+            $startIndex = ($currentPage - 1) * $perPage;
+            $slicedCalls = array_slice($allCalls, $startIndex, $perPage);
+            return response()->json([
+                'status' => true,
+                'calls' => $slicedCalls,
+                'totalPage' => $totalPage,
+                'totalRecord' => $totalRecord,
+                'page' => $currentPage,
+            ]);
+
+        } catch (TwilioException $e) {
+            return response()->json([
+                'status' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+
+    }
+
+    public function dashNumberAnalysis(Request $request)
+    {
+        $searchQuery = $request->input('q');
+        $options = $request->input('options');
+
+        try {
+
+            $perPage = $options['itemsPerPage'] ?? 10;
+            $currentPage = $options['page'] ?? 1;
+
+            $userId = Auth::user()->id;
+            $assignPhoneNumberService = new AssignPhoneNumberService();
+            $numbers = $assignPhoneNumberService->getAssignPhoneNumbers($userId);
+            
+            if (empty($numbers )) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No phone numbers assigned to the user.',
+                ], 404);
+            }
+
+            $userNumbers = UserNumber::select('user_id', 'phone_number', 'country_code', 'country')
+                ->whereIn('phone_number', $numbers);  
+            
+            if ($searchQuery) {
+                $userNumbers->where('phone_number', 'like', '%' . $searchQuery . '%');
+            }
+            
+            $userNumbers = $userNumbers->get(); 
+            $totalRecord = $userNumbers->count();
+            $totalPage = ceil($totalRecord / $perPage);
+            $allNumbers = [];
+        
+            foreach ($userNumbers as $number) {
+                $phoneNumber = $number->phone_number;
+                $callRecords = Call::selectRaw("
+                    SUM(CASE WHEN direction = 'outbound-dial' OR direction = 'outbound-api' THEN 1 ELSE 0 END) AS outbound,
+                    SUM(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) AS inbound,
+                    SUM(CASE WHEN status = 'no-answer' THEN 1 ELSE 0 END) AS missed
+                ")->where(function($query) use ($phoneNumber) {
+                    $query->where('to', $phoneNumber)
+                          ->orWhere('from', $phoneNumber);
+                })
+                ->first();
+
+                $friendlyName = $this->formatPhoneNumber($phoneNumber);
+                $flagUrl = $this->getCountryFlagUrl($number->country_code);
+
+                $allNumbers[] = [
+                    'number' => $phoneNumber,
+                    'friendly_name' => $friendlyName,
+                    'flag_url' => $flagUrl,
+                    'outbound' => $callRecords->outbound ?? 0,
+                    'inbound' => $callRecords->inbound ?? 0,
+                    'missed' => $callRecords->missed ?? 0,
+                ];
+            }
+            
             $startIndex = ($currentPage - 1) * $perPage;
             $slicedNumbers = array_slice($allNumbers, $startIndex, $perPage);
             return response()->json([
@@ -592,14 +545,16 @@ class VoiceController extends Controller
         }
     }
 
+
     public function dash_member_list(Request $request)
     {
         $searchQuery = $request->input('q');
         $options = $request->input('options');
+        
         try {
-            $perPage = $options['itemsPerPage'];
-
+            $perPage = $options['itemsPerPage'] ?? 10;
             $currentPage = $options['page'] ?? 1;
+
             $role = Role::where('name', 'Member')->first();
             if ($role) {
                 if (!empty($searchQuery)) {
@@ -616,8 +571,9 @@ class VoiceController extends Controller
                         ->get(['id', 'firstname', 'lastname', 'last_login_at']);
                 }
 
-                $totalRecord = count($teamMembers);
+                $totalRecord = $teamMembers->count(); 
                 $totalPage = ceil($totalRecord / $perPage);
+                
                 foreach ($teamMembers as $member) {
                     $member->fullName = $member->firstname . ' ' . $member->lastname;
                     $member->avatar = $member?->profile?->avatar ? asset('storage/' . $member->profile->avatar) : null;
@@ -632,9 +588,10 @@ class VoiceController extends Controller
                     $member->inboundCalls = $calls->where('direction', 'inbound')->count();
                 }
 
+                $slicedNumbers = $teamMembers->slice(($currentPage - 1) * $perPage, $perPage)->values();
                 return response()->json([
                     'status' => true,
-                    "teamMembers" => $teamMembers,
+                    "teamMembers" => $slicedNumbers,
                     'totalPage' => $totalPage,
                     'totalRecord' => $totalRecord,
                     'page' => $currentPage,
@@ -779,10 +736,32 @@ class VoiceController extends Controller
             case 'missed':
                 return $query->where('status', 'no-answer');
             case 'voicemail':
-                $query->where('status', 'no-answer');
+                $query->whereIn('status', ['no-answer','busy','in-progress','ringing']);
             default:
                 return $query;
         }
+    }
+
+    public function formatPhoneNumber($phoneNumber=null)
+    {
+        if (empty($phoneNumber)) {
+            return 'Error: Phone number is required';
+        }
+
+        $cleaned = preg_replace('/\D/', '', $phoneNumber);
+        if (preg_match('/^1?(\d{3})(\d{3})(\d{4})$/', $cleaned, $matches)) {
+            return '(' . $matches[1] . ') ' . $matches[2] . '-' . $matches[3];
+        }
+        return $phoneNumber;
+    }
+
+    private function getCountryFlagUrl($countryCode=null)
+    {
+        if ($countryCode) {
+            $code = Str::lower($countryCode);
+            return asset('images/flags/' . $code . '.png');
+        }
+        return '';
     }
 
     public function fetch_call_logs(Request $request)
