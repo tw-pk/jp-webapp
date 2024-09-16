@@ -101,16 +101,14 @@ class ConferenceController extends Controller
         $conferenceSid = $request->input('ConferenceSid');
         $event = $request->input('StatusCallbackEvent');
         
-        if ($event === 'participant-leave') {
-            // Get the participants of the conference
+        if ($event === 'participant-leave') {            
             $participants = $this->twilio->conferences($conferenceSid)
                                         ->participants
                                         ->read();
 
             \Log::info("here is participants =>". $participants);
             
-            if (count($participants) == 1) {
-                // If only one participant is left, disconnect the remaining one
+            if (count($participants) == 1) {                
                 $remainingParticipant = $participants[0]->callSid;
                 $this->twilio->calls($remainingParticipant)->update(['status' => 'completed']);
             }

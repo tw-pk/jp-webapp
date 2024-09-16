@@ -20,8 +20,7 @@ class VerifyCsrfToken extends Middleware
         'api/twilio-sms',
         '/make-call',        
         '/get-call-info',
-        '/twiml/new-url',        
-        '/twiml/continue-conversation',     
-        '/join-conference'   
+        '/call-disconnected',
+        '/twiml/*',                
     ];
 }
