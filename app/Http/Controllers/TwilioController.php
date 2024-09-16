@@ -71,10 +71,11 @@ class TwilioController extends Controller
 
         $creditInformation = UserCredit::where('user_id', $teamleadId)->first();
     
-        if($thresholdEnabled->threshold_enabled == '1'){
-            $this->autoTopUpPaymentService->checkAndTopUp($user);
+        // if($creditInformation->threshold_enabled == '1'){
+        //     $this->autoTopUpPaymentService->checkAndTopUp($user);
             
-        }
+        // }
+
         // Check if $creditInformation is null
         if (!$creditInformation) {
             return response()->json([
@@ -120,12 +121,13 @@ class TwilioController extends Controller
             $to = $request->To;
             $number = Str::replaceFirst('+', '', $to);
             $dial->number($number);
-            $data = $request->all();
-            if ($request->CallStatus === 'completed') {
-                $this->updateCallDetails($data);
-            } else {
-                $this->webhookCallstatus($data, $number);
-            }
+            
+            // $data = $request->all();
+            // if ($request->CallStatus === 'completed') {
+            //     $this->updateCallDetails($data);
+            // } else {
+            //     $this->webhookCallstatus($data, $number);
+            // }
             
             $response->enqueue('supportRoom');
             return response($response)->header('Content-Type', 'text/xml');            

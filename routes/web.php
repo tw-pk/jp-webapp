@@ -48,16 +48,28 @@ Route::post('/make-call', [CallController::class, 'makeCall']);
 
 Route::post('/get-call-info', [CallController::class, 'getCallInfo'])->name('get-call-info');
 
-Route::post('/place-on-hold', [CallController::class, 'placeOnHold']);
+Route::post('/call-disconnected', [CallController::class, 'callDisconnected'])->name('call-disconnected');
 
-Route::post('/twiml/new-url', [CallController::class, 'holdTwiML'])->name('hold-url');
+Route::post('twiml/place-on-hold', [CallController::class, 'placeOnHold']);
 
-Route::post('/resume-from-hold', [CallController::class, 'resumeCall'])->name('resume-url');
+Route::post('/twiml/hold-url', [CallController::class, 'holdTwiML'])->name('hold-url');
+
+Route::post('/twiml/resume-from-hold', [CallController::class, 'resumeCall'])->name('resume-url');
 
 Route::post('/twiml/continue-conversation', [CallController::class, 'continueConversation'])->name('continue-conversation');
 
-Route::post('/create-conference', [ConferenceController::class, 'createConference']);
+Route::post('/twiml/create-conference', [ConferenceController::class, 'createConference']);
 
-Route::post('/join-conference', [ConferenceController::class, 'joinConference'])->name('join-conference');
+Route::post('/twiml/join-conference', [ConferenceController::class, 'joinConference'])->name('join-conference');
 
 Route::post('/twilio/conference-status-callback',  [ConferenceController::class, 'conferenceStatusCallback'])->name('twilio.conferenceStatusCallback');
+
+Route::post('/twiml/transfer-call', [CallController::class, 'transferCall'])->name('transfer-call');
+
+Route::post('/twiml/forward-ringing', [CallController::class, 'forwardRinging'])->name('forward-ringing');
+
+Route::post('/twiml/waiting-room', [CallController::class, 'waitingRoom'])->name('waiting-room');
+
+Route::post('/twiml/transfer-call-conference', [CallController::class, 'transferCallConference'])->name('transfer-call-conference');
+
+Route::post('/twiml/connect-transfer-call', [CallController::class, 'connectTransferCall'])->name('connect-transfer-call');

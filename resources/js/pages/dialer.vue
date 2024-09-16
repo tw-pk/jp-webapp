@@ -74,6 +74,7 @@ const childCallSid = ref('')
 const userNumber  = ref('')
 const phoneNumbers = ref('')
 const dialog = ref(false)
+const forwardNumber = ref('');
 
 //hold track
 const onHold = ref(false) 
@@ -340,7 +341,7 @@ const holdCall = async () => {
   const user = await User.auth()      
   const userId = user.data.id
 
-  axiosIns.post('/place-on-hold', {
+  axiosIns.post('/twiml/place-on-hold', {
     callSid: callSid.value,
     to: userNumber.value,
     From: from.value,
@@ -363,7 +364,7 @@ const holdCall = async () => {
 const resumeCall = () => {      
   console.log('inside resume function => ', childCallSid.value)
       
-  axiosIns.post('/resume-from-hold', { 
+  axiosIns.post('/twiml/resume-from-hold', { 
     callSid: callSid.value,
     childCallSid: childCallSid.value,
     to: userNumber.value,
@@ -380,22 +381,42 @@ const resumeCall = () => {
 }
 
 
-    const connectForwardCall = () => {      
-      const id = selectedTeamMember.value;
-      const number = '+' + currentNumber.value.replace(/\D/g, '');
-      try {    
-        const data = { id, number };
-        const response = dialerStore.connectTransferCall(data);
-        if (response.data.success) {
-          log.value('Call transferred successfully');
-        } else {
-          log.value('Failed to transfer call:', response.data.message);
-        }
-      } catch (error) {
-        console.error('Failed to transfer call:', error);
-      }
+  const transferCall = () => {      
+    axiosIns.post('/twiml/transfer-call', { 
+      callSid: callSid.value,      
+      to: userNumber.value,
+      From: from.value,
+      forwardNumber: forwardNumber.value
+    })
+    .then(response => {        
+      console.log(response)
+          
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error)
+    })    
       
-}
+  }
+
+
+  const connectForwardCall = () => {      
+    axiosIns.post('/twiml/connect-transfer-call', { 
+      callSid: callSid.value,      
+      to: userNumber.value,
+      From: from.value,
+      forwardNumber: forwardNumber.value
+    })
+    .then(response => {        
+      console.log(response)
+          
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error)
+    })    
+      
+  }
+
+
 
 const  openConferenceDialog = () => {
   dialog.value = true
@@ -403,7 +424,7 @@ const  openConferenceDialog = () => {
 
   const createConference = () => {      
       const numbers = (phoneNumbers.value).split(',').map(number => number.trim());
-      axiosIns.post('/create-conference', { 
+      axiosIns.post('/twiml/create-conference', { 
         numbers: JSON.stringify(numbers),
         from :from.value,
         callSid: callSid.value,
@@ -510,28 +531,55 @@ const toggleCall = async event => {
 
 
         call.on('ringing', () => {                                 
-          log.value = 'Call in queued'
+          log.value = 'Ringing'
           isCallAccepted.value = true          
         })         
         
-        
-        call.on('in-progress', () => {                                                       
-          log.value = 'Call in progress'          
-        })        
 
-        call.on('accept', () => {                                               
-          // call.accept();
-          log.value = 'Call in accept'
+
+        call.on('accept', () => {                                                                   
+          log.value = 'Progress'
           if (call.parameters && call.parameters.CallSid) {
             callSid.value = call.parameters.CallSid    
             console.log(callSid.value, 'here is dialer CallSid ')
                                                    
           }          
+
           isCallAccepted.value = true
           startTimer()
+
+          // check Call status
+          axiosIns.post('/get-call-info', {
+            callSid: callSid.value,
+            to: userNumber.value,
+            From: from.value,
+          })
+          .then(response => {            
+            console.log(response, 'here is call info response')                                                          
+          })
+          .catch(error => {
+            console.error(error.response.data.error)
+          })
+
+
         })                                    
 
-        call.on('disconnect', () => {
+
+        call.on('disconnect', () => {       
+          //call Discconnect status to fetch details
+          axiosIns.post('/call-disconnected', {
+            callSid: callSid.value, 
+            childCallSid: childCallSid.value,
+            to: userNumber.value,
+            From: from.value,
+          })
+          .then(response => {            
+            console.log(response, 'here is call disconnected response')                                                          
+          })
+          .catch(error => {
+            console.error(error.response.data.error)
+          })
+          
           onPhone.value = false
           connected.value = false
           callSid.value = null
@@ -539,8 +587,7 @@ const toggleCall = async event => {
           userNumber.value = null
           isCallAccepted.value = false;         
           isConference.value = false; 
-          stopTimer();
-          device.disconnectAll();
+          stopTimer();          
           muted.value = true;
           setTimeout(() => {
             connected.value = true
@@ -554,7 +601,7 @@ const toggleCall = async event => {
         console.error('Error connecting:', error)
       }
     }
-  } else {
+  } else {    
     log.value = 'Hanging Up'
     device.disconnectAll()
     log.value = 'Connected'
@@ -726,8 +773,9 @@ const selectedCountryCode = ref('+1')
 const phoneNumber = ref('')
     
 const clearInput = () => {
-  currentNumber.value = currentNumber.value.slice(0, -1)
-  phoneNumbers.value = phoneNumbers.value.slice(0, -1)
+  currentNumber.value = currentNumber.value.slice(0, -1);
+  phoneNumbers.value = phoneNumbers.value.slice(0, -1);
+  forwardNumber.value = forwardNumber.value.slice(0, -1);
 
 }
    
@@ -1413,8 +1461,29 @@ const moreList = [
         <div
           v-if="onForward"
           class="d-flex flex-row justify-center align-items-center status-container mt-4 mr-4 ml-4 gap-4"
-        >          
-          <VSelect
+        >                        
+
+            <input        
+              v-model="forwardNumber"
+              type="tel"
+              placeholder="Enter Number here to connect"
+              class="phone-input"
+            >
+
+            <button
+              v-if="forwardNumber"
+              class="clear-button"
+              @click="clearInput"
+            >
+              <VIcon
+                icon="tabler-backspace"
+                class="text-black"  
+                size="20px"
+              />
+            </button>
+            
+
+          <!-- <VSelect
             v-model="selectedTeamMember"
             label="Select Team Member"
             :items="teamMembers"
@@ -1424,13 +1493,21 @@ const moreList = [
             clearable
             clear-icon="tabler-x"
             style="width: 10rem;"
-          />     
+          />      -->
+
           <VBtn              
-            size="large"
+            size="small"
             color="success"
-            text="Connect"              
+            icon="tabler-letter-t"
             @click.prevent="connectForwardCall"
-          />   
+          />  
+          
+          <VBtn              
+            size="small"
+            color="success"
+            icon="tabler-letter-c"
+            @click.prevent="transferCall"
+          />  
         </div>  
         
 
@@ -1516,6 +1593,7 @@ const moreList = [
             />
           </VCol>
         </div>
+        
       </div>
 
       <div
