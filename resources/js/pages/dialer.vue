@@ -586,7 +586,8 @@ const toggleCall = async event => {
           log.value = 'Call has ended'
           userNumber.value = null
           isCallAccepted.value = false;         
-          isConference.value = false; 
+          isConference.value = false;
+          onForward.value   = false; 
           stopTimer();          
           muted.value = true;
           setTimeout(() => {
@@ -1499,15 +1500,16 @@ const moreList = [
             size="small"
             color="success"
             icon="tabler-letter-t"
-            @click.prevent="connectForwardCall"
+            @click.prevent="transferCall"
           />  
           
           <VBtn              
             size="small"
             color="success"
             icon="tabler-letter-c"
-            @click.prevent="transferCall"
+            @click.prevent="connectForwardCall"
           />  
+                   
         </div>  
         
 

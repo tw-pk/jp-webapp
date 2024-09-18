@@ -68,8 +68,6 @@ Route::post('/twiml/transfer-call', [CallController::class, 'transferCall'])->na
 
 Route::post('/twiml/forward-ringing', [CallController::class, 'forwardRinging'])->name('forward-ringing');
 
-Route::post('/twiml/waiting-room', [CallController::class, 'waitingRoom'])->name('waiting-room');
-
 Route::post('/twiml/transfer-call-conference', [CallController::class, 'transferCallConference'])->name('transfer-call-conference');
 
 Route::post('/twiml/connect-transfer-call', [CallController::class, 'connectTransferCall'])->name('connect-transfer-call');
