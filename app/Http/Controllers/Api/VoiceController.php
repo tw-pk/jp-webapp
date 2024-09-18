@@ -35,6 +35,7 @@ class VoiceController extends Controller
         $sid = config('app.TWILIO_CLIENT_ID');
         $token = config('app.TWILIO_AUTH_TOKEN');
         $this->twilio = new Client($sid, $token);
+        $this->assignPhoneNumberService = new AssignPhoneNumberService();
     }
 
     private function isUserAdmin()
@@ -125,8 +126,7 @@ class VoiceController extends Controller
             $user = User::find($member);
         }
 
-        $assignPhoneNumberService = new AssignPhoneNumberService();
-        $assignPhoneNumbers = $assignPhoneNumberService->getAssignPhoneNumbers($user->id);
+        $assignPhoneNumbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($user->id);
         if (count($assignPhoneNumbers) === 0) {
             return response()->json([
                 'status' => false,
@@ -391,8 +391,7 @@ class VoiceController extends Controller
             $user = User::find($member);
         }
 
-        $assignPhoneNumberService = new AssignPhoneNumberService();
-        $assignPhoneNumbers = $assignPhoneNumberService->getAssignPhoneNumbers($user->id);
+        $assignPhoneNumbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($user->id);
         if (count($assignPhoneNumbers) === 0) {
             return response()->json([
                 'status' => false,
@@ -481,9 +480,7 @@ class VoiceController extends Controller
             $currentPage = $options['page'] ?? 1;
 
             $userId = Auth::user()->id;
-            $assignPhoneNumberService = new AssignPhoneNumberService();
-            $numbers = $assignPhoneNumberService->getAssignPhoneNumbers($userId);
-            
+            $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($userId);
             if (empty($numbers )) {
                 return response()->json([
                     'status' => false,
@@ -546,48 +543,65 @@ class VoiceController extends Controller
     }
 
 
-    public function dash_member_list(Request $request)
+    public function dashMemberList(Request $request)
     {
         $searchQuery = $request->input('q');
         $options = $request->input('options');
-        
+
         try {
             $perPage = $options['itemsPerPage'] ?? 10;
             $currentPage = $options['page'] ?? 1;
 
-            $role = Role::where('name', 'Member')->first();
-            if ($role) {
-                if (!empty($searchQuery)) {
-                    $teamMembers = User::role($role)
-                        ->with('numbers:user_id,phone_number', 'profile:id,user_id,contact_id,avatar')
-                        ->where(function ($query) use ($searchQuery) {
+            $userId = Auth::user()->id;
+
+            $teamMembersQuery = Auth::user()->invitations()
+                ->where('registered', 1)
+                ->with(['invitationAccept' => function ($query) use ($searchQuery) {
+                    if (!empty($searchQuery)) {
+                        $query->where(function ($query) use ($searchQuery) {
                             $query->where('firstname', 'LIKE', '%' . $searchQuery . '%')
                                 ->orWhere('lastname', 'LIKE', '%' . $searchQuery . '%');
-                        })
-                        ->get(['id', 'firstname', 'lastname', 'last_login_at']);
-                } else {
-                    $teamMembers = User::role($role)
-                        ->with('numbers:user_id,phone_number', 'profile:id,user_id,contact_id,avatar')
-                        ->get(['id', 'firstname', 'lastname', 'last_login_at']);
-                }
+                        });
+                    }
+                    $query->select('id', 'firstname', 'lastname', 'last_login_at');
+                }]);
 
-                $totalRecord = $teamMembers->count(); 
-                $totalPage = ceil($totalRecord / $perPage);
-                
+            $teamMembers = $teamMembersQuery->get()->map(function ($invitation) {
+                return $invitation->invitationAccept;
+            });
+            
+            $teamMembers = $teamMembers->filter(function ($teamMember) {
+                return $teamMember !== null;
+            });
+        
+            $totalRecord = $teamMembers->count();
+            $totalPage = ceil($totalRecord / $perPage);
+        
                 foreach ($teamMembers as $member) {
-                    $member->fullName = $member->firstname . ' ' . $member->lastname;
-                    $member->avatar = $member?->profile?->avatar ? asset('storage/' . $member->profile->avatar) : null;
-
+                    $member->fullName = $member->fullName();
+                    $member->avatar = $member?->profile?->avatar ? asset('storage/avatars/' . $member->profile->avatar) : null;
                     $curtime = Carbon::now();
                     $dateTime = $member->last_login_at ? Carbon::parse($member->last_login_at) : $curtime;
                     $formattedDate = "Since " . $dateTime->format('j M, \a\t h:i A');
                     $member->last_login_at = $formattedDate;
-
-                    $calls = Auth::user()?->calls();
-                    $member->outboundCalls = $calls->whereIn('direction', ['outbound-api', 'outbound-dial'])->count();
-                    $member->inboundCalls = $calls->where('direction', 'inbound')->count();
+                    
+                    $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($member->id);
+                    if (!empty($numbers)) {
+                        $callRecords = Call::selectRaw("
+                            SUM(CASE WHEN direction = 'outbound-dial' OR direction = 'outbound-api' THEN 1 ELSE 0 END) AS outboundCalls,
+                            SUM(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) AS inboundCalls
+                        ")->where(function($query) use ($numbers) {
+                            $query->whereIn('to', $numbers)
+                                  ->orWhereIn('from', $numbers);
+                        })->first();
+                        $member->outboundCalls = $callRecords->outboundCalls ?? 0;
+                        $member->inboundCalls = $callRecords->inboundCalls ?? 0;
+                    } else {
+                        $member->outboundCalls = 0;
+                        $member->inboundCalls = 0;
+                    }
                 }
-
+                
                 $slicedNumbers = $teamMembers->slice(($currentPage - 1) * $perPage, $perPage)->values();
                 return response()->json([
                     'status' => true,
@@ -596,7 +610,6 @@ class VoiceController extends Controller
                     'totalRecord' => $totalRecord,
                     'page' => $currentPage,
                 ]);
-            }
         } catch (TwilioException $e) {
             return response()->json([
                 'status' => false,

@@ -146,7 +146,6 @@ const resolveStatusColor = {
                 />
                 <span v-else>{{ avatarText(item.raw?.fullName) }}</span>
               </VAvatar>
-
               <div class="d-flex flex-column">
                 <h5>
                   {{ item.raw?.fullName }}
