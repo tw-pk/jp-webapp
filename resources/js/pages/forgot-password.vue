@@ -40,6 +40,12 @@ const resetPassword = () => {
       isAlertVisible.value = true
     }
   })
+    .catch(res => {
+      isDisabled.value = false
+      alertMessage.value = 'Error! ' + res?.response?.data?.message
+      alertActionColor.value = 'error'
+      isAlertVisible.value = true
+    })
 }
 
 const submitResetPassword = () => {

@@ -5,6 +5,7 @@ import axiosIns from "@axios"
 import { VNodeRenderer } from "@layouts/components/VNodeRenderer"
 import { themeConfig } from '@themeConfig'
 import { emailValidator, requiredValidator } from "@validators"
+import { ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { isEmpty } from "../@core/utils"
 
@@ -14,10 +15,10 @@ const inviteMemberStore = useInviteMemberStore()
 const vuetifyTheme = useTheme()
 const currentThemeName = vuetifyTheme.name.value
 
-const selectOption = ref()
-const selectOptionSearch = ref()
+// const selectOption = ref()
+// const selectOptionSearch = ref()
 
-const existingNumberOptionSelected = ref(false)
+//const existingNumberOptionSelected = ref(false)
 
 const inviteUsers = ref([{
   firstName: '',
@@ -27,6 +28,9 @@ const inviteUsers = ref([{
   existingNumber: '',
   allowNewNumber: '',
   panel: 0,
+  selectOption: '',
+  selectOptionSearch: '',
+  existingNumberOptionSelected: false,
 }])
 
 const errors = ref({
@@ -49,6 +53,7 @@ const refVForm = ref(null)
 vuetifyTheme.themes.value[currentThemeName].colors.primary = '#38A6E3'
 
 const addMore = () => {
+
   inviteUsers.value.push({
     firstName: '',
     lastName: '',
@@ -57,8 +62,12 @@ const addMore = () => {
     existingNumber: '',
     allowNewNumber: '',
     panel: 0,
+    selectOption: '',
+    selectOptionSearch: '',
+    existingNumberOptionSelected: false,
   })
 }
+
 
 const remove = index => {
   inviteUsers.value.splice(index, 1)
@@ -66,9 +75,11 @@ const remove = index => {
 
 const loading = ref(false)
 const isLoading = ref(false)
+const isSnackbarVisible = ref(false)
+const snackbarMessage = ref('')
+const snackbarActionColor = ref(' ')
 const search = ref()
 const select = ref(null)
-
 const existingNumbers = ref([])
 const items = ref([])
 const checkoutUrl = ref()
@@ -102,46 +113,94 @@ watch(search, query => {
   query && query !== select.value && querySelections(query)
 })
 
-watch(selectOption, value => {
-  existingNumberOptionSelected.value = value && value === "Existing Number"
-})
+
+const watchSelectOptionChanges = () => {
+  inviteUsers.value.forEach((inviteUser, index) => {
+    watch(() => inviteUser.selectOption, newValue => {
+    
+      inviteUser.existingNumberOptionSelected = newValue && newValue === "Existing Number"
+      if(!inviteUser.existingNumberOptionSelected){
+        inviteUser.existingNumber = null
+      }
+      
+      // Update allowNewNumber based on selectOption
+      inviteUser.allowNewNumber = newValue === 'Existing Number' ? false : true
+    })
+  })
+}
+
+// Initial setup
+watchSelectOptionChanges()
+
+watch(inviteUsers, () => {
+  watchSelectOptionChanges()
+}, { deep: true })
 
 const createStripeSession = () => {
-  isLoading.value = true
-  isDisabled.value = true
+  
   axiosIns.post('/api/auth/create-session-details')
     .then(res => {
       if (res.data){
-        isLoading.value = false
-        isDisabled.value = false
         window.location.href = res.data.checkout_url
       }else{
         isLoading.value = false
         isDisabled.value = false
       }
-
-
     })
     .catch(error => {
       console.log(error)
-      isLoading.value = false
-      isDisabled.value = false
     })
 }
 
 const inviteMembers = () => {
+  refVForm.value.validate().then(isValid => {
+    if(isValid.valid === true) {
+      refVForm.value.resetValidation()
 
-  inviteMemberStore.createInvitations({
-    members: inviteUsers.value,
+      isLoading.value = true
+      isDisabled.value = true
+      
+      inviteMemberStore.createInvitations({
+        members: inviteUsers.value,
+      })
+        .then(res => {
+          isLoading.value = false
+          isDisabled.value = false
+          if (res.data.status) {
+            createStripeSession()
+          }else{
+            snackbarMessage.value = res
+            snackbarActionColor.value = 'error'
+            isSnackbarVisible.value = true
+          }
+        })
+        .catch(error => {
+          isLoading.value = false
+          isDisabled.value = false
+          let errorMsg = ''
+          if (error.response && error.response.data && error.response.data.errors) {
+            const errorMessages = error.response.data.errors
+            
+            const errorFields = Object.keys(errorMessages)
+            for (const field of errorFields) {
+              const fieldErrors = errorMessages[field]
+
+              errorMsg += `${fieldErrors.join('\n')}\n`
+            }
+          } else {
+            errorMsg = error.message
+          }
+          snackbarMessage.value = errorMsg
+          snackbarActionColor.value = 'error'
+          isSnackbarVisible.value = true
+        })
+
+    }
   })
-    .then(res => {
-      if (res.data.status) {
-        createStripeSession()
-      }
-    })
-    .catch(error => {
-      console.log(error)
-    })
+}
+
+const cancelInviteMembers = () => {
+  createStripeSession()
 }
 </script>
 
@@ -174,6 +233,7 @@ const inviteMembers = () => {
     <VForm
       ref="refVForm"
       class="__login_form pt-6"
+      lazy-validation
     >
       <VCol
         cols="12"
@@ -207,6 +267,8 @@ const inviteMembers = () => {
                       :ref="inviteUser.firstName"
                       v-model="inviteUser.firstName"
                       label="First Name"
+                      :rules="[requiredValidator]"
+                      required
                     />
                   </VCol>
 
@@ -229,6 +291,7 @@ const inviteMembers = () => {
                       :ref="inviteUser.emailAddress"
                       v-model="inviteUser.emailAddress"
                       :rules="[requiredValidator, emailValidator]"
+                      required
                       label="Email Address"
                       type="email"
                     />
@@ -240,18 +303,20 @@ const inviteMembers = () => {
                     md="12"
                   >
                     <AppAutocomplete
-                      v-model="selectOption"
-                      v-model:search="selectOptionSearch"
+                      v-model="inviteUser.selectOption"
+                      v-model:search="inviteUser.selectOptionSearch"
                       :loading="loading"
                       label="Assign Number"
                       :items="assignNumberOptions"
                       item-title="optionValue"
                       :menu-props="{ maxHeight: '200px' }"
+                      :rules="[requiredValidator]"
+                      required
                     />
                   </VCol>
 
                   <VCol
-                    v-if="existingNumberOptionSelected"
+                    v-if="inviteUser.existingNumberOptionSelected"
                     cols="12"
                     md="12"
                   >
@@ -351,7 +416,14 @@ const inviteMembers = () => {
               + Add more
             </VBtn>
           </VRow>
-          <VRow justify="end">
+          <VRow class="d-flex flex-wrap justify-end gap-4 mt-4">
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              @click="cancelInviteMembers"
+            >
+              Cancel
+            </VBtn>
             <VBtn
               :disabled="isDisabled"
               :loading="isLoading"
@@ -363,6 +435,21 @@ const inviteMembers = () => {
         </VCol>
       </VCol>
     </VForm>
+    <!-- Snackbar -->
+    <VSnackbar
+      v-model="isSnackbarVisible"
+      multi-line
+    >
+      {{ snackbarMessage }}
+      <template #actions>
+        <VBtn
+          :color="snackbarActionColor"
+          @click="isSnackbarVisible = false"
+        >
+          Close
+        </VBtn>
+      </template>
+    </VSnackbar>
   </VCard>
 </template>
 

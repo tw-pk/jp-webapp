@@ -81,7 +81,18 @@ export const useDialerStore = defineStore('dialer', {
           .catch(error => reject(error))
       })
     },
+            
+     //fetch team member        
+     fetchMemberList() {      
+      return new Promise((resolve, reject) => {
+        axiosIns.post('api/auth/team/fetch/members')
+          .then(response => {            
+            resolve(response.data.inviteMembers);
+          })
+          .catch(error => reject(error));
+      });
 
+    }
 
   },
   getters: {

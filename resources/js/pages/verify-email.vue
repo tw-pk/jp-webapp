@@ -40,7 +40,6 @@ User.auth()
     email.value = userData.email
   })
   .catch(error => {
-    isResendDisabled.value = true
     isSnackbarVisible.value = true
     snackbarMessage.value = error
     snackbarActionColor.value = 'error'
@@ -55,6 +54,12 @@ const resendEmail = () => {
     snackbarActionColor.value = 'success'
     timer(180)
   })
+    .catch(error => {
+      isResendDisabled.value = true
+      isSnackbarVisible.value = true
+      snackbarMessage.value = error
+      snackbarActionColor.value = 'error'
+    })
 }
 
 const timerOn = ref(true)
@@ -102,10 +107,17 @@ const verifyOtp = () => {
     }else{
       isLoading.value = false
       verificationStatus.value = 'Verify My Account'
+      snackbarMessage.value = response.data.message
+      snackbarActionColor.value = 'error'
+      isSnackbarVisible.value = true
     }
   }).catch(error => {
     isLoading.value = false
     verificationStatus.value = 'Verify My Account'
+
+    snackbarMessage.value = error?.response?.data?.message
+    snackbarActionColor.value = 'error'
+    isSnackbarVisible.value = true
   })
 }
 </script>

@@ -94,7 +94,7 @@
   background: var(--light-solid-color-extra-white, #fff);
   block-size: 773px;
   inline-size: 500px;
-  margin-block-start: 5rem;
+  margin-block-start: 3rem;
 }
 
 .dialer-header {
@@ -133,6 +133,18 @@
   margin-inline: 52px;
 }
 
+.conference-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: var(--dark-opacity-color-gray-gray-8, rgba(134, 146, 208, 8%));
+  margin-block: 0;
+  margin-inline: 13px;
+  width: 70%;
+}
+
 .flag-dropdown {
   position: relative;
   cursor: pointer;
@@ -153,6 +165,18 @@
   line-height: 30px; /* 136.364% */
   outline: none;
 }
+
+.conference-input {  
+    flex: 1;
+    color: var(--light-typography-color-heading-text, #4b465c);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 30px;
+    outline: none;    
+}
+
+
 
 .clear-button {
   margin-inline-start: 10px;

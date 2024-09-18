@@ -106,11 +106,11 @@ class TwoFactorAuthController extends Controller
     public function verifyOtp(Request $request){
         $request->validate([
             'to' => 'required',
-            'code' => 'required|min:6|max:6'
+            'otp' => 'required|min:6|max:6'
         ]);
 
         try {
-            $response = $this->twoFactorAuthenticationService->verifyCode(TwilioVerifyService::first()->sid, $request->to, $request->code);
+            $response = $this->twoFactorAuthenticationService->verifyCode(TwilioVerifyService::first()->sid, $request->to, $request->otp);
 
             if (isset($response->original['status'])) {
                 $status = $response->original['status'];

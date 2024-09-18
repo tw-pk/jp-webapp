@@ -26,6 +26,7 @@ const vuetifyTheme = useTheme()
 const currentThemeName = vuetifyTheme.name.value
 const otp_timer = ref('')
 const isResendDisabled = ref(false)
+const isDisabled = ref(false)
 const isLoading = ref(false)
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
@@ -67,13 +68,16 @@ function timer(remaining) {
 }
 
 const verifyOtp = () => {
-  isLoading.value = true
+  isDisabled.value = true
+  isLoading.value = true 
+
   verificationStatus.value = 'Verifying'
   twoFactor.verifyCode({
     to: newPhoneNumber.value,
-    code: otp.value,
+    otp: otp.value,
   }).then(response => {
     if(response.data.status){
+      isDisabled.value = false
       isLoading.value = false
       isResendDisabled.value = true
       snackbarMessage.value = 'OTP verified successfully, Redirecting...'
@@ -81,13 +85,34 @@ const verifyOtp = () => {
       isSnackbarVisible.value = true
       router.push('/')
     }else{
-      isLoading.value = false
-      verificationStatus.value = 'Verify OTP'
+      errorMessageFunction(response)
     }
   }).catch(error => {
-    isLoading.value = false
-    verificationStatus.value = 'Verify OTP'
+    errorMessageFunction(error)
   })
+}
+
+const errorMessageFunction = error => {
+  
+  verificationStatus.value = 'Verify OTP'
+  isDisabled.value = false
+  isLoading.value = false
+  let errorMsg = ''
+
+  // Error: Display validation errors
+  if (error.response && error.response.data && error.response.data.errors) {
+    const validationErrors = error.response.data.errors
+
+    errorMsg = Object.values(validationErrors).flat().join('\n')
+  } else if(error.data && error.data.message) {
+    errorMsg = error.data.message
+  }else {
+    console.log('An error occurred:', error.message)
+    errorMsg = error.message
+  }
+  snackbarMessage.value = errorMsg
+  snackbarActionColor.value = 'error'
+  isSnackbarVisible.value = true
 }
 
 const errors = ref({
@@ -96,6 +121,9 @@ const errors = ref({
 })
 
 const sendCode = async() => {
+  isDisabled.value = true
+  isLoading.value = true
+ 
   const data = {
     phoneNumber: newPhoneNumber.value,
     channel: channel.value,
@@ -103,11 +131,15 @@ const sendCode = async() => {
 
   twoFactor.generateCode(data)
     .then(res => {
+      isDisabled.value = false
+      isLoading.value = false
       if(res.data.status){
         phoneProvided.value = true
       }
     })
     .catch(error => {
+      isDisabled.value = false
+      isLoading.value = false
       errors.value = error.response.data.errors
     })
 }
@@ -220,7 +252,7 @@ onMounted(async() => {
                 <VBtn
                   block
                   type="submit"
-                  :disabled="isLoading"
+                  :disabled="isDisabled"
                   :loading="isLoading"
                   @click.prevent="sendCode"
                 >
@@ -236,7 +268,7 @@ onMounted(async() => {
                 <VBtn
                   block
                   type="submit"
-                  :disabled="isLoading"
+                  :disabled="isDisabled"
                   :loading="isLoading"
                   @click.prevent="verifyOtp"
                 >
@@ -283,7 +315,12 @@ onMounted(async() => {
     </VCol>
   </VRow>
   <!-- Snackbar -->
-  <VSnackbar v-model="isSnackbarVisible">
+  <VSnackbar
+    v-model="isSnackbarVisible"
+    multi-line
+    transition="scroll-y-reverse-transition"
+    location="top end"
+  >
     {{ snackbarMessage }}
 
     <template #actions>

@@ -97,7 +97,7 @@ const resolveStatusVariant = status => {
 
 // 👉 Fetching Members
 const fetchMembers = () => {
-  teamListStore.fetchMembers().then(response => {
+  teamListStore.fetchMemberList().then(response => {
     inviteMembers.value = response.data.inviteMembers
   }).catch(error => {
     console.error(error)

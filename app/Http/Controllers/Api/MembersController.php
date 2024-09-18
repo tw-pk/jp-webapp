@@ -9,6 +9,8 @@ use App\Models\AssignNumber;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class MembersController extends Controller
 {
@@ -80,7 +82,7 @@ class MembersController extends Controller
         $options = $request->input('options');
 
         $query = Invitation::with(['invitationAccept:id,email', 'invitationAccept.profile:id,user_id,avatar', 'roleInfo:id,name'])
-            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'role', 'number', 'can_have_new_number')
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'role', 'number', 'can_have_new_number', 'registered')
             ->where('user_id', Auth::user()->id);
 
         if ($searchQuery) {
@@ -137,6 +139,37 @@ class MembersController extends Controller
             return response()->json([
                 'status' => true,
                 'members' => $members
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function fetchMemberDetail(Request $request)
+    { 
+        try {
+            $member = Invitation::find($request->member_id);
+            if(!$member){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ]);
+            }
+            
+            $memberDetail = [
+                'fullName' => $member->fullName(),
+                'email' => $member->email,
+                'number' => $member->number,
+                'registered' => $member->registered ==1 ? "True" : "False",
+                'role' => $member->roleInfo ? $member->roleInfo->name : 'Role not found',
+                'invitationDate' => Carbon::parse($member->created_at)->format('d M, Y'),
+                'avatar' => $member->invitationAccept && $member->invitationAccept->profile && $member->invitationAccept->profile->avatar
+                ? asset('storage/avatars/' . $member->invitationAccept->profile->avatar)
+                : null,
+            ];
+            return response()->json([
+                'status' => true,
+                'memberDetail' => $memberDetail
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

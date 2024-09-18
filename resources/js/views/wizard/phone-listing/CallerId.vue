@@ -22,10 +22,6 @@ const incomingOption = [
     name: 'Default',
     value: 'default',
   },
-  {
-    name: 'JustCall Number',
-    value: 'justcall_number',
-  },
 ]
 
 const outboundOption = [
@@ -41,11 +37,11 @@ const fetchCallerIds = () => {
   callerIdStore.fetchCallerIds({
     phone_number: props.phoneNumber,
   }).then(response => {
-    const data = response.data.phoneSetting
+    const data = response?.data?.phoneSetting
     
-    callerIds.value[0].incomingCaller = data.incoming_caller_id
+    callerIds.value[0].incomingCaller = data[0]?.incoming_caller_id
 
-    callerIds.value[0].outboundCaller = data.outbound_caller_id
+    callerIds.value[0].outboundCaller = data[0]?.outbound_caller_id
   }).catch(error => {
     console.error(error)
   })

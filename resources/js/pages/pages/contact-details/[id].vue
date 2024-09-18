@@ -2,7 +2,7 @@
 import Profile from "@/pages/pages/contact-details/components/Profile.vue"
 import ProfileHeader from "@/pages/pages/contact-details/components/ProfileHeader.vue"
 import { useContactStore } from "@/views/apps/contact/useContactStore"
-import { useRoute } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
 const contactStore = useContactStore()
 const route = useRoute()

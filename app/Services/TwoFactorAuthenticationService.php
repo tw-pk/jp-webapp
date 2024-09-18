@@ -63,17 +63,30 @@ class TwoFactorAuthenticationService implements TwoFactorAuthenticationInterface
                 ]);
             }
 
-            $user = \Auth::user();
-            $profile = $user->twoFactorProfile;
-            if (!$profile) {
-                TwoFactorProfiles::create([
+            //$user = \Auth::user();
+            // $profile = $user->twoFactorProfile;
+            // if (!$profile) {
+            //     TwoFactorProfiles::create([
+            //         'user_id' => \Auth::user()->id,
+            //         'sid' => $service->sid,
+            //         'channel' => $channel,
+            //         'phone' => $phoneNumber,
+            //         'enabled' => false
+            //     ]);
+            // }
+
+            TwoFactorProfiles::updateOrCreate(
+                [
                     'user_id' => \Auth::user()->id,
+                    'channel' => $channel
+                ],
+                [
                     'sid' => $service->sid,
-                    'channel' => $channel,
                     'phone' => $phoneNumber,
                     'enabled' => false
-                ]);
-            }
+                ]
+            );
+            
 
             $verification = $this->twilio->verify->v2->services($service->sid)
                 ->verifications

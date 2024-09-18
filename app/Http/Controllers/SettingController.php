@@ -17,8 +17,45 @@ class SettingController extends Controller
             ->where('phone_number', $request->phone_number)
             ->first();
 
-        if (!empty($phoneSetting->ring_order_value)) {
-            $phoneSetting->ring_order_value = unserialize($phoneSetting->ring_order_value);
+        $phoneSettingArray = [];   
+        if ($phoneSetting && !empty($phoneSetting->ring_order_value)) {
+            $ringOrderValues = unserialize($phoneSetting->ring_order_value);
+            foreach($ringOrderValues as $val){
+                $phoneSettingArray[] = [
+                    "id" => $phoneSetting?->id,
+                    "user_id" => $phoneSetting?->user_id,
+                    "phone_number" => $phoneSetting?->phone_number,
+                    "external_phone_number" => $phoneSetting?->external_phone_number,
+                    "fwd_incoming_call" => $this->transFormText($phoneSetting?->fwd_incoming_call),
+                    "unanswered_fwd_call" => $this->transFormText($phoneSetting?->unanswered_fwd_call),
+                    "ring_order" => $this->transFormText($phoneSetting?->ring_order),
+                    "ring_order_value" => [
+                        "invitationId" => $val['invitationId'] ?? $val['invitationId'],
+                        "fullname" => $val['fullname'] ?? $val['fullname'],
+                        "webDesktop" => $val['webDesktop']==true ? ['icon' => 'tabler-device-desktop-check', 'color' => 'primary'] :['icon' => 'tabler-x', 'color' => 'error'],
+                        "mobileLandline" => $val['mobileLandline']==true ? ['icon' => 'tabler-device-mobile-check', 'color' => 'primary'] :['icon' => 'tabler-x', 'color' => 'error'],
+                    ],
+                    "incoming_caller_id" => $phoneSetting?->incoming_caller_id,
+                    "outbound_caller_id" => $phoneSetting?->outbound_caller_id,
+                    "transcription" => $phoneSetting?->transcription,
+                ];
+            }
+        }else{
+            if($phoneSetting){
+                $phoneSettingArray[] = [
+                    "id" => $phoneSetting?->id,
+                    "user_id" => $phoneSetting?->user_id,
+                    "phone_number" => $phoneSetting?->phone_number,
+                    "external_phone_number" => $phoneSetting?->external_phone_number,
+                    "fwd_incoming_call" => $this->transFormText($phoneSetting?->fwd_incoming_call),
+                    "unanswered_fwd_call" => $this->transFormText($phoneSetting?->unanswered_fwd_call),
+                    "ring_order" => $this->transFormText($phoneSetting?->ring_order),
+                    "ring_order_value" => null,
+                    "incoming_caller_id" => $phoneSetting?->incoming_caller_id,
+                    "outbound_caller_id" => $phoneSetting?->outbound_caller_id,
+                    "transcription" => $phoneSetting?->transcription,
+                ];
+            }
         }
 
         $assignNumbers = AssignNumber::with(['invitation' => function ($query) {
@@ -67,9 +104,15 @@ class SettingController extends Controller
         });
         return response()->json([
             'message' => 'Phone number setting fetched successfully',
-            'phoneSetting' => $phoneSetting,
+            'phoneSetting' => $phoneSettingArray,
             'assignUsers' => $assignUsers
         ]);
+    }
+
+    private function transFormText($string=null){
+        if($string){
+            return str_replace('_', ' ', ucwords($string, '_'));
+        }
     }
 
     public function add_routing(Request $request)
@@ -80,6 +123,7 @@ class SettingController extends Controller
                 [
                     'user_id' => Auth::user()->id,
                     'phone_number' => $request->phone_number,
+                    'external_phone_number' => $request->externalPhoneNumber,
                     'fwd_incoming_call' => $request->fwd_incoming_call,
                     'unanswered_fwd_call' => $request->unanswered_fwd_call,
                     'ring_order' => $request->ringOrder,
@@ -89,7 +133,7 @@ class SettingController extends Controller
                 ]
             );
             return response()->json([
-                'message' => 'Call Routing have been saved Successfully.'
+                'message' => 'Call Forwarding have been saved Successfully.'
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred while adding data'], 500);
@@ -126,16 +170,13 @@ class SettingController extends Controller
                 [
                     'user_id' => Auth::user()->id,
                     'phone_number' => $request->phone_number,
-                    'vunanswered_fwd_call' => $request->vunanswered_fwd_call,
-                    'vemail_id' => $request->vemail_id,
-                    'voice_message' => $request->voice_message,
                     'transcription' => $request->transcription,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]
             );
             return response()->json([
-                'message' => 'Voice Mail have been saved Successfully.'
+                'message' => 'Voicemail have been saved Successfully.'
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred while adding data'], 500);

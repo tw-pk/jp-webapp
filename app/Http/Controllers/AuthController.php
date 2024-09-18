@@ -35,27 +35,16 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $rules = [
+        $request->validate([
             'firstname' => 'required|string',
-            'email' => 'required|string|email',
-            'phoneNumber' => 'required|numeric',
+            'email' => 'required|string|email|unique:users',
             'password' => 'required|string',
             'c_password' => 'required|same:password',
             'privacyPolicies' => 'required|accepted',
             //'terms_agreement' => 'required|accepted',
-        ];
+        ]);
         
-        $user = User::find($request->lastInsertedId);
-        if ($user) {
-            $rules['email'] = 'required|string|email|unique:users,email,' . $user->id;
-        } else {
-            $rules['email'] = 'required|string|email|unique:users';
-        }
-        $request->validate($rules);
-
-        if (!$user) {
-            $user = new User();
-        }
+        $user = new User();
         $user->firstname = $request->firstname;
         $user->lastname = $request->lastname;
         $user->email = $request->email;
@@ -63,16 +52,17 @@ class AuthController extends Controller
         $user->privacy_policy_agreed = true;
         
         if ($user->save()) {
-
             $invitationRole = Invitation::with('roleInfo')
                 ->where('email', $user->email)
-                ->select('role')
                 ->first();
+
             if ($invitationRole) {
                 $invitationRole->member_id = $user->id;
                 $invitationRole->registered = true;
                 $invitationRole->save();
+                
             }
+
             $role = $invitationRole?->roleInfo;
             if (empty($role)) {
                 $role = Role::where('name', 'Admin')->first();
@@ -83,10 +73,15 @@ class AuthController extends Controller
             $email_verification_service->generateOtp($user);
 
             return response()->json([
+                'status' => true,
+                //'lastInsertedId' => encrypt($user->id),
                 'message' => 'Successfully created user!'
             ], 201);
         } else {
-            return response()->json(['error' => 'Provide proper details']);
+            return response()->json([
+                'status' => false, 
+                'error' => 'Provide proper details'
+            ]);
         }
     }
 
@@ -97,7 +92,7 @@ class AuthController extends Controller
             'to' => 'required',
             'code' => 'required|min:6|max:6'
         ]);
-        $lastInsertedId = $request->lastInsertedId;
+        $lastInsertedId = decrypt($request->lastInsertedId);
         $twoFactorAuthenticationService = app(TwoFactorAuthenticationService::class);
         return $twoFactorAuthenticationService->registerVerifyCode($request->to, $request->code, $lastInsertedId);
     }
@@ -105,29 +100,18 @@ class AuthController extends Controller
     public function verifyPhoneNumber(Request $request)
     {
         $request->validate([
-            'firstname' => 'required|string',
-            'email' => 'required|string|unique:users',
-            'phoneNumber' => 'required|numeric'
+            'lastInsertedId' => 'required',
+            'phoneNumber' => 'required|numeric',
+            'channel' => 'required|string'
         ]);
-        
-        $user = new User([
-            'firstname' => $request->firstname,
-            'lastname' => $request->lastname,
-            'email' => $request->email,
-            'password' => bcrypt(Carbon::now()),
-        ]);
-
-        if ($user->save()) {
-            $data = [
-                'lastInsertedId' => $user->id,
-                'phoneNumber' => $request->phoneNumber,
-                'channel' => 'sms'
-            ];
-            $twoFactorAuthenticationService = app(TwoFactorAuthenticationService::class);
-            return $twoFactorAuthenticationService->VerifyGenerateCode($data);
-        } else {
-            return response()->json(['error' => 'Failed to add user'], 500);
-        }
+        $lastInsertedId = decrypt($request->lastInsertedId);
+        $data = [
+            'lastInsertedId' => $lastInsertedId,
+            'phoneNumber' => $request->phoneNumber,
+            'channel' => $request->channel
+        ];
+        $twoFactorAuthenticationService = app(TwoFactorAuthenticationService::class);
+        return $twoFactorAuthenticationService->VerifyGenerateCode($data);
     }
 
     public function create_ten_dlc(Request $request)
@@ -350,6 +334,7 @@ class AuthController extends Controller
             'email_verified' => $request->user()->email_verified_at ?? false,
             'numbers' => $request->user()->numbers->count(),
             'invitations' => $request->user()->invitations->count(),
+            'can_have_new_number' => $request->user()?->invitationsMember?->can_have_new_number,
             "bio" => $request->user()->profile ? $request->user()->profile->bio : "",
             'avatar' => Auth::user()->profile ? (Auth::user()->profile->avatar != null ? asset('storage/avatars/' . Auth::user()->profile?->avatar) : null) : null
         ];
@@ -452,6 +437,7 @@ class AuthController extends Controller
 
         if (!$check_password) {
             return response()->json([
+                'status' => false,
                 'message' => 'Invalid token!'
             ], 400);
         }
@@ -463,6 +449,7 @@ class AuthController extends Controller
         \DB::table('password_reset_tokens')->where(['email' => $request->email])->delete();
 
         return response()->json([
+            'status' => true,
             'message' => 'Password updated successfully'
         ]);
     }
@@ -539,7 +526,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => false,
                 'errors' => [
-                    'currentPassword' => 'Invalid current password, does not match your actual password!'
+                    'currentPassword' => 'Invalid current password, does not match your actual password.'
                 ]
             ], 422);
         }
@@ -550,7 +537,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Password updated successfully'
+            'message' => 'Password has been updated successfully.'
         ]);
     }
 

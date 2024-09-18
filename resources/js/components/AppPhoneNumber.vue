@@ -282,6 +282,16 @@ watch(address_requirements,  (newValue, oldValue) => {
 
 <template>
   <div class="">
+    <VAlert
+      type="info"
+      border="start"
+      color="primary"
+      variant="tonal"
+      closable
+      class="mb-3"
+    >
+      First! select the country and then search for the number of the country you want to add.
+    </VAlert>
     <VRow class="match-height">
       <VCol
         cols="12"

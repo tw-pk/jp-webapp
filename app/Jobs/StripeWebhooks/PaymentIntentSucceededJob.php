@@ -33,16 +33,16 @@ class PaymentIntentSucceededJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    #[NoReturn] public function handle(): void
+    #[NoReturn] 
+    public function handle(): void
     {
         Log::info('This is an informational message.');
 
         $paymentIntent = $this->webhookCall->payload['data']['object'];
+        $amountStatus = $paymentIntent['status'];
         $paymentData = $paymentIntent['charges']['data'][0];
         $customerId = $paymentData['customer'];
-
         $amount = $paymentData['amount'] / 100;
-        $amountStatus = $paymentData['status'];
 
         if ($amountStatus === 'succeeded') {
             $user = User::where('stripe_id', $customerId)->first();
@@ -58,5 +58,6 @@ class PaymentIntentSucceededJob implements ShouldQueue
                 }
             }
         }
+
     }
 }

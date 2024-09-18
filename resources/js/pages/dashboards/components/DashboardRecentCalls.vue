@@ -112,22 +112,27 @@ const fetchRecentCalls = () => {
 
   recentCallsDashStore.fetchRecentCalls({
     callType: selectedTabTitle,
+    member: member.value,
     q: searchQuery.value,
     options: options.value,
   })
     .then(res => {
-      if(res.data.status){
+      if (res.data.status) {
         error.value = false
         isProcessing.value = false
         calls.value = res.data.calls
         totalPage.value = res.data.totalPage
         totalRecord.value = res.data.totalRecord
         options.value.page = res.data.page
+      } else {
+        error.value = true
+        errorMessage.value = res?.data?.message
+        isProcessing.value = false
       }
     })
     .catch(errors => {
       error.value = true
-      errorMessage.value = errors.response.data.message ? errors.response.data.message : errors.message
+      errorMessage.value = errors.response.data.message ?? errors.message
       isProcessing.value = false
     })
 }
@@ -204,11 +209,18 @@ const editItem = callSid => {
 onMounted(async () => {
   await recentCallsDashStore.fetchMemberList()
     .then(res => {
-      if(res.data.status){
+      if (res.data.status) {
         members.value = res.data.members
-      }else{
-        console.log(res.data.message)
+      } else {
+        error.value = true
+        errorMessage.value = res.data.message
+        isProcessing.value = false
       }
+    })
+    .catch(errors => {
+      error.value = true
+      errorMessage.value = errors.response.data.message ?? errors.message
+      isProcessing.value = false
     })
 })
 
@@ -230,19 +242,17 @@ const playRecording = url => {
 </script>
 
 <template>
-  <div
+  <VAlert
     v-if="errorMessage"
     class="my-3"
+    density="compact"
+    color="error"
+    variant="tonal"
+    closable
   >
-    <VAlert
-      density="compact"
-      color="error"
-      variant="tonal"
-      closable
-    >
-      {{ errorMessage }}
-    </VAlert>
-  </div>
+    {{ errorMessage }}
+  </VAlert>
+ 
   <VCard>
     <div class="__dashboard__recent-calls-header pa-4 __border-bottom-light">
       <div class="__dashboard__header-title">
@@ -272,7 +282,7 @@ const playRecording = url => {
           label="Select members"
           :items="members"
           item-title="fullname"
-          item-value="fullname"
+          item-value="id"
         />
       </VCol>
       <div class="__dashboard__header-search">

@@ -1,5 +1,6 @@
 <script setup>
 import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
+
 import DashboardRecentCalls from "@/pages/dashboards/components/DashboardRecentCalls.vue"
 import DashboardStatistics from "@/pages/dashboards/components/DashboardStatistics.vue"
 
@@ -10,7 +11,7 @@ import { getCallsChartConfig } from '@core/libs/apex-chart/apexCharConfig'
 import avatar1 from '@images/avatars/avatar-1.png'
 import avatar2 from '@images/avatars/avatar-2.png'
 import avatar3 from '@images/avatars/avatar-3.png'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { useTheme } from 'vuetify'
 
@@ -242,7 +243,7 @@ onMounted(fetchData)
             >
               <VCol
                 cols="6"
-                class=" text-center __border-right"
+                class="text-center __border-right"
               >
                 <h5 class="text-h1 text-center">
                   {{ totalOutboundCalls }}
@@ -293,14 +294,16 @@ onMounted(fetchData)
           </VCardText>
         </VCard>
       </VCol>
-      
+    
       <VCol cols="6">
         <DashboardNAnalysis class="h-100" />
       </VCol>
       
+      
       <VCol cols="6">
         <DashboardTMAnalysis class="h-100" />
       </VCol>
+      
       
       <VCol cols="12">
         <DashboardRecentCalls class="h-100" />

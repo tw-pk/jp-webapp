@@ -48,7 +48,11 @@ const fetchNumbers = async() => {
   isProcessing.value = true
 
   try{
-    const { data } = await analysisDashStore.fetchNumbers({ q: searchQuery.value, options: options.value })
+    const { data } = await analysisDashStore.fetchNumbers({ 
+      q: searchQuery.value, 
+      options: options.value, 
+    })
+
     if(data.status){
       isProcessing.value = false
       numbers.value = data.numbers
@@ -84,7 +88,7 @@ watchEffect(fetchNumbers)
           <AppTextField
             v-model="searchQuery"
             density="compact"
-            placeholder="Search Phone Numbers"
+            placeholder="Search Numbers"
             append-inner-icon="tabler-search"
             single-line
             hide-details
@@ -124,7 +128,7 @@ watchEffect(fetchNumbers)
             <div class="d-flex align-center">
               <VAvatar
                 rounded="lg"
-                size="24"
+                size="20"
                 class="me-3"
               >
                 <VImg

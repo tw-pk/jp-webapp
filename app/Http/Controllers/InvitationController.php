@@ -18,9 +18,12 @@ class InvitationController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'members' => 'required'
-        ]);
+        $rules = [
+            'members' => 'required|array',
+            'members.*.firstName' => 'required|string|max:255',
+            'members.*.emailAddress' => 'required|email|unique:invitations,email',
+        ];
+        $request->validate($rules);
 
         $members = $request->members;
 

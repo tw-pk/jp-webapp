@@ -19,6 +19,7 @@ class Call extends Model
         'date_time',
         'sid',
         'contact_id',
+        'price'
     ];
 
     public function contact(): \Illuminate\Database\Eloquent\Relations\BelongsTo
