@@ -19,6 +19,7 @@ use Twilio\Rest\Client;
 use Illuminate\Http\Response;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
+use App\Services\StatusService;
 use App\Services\AssignPhoneNumberService;
 use Illuminate\Support\Str;
 
@@ -564,7 +565,8 @@ class VoiceController extends Controller
                         });
                     }
                     $query->select('id', 'firstname', 'lastname', 'last_login_at');
-                }]);
+                }])
+                ->orderBy('created_at', 'desc');
 
             $teamMembers = $teamMembersQuery->get()->map(function ($invitation) {
                 return $invitation->invitationAccept;
@@ -580,11 +582,14 @@ class VoiceController extends Controller
                 foreach ($teamMembers as $member) {
                     $member->fullName = $member->fullName();
                     $member->avatar = $member?->profile?->avatar ? asset('storage/avatars/' . $member->profile->avatar) : null;
+                    
                     $curtime = Carbon::now();
                     $dateTime = $member->last_login_at ? Carbon::parse($member->last_login_at) : $curtime;
                     $formattedDate = "Since " . $dateTime->format('j M, \a\t h:i A');
                     $member->last_login_at = $formattedDate;
                     
+                    $member->status = StatusService::getUserStatus($member->id);
+
                     $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($member->id);
                     if (!empty($numbers)) {
                         $callRecords = Call::selectRaw("
@@ -594,6 +599,7 @@ class VoiceController extends Controller
                             $query->whereIn('to', $numbers)
                                   ->orWhereIn('from', $numbers);
                         })->first();
+
                         $member->outboundCalls = $callRecords->outboundCalls ?? 0;
                         $member->inboundCalls = $callRecords->inboundCalls ?? 0;
                     } else {

@@ -193,10 +193,6 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        $user->update([
-            'last_login_at' => Carbon::now(),
-        ]);
-
         $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(3));
         $token = $tokenResult->plainTextToken;
 
