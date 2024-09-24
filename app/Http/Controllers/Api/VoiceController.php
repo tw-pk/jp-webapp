@@ -482,7 +482,7 @@ class VoiceController extends Controller
 
             $userId = Auth::user()->id;
             $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($userId);
-            if (empty($numbers )) {
+            if (empty($numbers)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'No phone numbers assigned to the user.',
@@ -624,31 +624,33 @@ class VoiceController extends Controller
         }
     }
 
-    public function dash_live_calls()
+    public function dashLiveCalls()
     {
         $totalOutboundCalls = 0;
         $totalInboundCalls = 0;
         $totalLiveCalls = 0;
         $totalMissed = 0;
 
-        $callRecords = Auth::user()?->calls()->select('direction')->get();
-        foreach ($callRecords as $call) {
-            switch ($call->direction) {
-                case 'outbound-dial':
-                case 'outbound-api':
-                    $totalOutboundCalls++;
-                    break;
-                case 'inbound':
-                    $totalInboundCalls++;
-                    break;
-                case 'in-progress':
-                case 'completed':
-                    $totalLiveCalls++;
-                    break;
-                case 'missed':
-                    $totalMissed++;
-                    break;
-            }
+        $userId = Auth::user()->id;
+        $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($userId);
+
+        if (!empty($numbers)) {
+            $callRecords = Call::selectRaw("
+                SUM(CASE WHEN direction IN ('outbound-dial', 'outbound-api') THEN 1 ELSE 0 END) AS outboundCalls,
+                SUM(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) AS inboundCalls,
+                SUM(CASE WHEN status = 'in-progress' THEN 1 ELSE 0 END) AS liveCalls,
+                SUM(CASE WHEN status = 'no-answer' THEN 1 ELSE 0 END) AS missedCalls
+            ")
+            ->where(function ($query) use ($numbers) {
+                $query->whereIn('to', $numbers)
+                      ->orWhereIn('from', $numbers);
+            })
+            ->first();
+        
+            $totalOutboundCalls = $callRecords->outboundCalls ?? 0;
+            $totalInboundCalls = $callRecords->inboundCalls ?? 0;
+            $totalLiveCalls = $callRecords->liveCalls ?? 0;
+            $totalMissed = $callRecords->missedCalls ?? 0;
         }
 
         return response()->json([
@@ -657,89 +659,6 @@ class VoiceController extends Controller
             'totalLiveCalls' => $totalLiveCalls,
             'totalMissed' => $totalMissed,
         ]);
-    }
-
-    public function dash_live_calls_past(Request $request)
-    {
-        if (!Auth::user()->numbers->count()) {
-            return response()->json([
-                'status' => false,
-                'message' => "You don't have any active number, please verify if you have an active number",
-            ], 404);
-        }
-
-        $callType = $request->input('callType');
-        $options = $request->input('options');
-
-        try {
-            $perPage = $options['itemsPerPage'];
-            $currentPage = $options['page'] ?? 1;
-
-            $phoneNumbers = Auth::user()?->numbers?->pluck('phone_number');
-
-            $liveCallsPast = [];
-            $now = Carbon::now();
-
-            if ($callType !== 'queue') {
-                foreach ($this->twilio->calls->read() as $call) {
-                    if ($callType == 'live' && $call->status === 'in-progress' && in_array($call->from, $phoneNumbers->toArray())) {
-                        $liveCallsPast[] = [
-                            'callSid' => $call->sid,
-                            'from' => $call->from,
-                            'to' => $call->to,
-                        ];
-                    }
-
-                    $callTo = false;
-                    if (strpos($call->to, 'client:') === 0) {
-                        $clientName = substr($call->to, 7);
-                        if ($clientName == Auth::user()?->firstname) {
-                            $callTo = true;
-                        }
-                    } else {
-                        $callTo = in_array($call->to, $phoneNumbers->toArray());
-                    }
-                    if ($callType == 'recent' && in_array($call->from, $phoneNumbers->toArray()) || $callTo == true) {
-                        $callTime = Carbon::createFromTimestamp($call->dateCreated->getTimestamp());
-                        if ($now->diffInMinutes($callTime) <= 30) {
-                            $liveCallsPast[] = [
-                                'callSid' => $call->sid,
-                                'from' => $call->from,
-                                'to' => $call->to,
-                                'callTime' => $callTime->format('Y-m-d H:i:s'),
-                            ];
-                        }
-                    }
-                }
-            }
-
-            if ($callType == 'queue') {
-                foreach ($this->twilio->queues->read(20) as $member) {
-                    $liveCallsPast[] = [
-                        'callSid' => $member->sid,
-                        'from' => $member->from,
-                        'to' => $member->to,
-                        'position' => $member->position,
-                    ];
-                }
-            }
-
-            $totalRecord = count($liveCallsPast);
-            $totalPage = ceil($totalRecord / $perPage);
-
-            return response()->json([
-                'status' => true,
-                "liveCallsPast" => $liveCallsPast,
-                'totalPage' => $totalPage,
-                'totalRecord' => $totalRecord,
-                'page' => $currentPage,
-            ]);
-        } catch (TwilioException $e) {
-            return response()->json([
-                'status' => false,
-                'error' => $e->getMessage(),
-            ], 500);
-        }
     }
 
     protected function getCallTypeCriteria($query=null, $callType=null)

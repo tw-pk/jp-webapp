@@ -7,12 +7,6 @@ export const useLiveCallsStore = defineStore('LiveCallsStore', {
     fetchLiveCalls(data) {
       return axiosIns.post('/api/auth/dashboard/live/calls', data)
     },
-
-    // 👉 Fetch live calls past
-    fetchLiveCallsPast(data) {
-      return axiosIns.post('/api/auth/dashboard/live/calls/past', data)
-    },
-
   
   },
 })
