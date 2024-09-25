@@ -21,6 +21,7 @@ const expenseRationChartConfig = computed(() => getCallsChartConfig(vuetifyTheme
 const totalLiveCalls = ref(0)
 const totalMissed = ref(0)
 const totalOutboundCalls = ref(0)
+const totalInboundCalls = ref(0)
 const totalCompletedCalls = ref(0)
 const series = ref([])
 
@@ -92,13 +93,14 @@ const fetchLiveCalls = async () => {
     if (liveCallsResponse.data) {
       totalLiveCalls.value = liveCallsResponse.data.totalLiveCalls
       totalOutboundCalls.value = liveCallsResponse.data.totalOutboundCalls
+      totalInboundCalls.value = liveCallsResponse.data.totalInboundCalls
       totalCompletedCalls.value = liveCallsResponse.data.totalCompletedCalls
       totalMissed.value = liveCallsResponse.data.totalMissed
 
       series.value = [
-        totalOutboundCalls.value, // outbound
-        totalCompletedCalls.value,  // inbound
-        totalMissed.value,        // missed
+        totalOutboundCalls.value,
+        totalInboundCalls.value,
+        totalMissed.value,
       ]
     }
   } catch (error) {
@@ -107,7 +109,7 @@ const fetchLiveCalls = async () => {
 }
 
 onMounted(fetchLiveCalls)
-
+      
 //watchEffect(fetchLiveCalls)
 </script>
 

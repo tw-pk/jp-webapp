@@ -411,7 +411,7 @@ export const getCallsChartConfig = themeColors => {
   }
 
   const { themeSecondaryTextColor, themePrimaryTextColor } = colorVariables(themeColors)
-
+  
   return {
     stroke: { width: 0 },
     labels: ['Outbound', 'Inbound', 'Missed'],
@@ -460,7 +460,7 @@ export const getCallsChartConfig = themeColors => {
         breakpoint: 992,
         options: {
           chart: {
-            height: 300,
+            height: 380,
           },
           legend: {
             position: 'bottom',
@@ -471,7 +471,7 @@ export const getCallsChartConfig = themeColors => {
         breakpoint: 576,
         options: {
           chart: {
-            height: 300,
+            height: 320,
           },
           plotOptions: {
             pie: {
