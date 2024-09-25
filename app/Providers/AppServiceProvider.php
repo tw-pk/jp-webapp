@@ -8,6 +8,8 @@ use App\Services\TwoFactorAuthenticationService;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
 use Twilio\Rest\Client;
+use App\Repositories\CallRepository;
+use App\Repositories\CallRepositoryInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
                 config('app.TWILIO_CLIENT_ID'),
                 config('app.TWILIO_AUTH_TOKEN')
             ));
-        });
+        }, CallRepositoryInterface::class , CallRepository::class);
     }
 
     /**
