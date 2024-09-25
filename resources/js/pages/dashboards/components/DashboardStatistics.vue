@@ -54,42 +54,36 @@ const statistics = [
 </script>
 
 <template>
-  <VCardText class=" pa-0">
-    <VRow class="pa-0">
-      <VCol
-        v-for="item in statistics"
-        :key="item.title"
-        cols="4"
-        md="4"
-      >
-        <VCard class="pa-0">
-          <div class="d-flex flex-row align-center pa-6">
-            <VAvatar
-              variant="tonal"
-              :color="item.tonal"
-              size="42"
-            >
-              <VIcon
-                :icon="item.icon"
-                :color="item.color"/>
-            </VAvatar>
+  <VCol
+    v-for="item in statistics"
+    :key="item.title"
+    cols="12"
+    sm="4"
+    lg="4"
+  >
+    <VCard class="pa-0">
+      <div class="d-flex flex-row align-center pa-6">
+        <VAvatar
+          variant="tonal"
+          :color="item.tonal"
+          size="42"
+        >
+          <VIcon
+            :icon="item.icon"
+            :color="item.color"
+          />
+        </VAvatar>
 
-            <div class="d-flex flex-column justify-end w-100">
-              <span class="text-h3 font-weight-bold text-end">{{ item.stats }}</span>
-              <span class="text-sm text-end">
-                {{ item.detailedStats }}
-              </span>
-              <span class="text-sm text-end">
-                {{ item.title }}
-              </span>
-            </div>
-          </div>
-        </VCard>
-      </VCol>
-    </VRow>
-  </VCardText>
+        <div class="d-flex flex-column justify-end w-100">
+          <span class="text-h3 font-weight-bold text-end">{{ item.stats }}</span>
+          <span class="text-sm text-end">
+            {{ item.detailedStats }}
+          </span>
+          <span class="text-sm text-end">
+            {{ item.title }}
+          </span>
+        </div>
+      </div>
+    </VCard>
+  </VCol>
 </template>
-
-<style scoped lang="css">
-@use "@core-scss/template/pages/page-auth.scss";
-</style>

@@ -44,6 +44,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'stripe_id',
         'privacy_policy_agreed',
         'last_login_at',
+        'activity_at',
         'pm_type',
         'pm_last_four',
         'trial_ends_at'

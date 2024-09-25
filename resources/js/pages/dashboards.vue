@@ -1,9 +1,7 @@
 <script setup>
 import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
-
 import DashboardRecentCalls from "@/pages/dashboards/components/DashboardRecentCalls.vue"
 import DashboardStatistics from "@/pages/dashboards/components/DashboardStatistics.vue"
-
 import DashboardTMAnalysis from "@/pages/dashboards/components/DashboardTMAnalysis.vue"
 import { useLiveCallsStore } from "@/views/apps/dashboard/useLiveCallsStore"
 import ApexChartReportData from '@/views/charts/apex-chart/ApexChartReportData.vue'
@@ -24,10 +22,7 @@ const totalLiveCalls = ref(0)
 const totalMissed = ref(0)
 const totalOutboundCalls = ref(0)
 const totalInboundCalls = ref(0)
-const currentTab = ref(0)
-const liveCallsPast = ref([])
-const totalPage = ref(1)
-const totalRecord = ref(0)
+const totalCompletedCalls = ref(0)
 const series = ref([])
 
 const items = [
@@ -84,8 +79,6 @@ const headers = [
   },
 ]
 
-const tabTitles = ['live', 'recent', 'queue']
-
 const options = ref({
   page: 1,
   itemsPerPage: 10,
@@ -94,46 +87,30 @@ const options = ref({
   search: undefined,
 })
 
-
-const fetchData = async () => {
+const fetchLiveCalls = async () => {
   try {
-    const [liveCallsResponse, liveCallsPastResponse] = await Promise.all([
-      liveCallsStore.fetchLiveCalls(),
-      liveCallsStore.fetchLiveCallsPast({
-        callType: tabTitles[currentTab.value],
-        options: options.value,
-      }),
-    ])
-
-    // liveCallsResponse
+    const liveCallsResponse = await liveCallsStore.fetchLiveCalls()
     if (liveCallsResponse.data) {
       totalLiveCalls.value = liveCallsResponse.data.totalLiveCalls
       totalOutboundCalls.value = liveCallsResponse.data.totalOutboundCalls
       totalInboundCalls.value = liveCallsResponse.data.totalInboundCalls
+      totalCompletedCalls.value = liveCallsResponse.data.totalCompletedCalls
       totalMissed.value = liveCallsResponse.data.totalMissed
 
       series.value = [
-        totalOutboundCalls.value, // outbound
-        totalInboundCalls.value,  // inbound
-        totalMissed.value,        // missed
+        totalOutboundCalls.value,
+        totalInboundCalls.value,
+        totalMissed.value,
       ]
-    }
-
-    //liveCallsPastResponse
-    if (liveCallsPastResponse.data && liveCallsPastResponse.data.status) {
-      liveCallsPast.value = liveCallsPastResponse.data.liveCallsPast
-      totalPage.value = liveCallsPastResponse.data.totalPage
-      totalRecord.value = liveCallsPastResponse.data.totalRecord
-      options.value.page = liveCallsPastResponse.data.page
     }
   } catch (error) {
     console.error('Error fetching data:', error)
   }
 }
 
-onMounted(fetchData)
-
-//watchEffect(fetchData)
+onMounted(fetchLiveCalls)
+      
+//watchEffect(fetchLiveCalls)
 </script>
 
 <template>
@@ -142,31 +119,9 @@ onMounted(fetchData)
       Dashboard
     </div>
     <VRow class="match-height">
-      <VCol
-        cols="12"
-        md="12"
-      >
-        <DashboardStatistics class="h-100" />
-      </VCol>
+      <DashboardStatistics class="h-100" />
 
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VCard max-height="515">
-          <VCardText>
-            <VueApexCharts
-              v-if="series.length > 0"
-              type="donut"
-              height="410"
-              :options="expenseRationChartConfig"
-              :series="series"
-            />
-          </VCardText>
-        </VCard>
-      </VCol>
-
-      <VCol cols="8">
+      <VCol cols="12">
         <VCard>
           <VCardItem class="d-flex flex-wrap justify-space-between gap-4">
             <template #append>
@@ -188,9 +143,6 @@ onMounted(fetchData)
                     </VChip>
                   </template>
                 </AppSelect>
-                <VBtn>
-                  Download Report
-                </VBtn>
               </div>
             </template>
           </VCardItem>
@@ -203,11 +155,11 @@ onMounted(fetchData)
 
       <VCol
         cols="12"
-        md="4"
+        md="6"
       >
         <VCard
           title="Live Calls"
-          max-height="300"
+          max-height="515"
         >
           <template #append>
             <div class="me-n2">
@@ -254,7 +206,7 @@ onMounted(fetchData)
                 class=" text-center"
               >
                 <h5 class="text-h1 text-center">
-                  {{ totalInboundCalls }}
+                  {{ totalCompletedCalls }}
                 </h5>
               </VCol>
             </VRow>
@@ -262,48 +214,38 @@ onMounted(fetchData)
         </VCard>
       </VCol>
 
-      <VCol cols="8">
-        <VCard>
-          <VCardText class="d-flex flex-column gap-4">
-            <!-- Default -->
-            <div class="d-flex flex-row justify-space-between">
-              <VTabs
-                v-model="currentTab"
-                class="w-75"
-              >
-                <VTab>Live Calls</VTab>
-                <VTab>Recent</VTab>
-                <VTab>Calls in Queue</VTab>
-              </VTabs>
-              <VBtn
-                color="secondary"
-                class="justify-end"
-              >
-                Past 30 Minutes
-              </VBtn>
-            </div>
-            <VDataTableServer
-              v-model:items-per-page="options.itemsPerPage"
-              v-model:page="options.page"
-              :items="liveCallsPast"
-              :items-length="totalRecord"
-              :headers="headers"
-              class="text-no-wrap"
-              show-select
+      <VCol
+        cols="12"
+        md="6"
+      >
+        <VCard max-height="515">
+          <VCardText>
+            <VueApexCharts
+              v-if="series.length > 0"
+              type="donut"
+              height="410"
+              :options="expenseRationChartConfig"
+              :series="series"
             />
           </VCardText>
         </VCard>
       </VCol>
-    
-      <VCol cols="6">
+ 
+      <VCol
+        cols="12" 
+        sm="6"
+        lg="6"
+      >
         <DashboardNAnalysis class="h-100" />
       </VCol>
       
-      
-      <VCol cols="6">
+      <VCol
+        cols="12" 
+        sm="6"
+        lg="6"
+      >
         <DashboardTMAnalysis class="h-100" />
       </VCol>
-      
       
       <VCol cols="12">
         <DashboardRecentCalls class="h-100" />

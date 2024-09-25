@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d28cd891037c07739b9243ffb6a2cf41",
+    "content-hash": "30bcaebfd87c51ec07218bfe8e67e14f",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -9491,16 +9491,16 @@
         },
         {
             "name": "twilio/sdk",
-            "version": "7.16.0",
+            "version": "8.3.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:twilio/twilio-php.git",
-                "reference": "b5578d953c8d126b3d13b2440d21c68460035265"
+                "url": "https://github.com/twilio/twilio-php.git",
+                "reference": "bfbb3bd7f274ccd3948f5c98f108c64a2db470d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twilio/twilio-php/zipball/b5578d953c8d126b3d13b2440d21c68460035265",
-                "reference": "b5578d953c8d126b3d13b2440d21c68460035265",
+                "url": "https://api.github.com/repos/twilio/twilio-php/zipball/bfbb3bd7f274ccd3948f5c98f108c64a2db470d7",
+                "reference": "bfbb3bd7f274ccd3948f5c98f108c64a2db470d7",
                 "shasum": ""
             },
             "require": {
@@ -9536,7 +9536,11 @@
                 "sms",
                 "twilio"
             ],
-            "time": "2024-02-27T14:19:44+00:00"
+            "support": {
+                "issues": "https://github.com/twilio/twilio-php/issues",
+                "source": "https://github.com/twilio/twilio-php/tree/8.3.1"
+            },
+            "time": "2024-09-18T13:24:34+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

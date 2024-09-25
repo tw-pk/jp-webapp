@@ -68,11 +68,32 @@ const fetchMembers = async () => {
 
 watchEffect(fetchMembers)
 
-const resolveStatusColor = {
-  'Online': 'success',
-  'Away': 'warning',
-  'Offline': 'secondary',
-  'In Meeting': 'error',
+const resolveStatusVariant = status => {
+  if (status == 'Online')
+    return {
+      color: 'success',
+      text: 'Available',
+    }
+  else if (status == 'Away')
+    return {
+      color: 'warning',
+      text: 'Do Not Disturb',
+    }
+  else if (status == 'Offline')
+    return {
+      color: 'secondary',
+      text: 'Out of Office',
+    }
+  else if (status == 'In Meeting')
+    return {
+      color: 'error',
+      text: 'Busy',
+    }
+  else
+    return {
+      color: 'secondary',
+      text: "Out of Office",
+    }
 }
 </script>
 
@@ -146,18 +167,17 @@ const resolveStatusColor = {
                 />
                 <span v-else>{{ avatarText(item.raw?.fullName) }}</span>
               </VAvatar>
-
               <div class="d-flex flex-column">
                 <h5>
                   {{ item.raw?.fullName }}
                 </h5>
                 <span class="text-sm text-medium-emphasis text-success">
                   <VBtn
-                    color="success"
+                    :color="resolveStatusVariant(item.raw?.status).color"
                     variant="tonal"
                     size="x-small"
                   >
-                    <small>Available</small>
+                    <small>{{ resolveStatusVariant(item.raw?.status).text }}</small>
                   </VBtn>
                 </span>
               </div>
@@ -169,11 +189,11 @@ const resolveStatusColor = {
               dot
               location="start center"
               offset-x="2"
-              :color="resolveStatusColor['Online']"
+              :color="resolveStatusVariant(item.raw?.status).color"
               class="me-3"
             >
               <h6 class="ms-4">
-                Online
+                {{ item.raw?.status }} 
               </h6>
             </VBadge>
             <div class="d-flex flex-column">

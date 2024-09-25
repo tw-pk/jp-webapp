@@ -254,50 +254,78 @@ const playRecording = url => {
   </VAlert>
  
   <VCard>
-    <div class="__dashboard__recent-calls-header pa-4 __border-bottom-light">
-      <div class="__dashboard__header-title">
-        <h5 class="font-weight-bold text-h5">
-          Recent Calls
-        </h5>
-      </div>
-      
-      <div class="__dashboard__header-tabs">
-        <VTabs
-          v-model="currentTab"
-          class="v-tabs-pill"
+    <div class="pa-4">
+      <VRow class="align-center">
+        <VCol
+          cols="12"
+          sm="4"
+          md="3"
+          lg="2"
+          class="d-flex align-center"
         >
-          <VTab>All</VTab>
-          <VTab>Outbound</VTab>
-          <VTab>Inbound</VTab>
-          <VTab>Missed</VTab>
-          <VTab>Voicemail</VTab>
-        </VTabs>
-      </div>
-      <VCol
-        cols="2"
-        md="2"
-      >
-        <VAutocomplete
-          v-model="member"
-          label="Select members"
-          :items="members"
-          item-title="fullname"
-          item-value="id"
-        />
-      </VCol>
-      <div class="__dashboard__header-search">
-        <AppTextField
-          v-model="searchQuery"
-          placeholder="Search Number"
-          density="compact"
-          append-inner-icon="tabler-search"
-          single-line
-          hide-details
-          dense
-          outlined
-        />
-      </div>
+          <h5 class="font-weight-bold text-h4">
+            Recent Calls
+          </h5>
+        </VCol>
+        <VCol
+          cols="12"
+          sm="8"
+          md="6"
+          lg="6"
+          class="d-flex align-center justify-center mt-7 pl-15"
+        >
+          <div class="v-tabs-wrapper w-100">
+            <VTabs
+              v-model="currentTab"
+              class="v-tabs-pill"
+              show-arrows
+            >
+              <VTab>All</VTab>
+              <VTab>Outbound</VTab>
+              <VTab>Inbound</VTab>
+              <VTab>Missed</VTab>
+              <VTab>Voicemail</VTab>
+            </VTabs>
+          </div>
+        </VCol>
+
+        <VCol
+          cols="12"
+          sm="4"
+          md="3"
+          lg="2"
+          class="d-flex justify-end"
+        >
+          <VAutocomplete
+            v-model="member"
+            label="Select members"
+            :items="members"
+            item-title="fullname"
+            item-value="id"
+            dense
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          sm="4"
+          md="4"
+          lg="2"
+          class="d-flex justify-end"
+        >
+          <AppTextField
+            v-model="searchQuery"
+            placeholder="Search Number"
+            density="compact"
+            append-inner-icon="tabler-search"
+            single-line
+            hide-details
+            dense
+            outlined
+          />
+        </VCol>
+      </VRow>
     </div>
+
     <VDivider />
 
     <!-- Show the loader -->
@@ -495,7 +523,15 @@ const playRecording = url => {
 <style scoped lang="css">
 @use "@core-scss/template/pages/page-auth.scss";
 
+.v-tabs-wrapper {
+  -ms-overflow-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
 .v-tabs-pill {
+  display: inline-flex;
   font-size: 0.8125rem;
   padding-block: 0.2rem;
   padding-inline: 0.5rem;
@@ -509,6 +545,11 @@ const playRecording = url => {
 }
 
 .v-tabs-pill .v-tab__indicator {
-  block-size: 1px;
+  background-color: #000;
+  block-size: 2px;
+}
+
+.v-tabs-wrapper::-webkit-scrollbar {
+  display: none;
 }
 </style>
