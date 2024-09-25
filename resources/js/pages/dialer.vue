@@ -518,7 +518,6 @@ const toggleCall = async event => {
       // Make outbound call with current number
       userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '')      
 
-
       try {                
 
         const call = await device.connect({
@@ -572,6 +571,9 @@ const toggleCall = async event => {
             childCallSid: childCallSid.value,
             to: userNumber.value,
             From: from.value,
+            ForwardNumber: forwardNumber.value,
+            PhoneNumbers: phoneNumbers
+
           })
           .then(response => {            
             console.log(response, 'here is call disconnected response')                                                          
@@ -596,11 +598,16 @@ const toggleCall = async event => {
             callSid.value = ''
           }, 5000)
         })        
-        
+
+        device.disconnect(() => {
+            console.log('here is  call disconnected');            
+        });
         
       } catch (error) {
         console.error('Error connecting:', error)
       }
+
+
     }
   } else {    
     log.value = 'Hanging Up'
