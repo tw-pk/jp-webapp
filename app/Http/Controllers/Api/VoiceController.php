@@ -627,7 +627,7 @@ class VoiceController extends Controller
     public function dashLiveCalls()
     {
         $totalOutboundCalls = 0;
-        $totalInboundCalls = 0;
+        $totalCompletedCalls = 0;
         $totalLiveCalls = 0;
         $totalMissed = 0;
 
@@ -637,7 +637,7 @@ class VoiceController extends Controller
         if (!empty($numbers)) {
             $callRecords = Call::selectRaw("
                 SUM(CASE WHEN direction IN ('outbound-dial', 'outbound-api') THEN 1 ELSE 0 END) AS outboundCalls,
-                SUM(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) AS inboundCalls,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completedCalls,
                 SUM(CASE WHEN status = 'in-progress' THEN 1 ELSE 0 END) AS liveCalls,
                 SUM(CASE WHEN status = 'no-answer' THEN 1 ELSE 0 END) AS missedCalls
             ")
@@ -648,14 +648,14 @@ class VoiceController extends Controller
             ->first();
         
             $totalOutboundCalls = $callRecords->outboundCalls ?? 0;
-            $totalInboundCalls = $callRecords->inboundCalls ?? 0;
+            $totalCompletedCalls = $callRecords->completedCalls ?? 0;
             $totalLiveCalls = $callRecords->liveCalls ?? 0;
             $totalMissed = $callRecords->missedCalls ?? 0;
         }
 
         return response()->json([
             'totalOutboundCalls' => $totalOutboundCalls,
-            'totalInboundCalls' => $totalInboundCalls,
+            'totalCompletedCalls' => $totalCompletedCalls,
             'totalLiveCalls' => $totalLiveCalls,
             'totalMissed' => $totalMissed,
         ]);

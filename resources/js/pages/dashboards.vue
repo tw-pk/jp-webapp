@@ -21,11 +21,7 @@ const expenseRationChartConfig = computed(() => getCallsChartConfig(vuetifyTheme
 const totalLiveCalls = ref(0)
 const totalMissed = ref(0)
 const totalOutboundCalls = ref(0)
-const totalInboundCalls = ref(0)
-
-const liveCallsPast = ref([])
-const totalPage = ref(1)
-const totalRecord = ref(0)
+const totalCompletedCalls = ref(0)
 const series = ref([])
 
 const items = [
@@ -93,20 +89,18 @@ const options = ref({
 const fetchLiveCalls = async () => {
   try {
     const liveCallsResponse = await liveCallsStore.fetchLiveCalls()
-
     if (liveCallsResponse.data) {
       totalLiveCalls.value = liveCallsResponse.data.totalLiveCalls
       totalOutboundCalls.value = liveCallsResponse.data.totalOutboundCalls
-      totalInboundCalls.value = liveCallsResponse.data.totalInboundCalls
+      totalCompletedCalls.value = liveCallsResponse.data.totalCompletedCalls
       totalMissed.value = liveCallsResponse.data.totalMissed
 
       series.value = [
         totalOutboundCalls.value, // outbound
-        totalInboundCalls.value,  // inbound
+        totalCompletedCalls.value,  // inbound
         totalMissed.value,        // missed
       ]
     }
-
   } catch (error) {
     console.error('Error fetching data:', error)
   }
@@ -210,13 +204,14 @@ onMounted(fetchLiveCalls)
                 class=" text-center"
               >
                 <h5 class="text-h1 text-center">
-                  {{ totalInboundCalls }}
+                  {{ totalCompletedCalls }}
                 </h5>
               </VCol>
             </VRow>
           </VCardText>
         </VCard>
       </VCol>
+
       <VCol
         cols="12"
         md="6"
