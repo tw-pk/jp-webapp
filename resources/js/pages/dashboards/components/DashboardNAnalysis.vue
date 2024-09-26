@@ -1,6 +1,7 @@
 <script setup>
 import { paginationMeta } from '@/@fake-db/utils'
 import { useAnalysisDashStore } from "@/views/apps/dashboard/useAnalysisDashStore"
+import { can } from "@layouts/plugins/casl"
 import { ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
@@ -82,8 +83,8 @@ watchEffect(fetchNumbers)
           </h5>
         </VCol>
         <VCol
-          cols="6"
-          md="6"
+          :cols="can('manage', 'all') ? 6 : 2"
+          :md="can('manage', 'all') ? 6 : 2"
         >
           <AppTextField
             v-model="searchQuery"

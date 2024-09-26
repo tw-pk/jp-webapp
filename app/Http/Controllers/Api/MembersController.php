@@ -145,6 +145,48 @@ class MembersController extends Controller
         }
     }
 
+    public function fetchMembersForChart()
+    {
+        try {
+            $userId = Auth::user()->id;
+            $members = User::whereHas('invitationsMember', function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
+                ->whereHas('invitationsMember', function ($query) {
+                    $query->whereColumn('member_id', 'users.id');
+                })
+                ->with(['profile' => function($query) {
+                    $query->select('user_id', 'avatar'); 
+                }])
+                ->select(['id', 'firstname', 'lastname'])
+                ->get();
+            
+            $members->map(function ($item) {
+                $item->fullname = $item->firstname . ' ' . $item->lastname;
+
+                if (!empty($item->profile->avatar)) {
+                    $item->avatar_url = asset('storage/avatars/' . $item->profile->avatar);
+                } else {
+                    $item->avatar_url = asset('images/avatars/avatar-0.png');
+                }
+                return $item;
+            });
+
+            if(!$members){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ]);
+            }
+            return response()->json([
+                'status' => true,
+                'members' => $members->toArray()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function fetchMemberDetail(Request $request)
     { 
         try {

@@ -6,15 +6,12 @@ import DashboardTMAnalysis from "@/pages/dashboards/components/DashboardTMAnalys
 import { useLiveCallsStore } from "@/views/apps/dashboard/useLiveCallsStore"
 import ApexChartReportData from '@/views/charts/apex-chart/ApexChartReportData.vue'
 import { getCallsChartConfig } from '@core/libs/apex-chart/apexCharConfig'
-import avatar1 from '@images/avatars/avatar-1.png'
-import avatar2 from '@images/avatars/avatar-2.png'
-import avatar3 from '@images/avatars/avatar-3.png'
+import { can } from "@layouts/plugins/casl"
 import { computed, onMounted, ref } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { useTheme } from 'vuetify'
 
 const liveCallsStore = useLiveCallsStore()
-const select_report = ref(['John Doe'])
 const vuetifyTheme = useTheme()
 const currentTheme = vuetifyTheme.current.value.colors
 const expenseRationChartConfig = computed(() => getCallsChartConfig(vuetifyTheme.current.value))
@@ -24,21 +21,6 @@ const totalOutboundCalls = ref(0)
 const totalInboundCalls = ref(0)
 const totalCompletedCalls = ref(0)
 const series = ref([])
-
-const items = [
-  {
-    name: 'John Doe',
-    avatar: avatar1,
-  },
-  {
-    name: 'Ali Connors',
-    avatar: avatar2,
-  },
-  {
-    name: 'Trevor Hansen',
-    avatar: avatar3,
-  },
-]
 
 const moreList = [
   {
@@ -122,35 +104,7 @@ onMounted(fetchLiveCalls)
       <DashboardStatistics class="h-100" />
 
       <VCol cols="12">
-        <VCard>
-          <VCardItem class="d-flex flex-wrap justify-space-between gap-4">
-            <template #append>
-              <div class="d-flex align-center">
-                <AppSelect
-                  v-model="select_report"
-                  :items="items"
-                  item-title="name"
-                  item-value="name"
-                  class="mr-5"
-                >
-                  <template #selection="{ item }">
-                    <VChip>
-                      <VAvatar
-                        start
-                        :image="item.raw.avatar"
-                      />
-                      <span>{{ item.title }}</span>
-                    </VChip>
-                  </template>
-                </AppSelect>
-              </div>
-            </template>
-          </VCardItem>
-
-          <VCardText>
-            <ApexChartReportData />
-          </VCardText>
-        </VCard>
+        <ApexChartReportData class="h-100" />
       </VCol>
 
       <VCol
@@ -232,14 +186,15 @@ onMounted(fetchLiveCalls)
       </VCol>
  
       <VCol
-        cols="12" 
-        sm="6"
-        lg="6"
+        cols="12"
+        :sm="can('manage', 'all') ? 6 : 12"
+        :lg="can('manage', 'all') ? 6 : 12"
       >
         <DashboardNAnalysis class="h-100" />
       </VCol>
       
       <VCol
+        v-if="can('manage', 'all')"
         cols="12" 
         sm="6"
         lg="6"

@@ -10,9 +10,6 @@ const props = defineProps({
 
 const { dialer } = useDialerConfig()
 
-console.log('dialer.value')
-console.log(dialer.value)
-
 const {
   state: currentDialerName,
   next: getNextDialerName,

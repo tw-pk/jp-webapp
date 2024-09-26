@@ -54,7 +54,7 @@ onMounted(async () => {
 
   const userData = localStorage.getItem('userData')
 
-  console.log(`${JSON.parse(userData).id}`)
+  //console.log(`${JSON.parse(userData).id}`)
 
   window.Echo
     .private(`User.${JSON.parse(userData).id}`)

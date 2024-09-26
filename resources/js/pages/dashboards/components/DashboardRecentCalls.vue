@@ -1,6 +1,7 @@
 <script setup>
 import { paginationMeta } from '@/@fake-db/utils'
 import { useRecentCallsDashStore } from "@/views/apps/recent-calls/useRecentCallsDashStore"
+import { can } from "@layouts/plugins/casl"
 import { requiredValidator } from '@validators'
 import { ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
@@ -290,6 +291,7 @@ const playRecording = url => {
         </VCol>
 
         <VCol
+          v-if="can('manage', 'all')"
           cols="12"
           sm="4"
           md="3"
@@ -305,6 +307,14 @@ const playRecording = url => {
             dense
           />
         </VCol>
+        <VCol
+          v-else
+          cols="12"
+          sm="4"
+          md="3"
+          lg="2"
+          class="d-flex justify-end"
+        />
         <VCol
           cols="12"
           sm="4"

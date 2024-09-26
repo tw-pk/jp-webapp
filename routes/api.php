@@ -138,7 +138,9 @@ Route::group(['prefix' => 'auth'], function (){
         //Manage Members
         Route::post('members/add', [MembersController::class, 'store']);
         Route::post('members/list', [MembersController::class, 'list']);
-        Route::post('fetch/members', [MembersController::class, 'fetchMembers']);   
+        Route::post('fetch/members', [MembersController::class, 'fetchMembers']); 
+        Route::post('fetch/members-for-chart', [MembersController::class, 'fetchMembersForChart']); 
+
         Route::post('member/detail', [MembersController::class, 'fetchMemberDetail']);
         Route::post('connect/transfer-call', [TwilioController::class, 'transferCall']);
 
