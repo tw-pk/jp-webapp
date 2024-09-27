@@ -16,6 +16,15 @@ export const useLiveCallsStore = defineStore('LiveCallsStore', {
           .catch(error => reject(error))
       })
     },
+
+    // 👉 Fetch Apex Chart Report Data
+    fetchApexChartReport(data) {
+      return new Promise((resolve, reject) => {
+        axiosIns.post('/api/auth/fetch/apex-chart-report', data)
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
   
   },
 })

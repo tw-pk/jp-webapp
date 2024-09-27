@@ -9,7 +9,6 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\NumberController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\CountryController;
@@ -24,6 +23,7 @@ use App\Http\Controllers\CreditController;
 use App\Http\Controllers\DialerSettingController;
 use App\Http\Controllers\TwilioController;
 use App\Http\Controllers\CallController;
+use App\Http\Controllers\ApexChartController;
 
 /*
 |--------------------------------------------------------------------------
@@ -196,7 +196,10 @@ Route::group(['prefix' => 'auth'], function (){
         Route::post('recent-calls-contact/list', [VoiceController::class, 'recent_calls_contact']);
         Route::post('dashboard/number/analysis', [VoiceController::class, 'dashNumberAnalysis']);
         Route::post('dashboard/member-list', [VoiceController::class, 'dashMemberList']);
-        Route::post('dashboard/live/calls', [VoiceController::class, 'dashLiveCalls']);
+
+        //Apex chart controller
+        Route::post('dashboard/live/calls', [ApexChartController::class, 'dashLiveCalls']);
+        Route::post('fetch/apex-chart-report', [ApexChartController::class, 'fetchApexChartReport']);
         
         //filter recent calls
         Route::post('recent-calls/list/filter', [VoiceController::class, 'filter_recent_calls']);

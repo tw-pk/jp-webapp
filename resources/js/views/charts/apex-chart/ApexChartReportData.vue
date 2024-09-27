@@ -7,44 +7,22 @@ import { useTheme } from 'vuetify'
 
 const liveCallsStore = useLiveCallsStore()
 const vuetifyTheme = useTheme()
-const scatterChartConfig = computed(() => getScatterChartConfig(vuetifyTheme.current.value, xAxisCategories))
-
-const select_report = ref(['All Members'])
+const memberId = ref('All Members')
 const membersforChart = ref()
+const xAxisCategories = ref([])
+const apexChartReport = ref([])
 
-const callData = {
-  missed: [0, 0, 1, 2, 3, 4, 2],
-  outbound: [0, 4, 1, 2, 3, 2, 1],
-  inbound: [0, 1, 2, 2, 2, 3, 3],
+// 👉 Fetching apex chart report
+const fetchApexChartReport = () => {
+  liveCallsStore.fetchApexChartReport({
+    member: memberId.value,
+  }).then(response => {
+    xAxisCategories.value = response?.data?.yearMonths || []
+    apexChartReport.value = response?.data?.series || []
+  }).catch(error => {
+    console.error(error)
+  })
 }
-
-const series = [
-  {
-    name: 'Outbound',
-    data: callData.outbound,
-  },
-  {
-    name: 'Inbound',
-    data: callData.inbound,
-  },
-  {
-    name: 'Missed',
-    data: callData.missed,
-  },
-  
-]
-
-const xAxisCategories = [
-  '2023-0',
-  '2023-01',
-  '2023-02',
-  '2023-03',
-  '2023-04',
-  '2023-05',
-  '2023-06',
-
-  // Add more categories here based on your data
-]
 
 // 👉 Fetching Members for chart
 const fetchMembersforChart = () => {
@@ -60,9 +38,17 @@ const fetchMembersforChart = () => {
 }
 
 onMounted(() => {
+  fetchApexChartReport()
   fetchMembersforChart()
-
 })
+
+watch(memberId, newValue => {
+  if (newValue) {
+    fetchApexChartReport()
+  }
+})
+
+const scatterChartConfig = computed(() => getScatterChartConfig(vuetifyTheme.current.value, xAxisCategories.value))
 </script>
 
 //area
@@ -75,7 +61,7 @@ onMounted(() => {
       <template #append>
         <div class="d-flex align-center">
           <AppSelect
-            v-model="select_report"
+            v-model="memberId"
             :items="membersforChart"
             item-title="fullname"
             item-value="id"
@@ -100,7 +86,7 @@ onMounted(() => {
         type="line"
         height="400"
         :options="scatterChartConfig"
-        :series="series"
+        :series="apexChartReport"
       />
     </VCardText>
   </VCard>
