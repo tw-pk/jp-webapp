@@ -273,7 +273,7 @@ const playRecording = url => {
           sm="8"
           md="6"
           lg="6"
-          class="d-flex align-center justify-center mt-7 pl-15"
+          class="d-flex align-center justify-center mt-7"
         >
           <div class="v-tabs-wrapper w-100">
             <VTabs

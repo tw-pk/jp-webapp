@@ -128,7 +128,7 @@ onMounted(fetchLiveCalls)
             </VRow>
             <VRow
               justify="center"
-              class="pl-3 pr-3 pt-3"
+              class="pt-3"
             >
               <VCol
                 cols="6"
