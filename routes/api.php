@@ -200,6 +200,7 @@ Route::group(['prefix' => 'auth'], function (){
         //Apex chart controller
         Route::post('dashboard/live/calls', [ApexChartController::class, 'dashLiveCalls']);
         Route::post('fetch/apex-chart-report', [ApexChartController::class, 'fetchApexChartReport']);
+        Route::post('fetch/statistics', [ApexChartController::class, 'fetchStatistics']);
         
         //filter recent calls
         Route::post('recent-calls/list/filter', [VoiceController::class, 'filter_recent_calls']);

@@ -141,5 +141,98 @@ class ApexChartController extends Controller
         return $months;
     }
 
+    public function fetchStatistics(Request $request)
+    {
+        $callMade = 0;
+        $callAnswered = 0;
+        $callNotPicked = 0;
+        $callAbandoned = 0;
+        $totalLiveCalls = 0;
+
+        $userId = Auth::user()->id;
+        $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($userId);
+
+        if (!empty($numbers)) {
+            $callRecords = Call::selectRaw("
+                SUM(CASE WHEN status IN ('completed', 'in-progress', 'ringing', 'queued') THEN 1 ELSE 0 END) AS callMade,
+                SUM(CASE WHEN status IN ('completed', 'in-progress') THEN 1 ELSE 0 END) AS callAnswered,
+                SUM(CASE WHEN status IN ('no-answer', 'busy', 'failed') THEN 1 ELSE 0 END) AS callNotPicked,
+                SUM(CASE WHEN status = 'queued' THEN 1 ELSE 0 END) AS callAbandoned,
+                SUM(CASE WHEN status = 'in-progress' THEN 1 ELSE 0 END) AS liveCalls
+                
+            ")
+            ->where(function ($query) use ($numbers) {
+                $query->whereIn('to', $numbers)
+                    ->orWhereIn('from', $numbers);
+            })
+            ->first();
+
+            $callMade = intval($callRecords->callMade ?? 0);
+            $callAnswered = intval($callRecords->callAnswered ?? 0);
+            $callNotPicked = intval($callRecords->callNotPicked ?? 0);
+            $callAbandoned = intval($callRecords->callAbandoned ?? 0);
+            $totalLiveCalls = intval($callRecords->liveCalls ?? 0);
+            
+        }
+
+        $statistics = [
+            [
+                'title' => 'Call Made',
+                'stats' => $callMade,
+                'detailedStats' => '18min 30sec',
+                'icon' => 'tabler-chart-pie-2',
+                'color' => 'primary',
+                'tonal' => 'warning',
+                'background' => '__light_primary',
+            ],
+            [
+                'title' => 'Call Answered',
+                'stats' => $callAnswered,
+                'detailedStats' => '10min 30sec',
+                'icon' => 'tabler-chart-pie-2',
+                'color' => 'primary',
+                'tonal' => 'info',
+                'background' => '__light_primary',
+            ],
+            [
+                'title' => 'Avg Answer Time',
+                'stats' => '9sec',
+                'icon' => 'tabler-chart-pie-2',
+                'color' => 'primary',
+                'tonal' => 'success',
+                'background' => '__light_primary',
+            ],
+            [
+                'title' => 'Call Outside Office Hours',
+                'stats' => '4',
+                'icon' => 'tabler-chart-pie-2',
+                'color' => 'primary',
+                'tonal' => 'warning',
+                'background' => '__light_primary',
+            ],
+            [
+                'title' => 'Call Not Picked by Agent',
+                'stats' => $callNotPicked,
+                'icon' => 'tabler-chart-pie-2',
+                'color' => 'primary',
+                'tonal' => 'error',
+                'background' => '__light_primary',
+            ],
+            [
+                'title' => 'Calls Abandoned Before Ringing',
+                'stats' => $callAbandoned,
+                'icon' => 'tabler-chart-pie-2',
+                'color' => 'primary',
+                'tonal' => 'warning',
+                'background' => '__light_primary',
+            ],
+        ];
+
+        return response()->json([
+            'status' => true,
+            'statistics' => $statistics
+        ]);
+
+    }
 
 }

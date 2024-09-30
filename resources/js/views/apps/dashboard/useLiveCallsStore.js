@@ -3,6 +3,15 @@ import { defineStore } from 'pinia'
 
 export const useLiveCallsStore = defineStore('LiveCallsStore', {
   actions: {
+    // 👉 Fetch statistics
+    fetchStatistics() {
+      return new Promise((resolve, reject) => {
+        axiosIns.post('/api/auth/fetch/statistics')
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
+
     // 👉 Fetch live calls (right side)
     fetchLiveCalls(data) {
       return axiosIns.post('/api/auth/dashboard/live/calls', data)

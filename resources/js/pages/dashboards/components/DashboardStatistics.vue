@@ -1,56 +1,27 @@
 <script setup>
-const statistics = [
-  {
-    title: 'Call Made',
-    stats: '4',
-    detailedStats: '18min 30sec',
-    icon: 'tabler-chart-pie-2',
-    color: 'primary',
-    tonal: 'warning',
-    background: '__light_primary',
-  },
-  {
-    title: 'Call answered',
-    stats: '2',
-    detailedStats: '10min 30sec',
-    icon: 'tabler-chart-pie-2',
-    color: 'primary',
-    tonal: 'info',
-    background: '__light_primary',
-  },
-  {
-    title: 'Avg answer time',
-    stats: '9sec',
-    icon: 'tabler-chart-pie-2',
-    color: 'primary',
-    tonal: 'success',
-    background: '__light_primary',
-  },
-  {
-    title: 'Call outside office hours',
-    stats: '4',
-    icon: 'tabler-chart-pie-2',
-    color: 'primary',
-    tonal: 'warning',
-    background: '__light_primary',
-  },
-  {
-    title: 'Call not picked by agent',
-    stats: '2',
-    icon: 'tabler-chart-pie-2',
-    color: 'primary',
-    tonal: 'error',
-    background: '__light_primary',
-  },
-  {
-    title: 'Calls abandoned before ringing',
-    stats: '0',
-    icon: 'tabler-chart-pie-2',
-    color: 'primary',
-    tonal: 'warning',
-    background: '__light_primary',
-  },
-]
+import { useLiveCallsStore } from "@/views/apps/dashboard/useLiveCallsStore"
+
+const liveCallsStore = useLiveCallsStore()
+
+const statistics = ref([])
+
+// 👉 Fetching Statistics
+const fetchStatistics = () => {
+  liveCallsStore.fetchStatistics()
+    .then(response => {
+      statistics.value = response?.data?.statistics
+    })
+    .catch(error => {
+      console.error(error)
+    })
+}
+
+onMounted(() => {
+  fetchStatistics()
+})
+
+console.log('statistics statistics')
+console.log(statistics)
 </script>
 
 <template>
