@@ -292,6 +292,8 @@ router.beforeEach(async (to, from, next) => {
     // Check if user is logged in and can navigate to the destination route
     const userData = await User.auth()
     
+    localStorage.setItem('activityAt', userData.data.activity_at)
+
     if(userData.data.invitations && !isSubscribed){
       createStripeSession()
     }

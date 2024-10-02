@@ -331,6 +331,7 @@ class AuthController extends Controller
             'numbers' => $request->user()->numbers->count(),
             'invitations' => $request->user()->invitations->count(),
             'can_have_new_number' => $request->user()?->invitationsMember?->can_have_new_number,
+            'activity_at' => $request->user()->activity_at,
             "bio" => $request->user()->profile ? $request->user()->profile->bio : "",
             'avatar' => Auth::user()->profile ? (Auth::user()->profile->avatar != null ? asset('storage/avatars/' . Auth::user()->profile?->avatar) : null) : null
         ];
