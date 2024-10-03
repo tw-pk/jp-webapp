@@ -148,6 +148,8 @@ class ApexChartController extends Controller
         $callNotPicked = 0;
         $callAbandoned = 0;
         $totalLiveCalls = 0;
+        $totalDurationSeconds = 0;
+        $totalAnsDurationSeconds = 0;
 
         $userId = Auth::user()->id;
         $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($userId);
@@ -172,14 +174,58 @@ class ApexChartController extends Controller
             $callNotPicked = intval($callRecords->callNotPicked ?? 0);
             $callAbandoned = intval($callRecords->callAbandoned ?? 0);
             $totalLiveCalls = intval($callRecords->liveCalls ?? 0);
-            
+
+
+            $callDetails = Call::select('date_time', 'status')
+                ->whereIn('status', ['completed', 'in-progress', 'ringing', 'queued'])
+                ->where(function ($query) use ($numbers) {
+                    $query->whereIn('to', $numbers)
+                        ->orWhereIn('from', $numbers);
+                })
+                ->get();
+
+            foreach ($callDetails as $call) {
+                preg_match('/From (.+) - To (.+)/', $call->date_time, $matches);
+                if (count($matches) === 3) {
+                    try {
+                        $fromTime = Carbon::createFromFormat('d M, Y h:i:s A', $matches[1]);
+                        $toTime = Carbon::createFromFormat('d M, Y h:i:s A', $matches[2]);
+                        $callDuration = $toTime->diffInSeconds($fromTime);
+                        $totalDurationSeconds += $callDuration;
+
+                        if (in_array($call->status, ['completed', 'in-progress'])) {
+                            $totalAnsDurationSeconds += $callDuration;
+                        }
+                    } catch (\Exception $e) {
+                        Log::error("Date parsing error: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        $totalDurationMinutes = floor($totalDurationSeconds / 60);
+        $remainingSeconds = $totalDurationSeconds % 60;
+        $formattedDuration = "{$totalDurationMinutes}min {$remainingSeconds}sec";
+
+        $answeredDurationMinutes = floor($totalAnsDurationSeconds / 60);
+        $answeredRemainingSeconds = $totalAnsDurationSeconds % 60;
+        $formattedAnsweredDuration = "{$answeredDurationMinutes}min {$answeredRemainingSeconds}sec";
+
+        $averageAnswerTimeSeconds = ($callAnswered > 0) ? round($totalAnsDurationSeconds / $callAnswered) : 0;
+
+        $averageAnswerMinutes = floor($averageAnswerTimeSeconds / 60);
+        $averageAnswerRemainingSeconds = $averageAnswerTimeSeconds % 60;
+        if ($averageAnswerMinutes > 0) {
+            $formattedAverageAnswerTime = "{$averageAnswerMinutes}min {$averageAnswerRemainingSeconds}sec";
+        } else {
+            $formattedAverageAnswerTime = "{$averageAnswerRemainingSeconds}sec";
         }
 
         $statistics = [
             [
                 'title' => 'Call Made',
                 'stats' => $callMade,
-                'detailedStats' => '18min 30sec',
+                'detailedStats' => $formattedDuration,
                 'icon' => 'tabler-chart-pie-2',
                 'color' => 'primary',
                 'tonal' => 'warning',
@@ -188,7 +234,7 @@ class ApexChartController extends Controller
             [
                 'title' => 'Call Answered',
                 'stats' => $callAnswered,
-                'detailedStats' => '10min 30sec',
+                'detailedStats' => $formattedAnsweredDuration,
                 'icon' => 'tabler-chart-pie-2',
                 'color' => 'primary',
                 'tonal' => 'info',
@@ -196,7 +242,7 @@ class ApexChartController extends Controller
             ],
             [
                 'title' => 'Avg Answer Time',
-                'stats' => '9sec',
+                'stats' => $formattedAverageAnswerTime,
                 'icon' => 'tabler-chart-pie-2',
                 'color' => 'primary',
                 'tonal' => 'success',
@@ -204,7 +250,7 @@ class ApexChartController extends Controller
             ],
             [
                 'title' => 'Call Outside Office Hours',
-                'stats' => '4',
+                'stats' => '0',
                 'icon' => 'tabler-chart-pie-2',
                 'color' => 'primary',
                 'tonal' => 'warning',
