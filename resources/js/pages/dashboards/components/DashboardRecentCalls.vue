@@ -273,21 +273,19 @@ const playRecording = url => {
           sm="8"
           md="6"
           lg="6"
-          class="d-flex align-center justify-center mt-7"
+          class="d-flex align-center justify-center mt-3"
         >
-          <div class="v-tabs-wrapper w-100">
-            <VTabs
-              v-model="currentTab"
-              class="v-tabs-pill"
-              show-arrows
-            >
-              <VTab>All</VTab>
-              <VTab>Outbound</VTab>
-              <VTab>Inbound</VTab>
-              <VTab>Missed</VTab>
-              <VTab>Voicemail</VTab>
-            </VTabs>
-          </div>
+          <VTabs
+            v-model="currentTab"
+            class="v-tabs-pill"
+            show-arrows
+          >
+            <VTab>All</VTab>
+            <VTab>Outbound</VTab>
+            <VTab>Inbound</VTab>
+            <VTab>Missed</VTab>
+            <VTab>Voicemail</VTab>
+          </VTabs>
         </VCol>
 
         <VCol

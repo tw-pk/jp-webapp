@@ -19,9 +19,6 @@ const fetchStatistics = () => {
 onMounted(() => {
   fetchStatistics()
 })
-
-console.log('statistics statistics')
-console.log(statistics)
 </script>
 
 <template>
