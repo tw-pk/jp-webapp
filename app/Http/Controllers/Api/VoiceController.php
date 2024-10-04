@@ -22,6 +22,7 @@ use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use App\Services\StatusService;
 use App\Services\AssignPhoneNumberService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class VoiceController extends Controller
 {
@@ -192,7 +193,9 @@ class VoiceController extends Controller
             foreach ($twilioCalls as $call) {
                 //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
                 //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
-                $recordingUrl = $call->sid ? asset('storage/voicemail/' . $call->sid) : '-';
+                $recordingPath = 'voicemail/' . $call->sid . '.mp3';
+                $filePath = storage_path('app/public/' . $recordingPath);
+                $recordingUrl = file_exists($filePath) ? asset('storage/' . $recordingPath) : '-';
 
                 if($call->direction == 'inbound'){
                     $teamdialerNumber = $call->to;
@@ -376,7 +379,9 @@ class VoiceController extends Controller
             foreach ($twilioCalls as $call) {
                 //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
                 //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
-                $recordingUrl = $call->sid ? asset('storage/voicemail/' . $call->sid) : '-';
+                $recordingPath = 'voicemail/' . $call->sid . '.mp3';
+                $filePath = storage_path('app/public/' . $recordingPath);
+                $recordingUrl = file_exists($filePath) ? asset('storage/' . $recordingPath) : '-';
 
                 if($call->direction == 'inbound'){
                     $teamdialerNumber = $call->to;

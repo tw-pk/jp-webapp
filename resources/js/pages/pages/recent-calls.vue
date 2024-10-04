@@ -217,20 +217,46 @@ const editItem = callSid => {
   editDialog.value = true
 }
 
+const currentAudio = ref(null)
+const isPlayingId = ref(null)
+const currentTime = ref(0)
+const duration = ref(0)
+
 const playRecording = url => {
-  const audio = new Audio(url)
-
-  //audio.play()
-
-  if (isPlaying.value) {
-    audio.pause()
-  } else {
-    if (!audio || audio.src !== url) {
-      audio = new Audio(url)
-    }
-    audio.play()
+  if (currentAudio.value && currentAudio.value.src !== url) {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+    currentTime.value = 0
   }
-  isPlaying.value = !isPlaying.value
+
+  if (!currentAudio.value || currentAudio.value.src !== url) {
+    currentAudio.value = new Audio(url)
+
+    currentAudio.value.addEventListener('timeupdate', () => {
+      currentTime.value = currentAudio.value.currentTime
+      duration.value = currentAudio.value.duration
+    })
+
+    currentAudio.value.addEventListener('ended', () => {
+      currentTime.value = duration.value
+    })
+
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else if (currentAudio.value.paused) {
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+  }
+}
+
+const formatTime = time => {
+  const minutes = Math.floor(time / 60).toString().padStart(2, '0')
+  const seconds = Math.floor(time % 60).toString().padStart(2, '0')
+  
+  return `${minutes}:${seconds}`
 }
 </script>
 
@@ -397,10 +423,20 @@ const playRecording = url => {
                   elevation="0"
                   @click="playRecording(item.raw.record)"
                 >
-                  <VIcon :icon="isPlaying ? 'tabler-pause' : 'tabler-play'" />
+                  <VIcon :icon="isPlayingId === item.raw.record ? 'tabler-pause' : 'tabler-play'" />
                 </VBtn>
+                <span
+                  v-if="isPlayingId === item.raw.record"
+                  class="ml-2"
+                  style="display: inline-block; width: 60px; text-align: end;"
+                >
+                  {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+                </span>
               </div>
-              <div v-else>
+              <div
+                v-else
+                class="ml-3"
+              >
                 {{ item.raw.record }}
               </div>
             </template>
