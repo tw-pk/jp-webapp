@@ -1,23 +1,16 @@
 <script setup>
 import { paginationMeta } from "@/@fake-db/utils"
 import { useRecentCallsStore } from "@/views/apps/recent-calls/useRecentCallsStore"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
-const router = useRoute()
 const isProcessing = ref(false)
 const recentCallsStore = useRecentCallsStore()
 const error = ref(false)
 const errorMessage = ref('')
 const searchQuery = ref('')
-const isDisabled = ref(false)
-const isLoading = ref(false)
-const isSnackbarVisible = ref(false)
-const snackbarMessage = ref('')
-const snackbarActionColor = ref(' ')
 const totalPage = ref(1)
 const totalRecord = ref(0)
-const form = ref()
 const calls = ref([])
 const currentTab = ref(0)
 
@@ -45,22 +38,27 @@ const tabTitles = [
   {
     icon: 'tabler-phone-call',
     title: 'All',
+    value: 'all',
   },
   {
     icon: 'tabler-phone-outgoing',
     title: 'Outbound',
+    value: 'outbound-dial',
   },
   {
     icon: 'tabler-phone-incoming',
     title: 'Inbound',
+    value: 'inbound',
   },
   {
     icon: 'tabler-phone-pause',
     title: 'Missed',
+    value: 'missed',
   },
   {
     icon: 'tabler-record-mail',
     title: 'Voicemail',
+    value: 'voicemail',
   },
 ]
 
@@ -75,10 +73,10 @@ const options = ref({
 const fetchRecentCallsContact = () => {
   isProcessing.value = true
 
-  const selectedTabTitle = tabTitles[currentTab.value]
+  const selectedTabTitle = computed(() => tabTitles[currentTab.value].value)
 
   recentCallsStore.fetchRecentCallsContact({
-    callType: selectedTabTitle,
+    callType: selectedTabTitle.value,
     q: searchQuery.value,
     options: options.value,
   })
@@ -87,7 +85,6 @@ const fetchRecentCallsContact = () => {
         error.value = false
         isProcessing.value = false
         calls.value = res.data.calls
-
         totalPage.value = res.data.totalPage
         totalRecord.value = res.data.totalRecord
         options.value.page = res.data.page
@@ -103,12 +100,12 @@ const fetchRecentCallsContact = () => {
 watchEffect(fetchRecentCallsContact)
 
 const resolveUserRoleVariant = direction => {
-  if (direction === 'outbound-api')
+  if (direction == 'outbound-api' || direction == 'outbound-dial')
     return {
       color: 'info',
       icon: 'tabler-phone-call',
     }
-  if (direction === 'inbound')
+  if (direction == 'inbound')
     return {
       color: 'error',
       icon: 'tabler-phone-off',

@@ -8,8 +8,6 @@ import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
 const recentCallsDashStore = useRecentCallsDashStore()
 const currentTab = ref(0)
-const route = useRoute()
-const router = useRouter()
 const searchQuery = ref('')
 const error = ref(false)
 const errorMessage = ref('')
@@ -74,16 +72,6 @@ const headers = [
     sortable: false,
   },
   {
-    title: "RATING",
-    key: "rating",
-    sortable: false,
-  },
-  {
-    title: "DISPOSITION",
-    key: "disposition",
-    sortable: false,
-  },
-  {
     title: "RECORD",
     key: "record",
     sortable: false,
@@ -92,17 +80,33 @@ const headers = [
 
 const tabTitles = ['all', 'outbound-dial', 'inbound', 'missed', 'voicemail']
 
+
 const resolveUserRoleVariant = call => {
-  if (call.direction === 'outbound-api' || call.direction === 'outbound-dial')
-    return {
-      color: 'success',
-      icon: 'tabler-phone-outgoing',
-    }
-  if (call.direction === 'inbound')
-    return {
-      color: 'error',
-      icon: 'tabler-phone-incoming',
-    }
+  const directions = {
+    'outbound-api': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'outbound-dial': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'inbound': { color: 'error', icon: 'tabler-phone-incoming' },
+  }
+  
+  if (call.status === 'no-answer' && directions[call.direction]) {
+    return { color: 'warning', icon: 'tabler-phone-calling' }
+  }
+
+  return directions[call.direction] || { color: 'error', icon: 'tabler-phone-off' }
+}
+
+const resolveStatusColorVariant = status => {
+  const statusColors = {
+    completed: { color: 'success' },
+    'no-answer': { color: 'warning' },
+    failed: { color: 'error' },
+    busy: { color: 'primary' },
+    'in-progress': { color: 'primary' },
+    ringing: { color: 'info' },
+    queued: { color: 'secondary' },
+  }
+
+  return statusColors[status] || { color: 'secondary' }
 }
 
 // 👉 Fetching recent calls
@@ -211,7 +215,7 @@ onMounted(async () => {
   await recentCallsDashStore.fetchMemberList()
     .then(res => {
       if (res.data.status) {
-        members.value = res.data.members
+        members.value = [{ id: "all", fullname: "All" }, ...res.data.members]
       } else {
         error.value = true
         errorMessage.value = res.data.message
@@ -383,7 +387,7 @@ const playRecording = url => {
       <template #item.status="{ item }">
         <VChip
           label
-          color="success"
+          :color="resolveStatusColorVariant(item.raw?.status)?.color"
         >
           {{ item.raw.status }}
         </VChip>

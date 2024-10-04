@@ -61,14 +61,6 @@ const headers = [
     key: "notes",
   },
   {
-    title: "RATING",
-    key: "rating",
-  },
-  {
-    title: "DISPOSITION",
-    key: "disposition",
-  },
-  {
     title: "RECORD",
     key: "record",
   },
@@ -87,6 +79,8 @@ const fetchMemberList = async () => {
     const res = await recentCallsStore.fetchMemberList()
     if (res.data.status) {
       members.value = res.data.members
+
+      members.value = [{ id: "all", fullname: "All" }, ...res.data.members]
     } else {
       error.value = true
       errorMessage.value = res.data.message
@@ -132,22 +126,32 @@ const fetchRecentCalls = () => {
 
 watchEffect(fetchRecentCalls)
 
-const resolveUserRoleVariant = direction => {
-  if (direction === 'outbound-api')
-    return {
-      color: 'info',
-      icon: 'tabler-phone-call',
-    }
-  if (direction === 'inbound')
-    return {
-      color: 'error',
-      icon: 'tabler-phone-off',
-    }
-  
-  return {
-    color: 'error',
-    icon: 'tabler-phone-off',
+const resolveUserRoleVariant = call => {
+  const directions = {
+    'outbound-api': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'outbound-dial': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'inbound': { color: 'error', icon: 'tabler-phone-incoming' },
   }
+  
+  if (call.status === 'no-answer' && directions[call.direction]) {
+    return { color: 'warning', icon: 'tabler-phone-calling' }
+  }
+
+  return directions[call.direction] || { color: 'error', icon: 'tabler-phone-off' }
+}
+
+const resolveStatusColorVariant = status => {
+  const statusColors = {
+    completed: { color: 'success' },
+    'no-answer': { color: 'warning' },
+    failed: { color: 'error' },
+    busy: { color: 'primary' },
+    'in-progress': { color: 'primary' },
+    ringing: { color: 'info' },
+    queued: { color: 'secondary' },
+  }
+
+  return statusColors[status] || { color: 'secondary' }
 }
 
 const addNote = () => {
@@ -355,10 +359,10 @@ const playRecording = url => {
               <div class="d-flex align-center gap-4">
                 <VIcon
                   :size="20"
-                  :color="resolveUserRoleVariant(item.raw.direction).color"
-                  :icon="resolveUserRoleVariant(item.raw.direction).icon"
+                  :color="resolveUserRoleVariant(item.raw)?.color || 'default'"
+                  :icon="resolveUserRoleVariant(item.raw)?.icon || 'default-icon'"
                 />
-                <span class="text-capitalize">{{ item.raw.teamdialer_number }}</span>
+                <span class="text-capitalize">{{ item.raw?.teamdialer_number || 'N/A' }}</span>
               </div>
             </template>
     
@@ -378,7 +382,7 @@ const playRecording = url => {
             <template #item.status="{ item }">
               <VChip
                 label
-                color="success"
+                :color="resolveStatusColorVariant(item.raw?.status)?.color"
               >
                 {{ item.raw.status }}
               </VChip>
