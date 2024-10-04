@@ -202,6 +202,7 @@ class VoiceController extends Controller
                     $number = $call->to;
                 }
                 $allCalls[] = [
+                    'call_id' => $call->id,
                     'call_sid' => $call->sid,
                     'teamdialer_number' => $teamdialerNumber,
                     'number' => $number,
@@ -280,6 +281,7 @@ class VoiceController extends Controller
                     $number = $call->to;
                 }
                 $allCalls[] = [
+                    'call_id' => $call->id,
                     'call_sid' => $call->sid,
                     'teamdialer_number' => $teamdialerNumber,
                     'number' => $number,
@@ -384,6 +386,7 @@ class VoiceController extends Controller
                     $number = $call->to;
                 }
                 $allCalls[] = [
+                    'call_id' => $call->id,
                     'call_sid' => $call->sid,
                     'teamdialer_number' => $teamdialerNumber,
                     'number' => $number,

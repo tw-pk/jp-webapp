@@ -20,7 +20,7 @@ const editDialog = ref(false)
 const notes = ref()
 const isDisabled = ref(false)
 const isLoading = ref(false)
-const call_sid = ref()
+const call_id = ref()
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
@@ -152,7 +152,7 @@ const addNote = () => {
   isDisabled.value = true
   isLoading.value = true
   recentCallsDashStore.addNote({
-    call_sid: call_sid.value,
+    call_id: call_id.value,
     notes: notes.value,
   }).then(response => {
     editDialog.value = false
@@ -192,11 +192,11 @@ const submitNotes = () => {
 }
 
 // 👉 Fetching note
-const fetchNote = callSid => {
+const fetchNote = callId => {
   isProcessingNote.value = true
-  call_sid.value = callSid,
+  call_id.value = callId,
   recentCallsDashStore.fetchNote({
-    sid: callSid,
+    call_id: callId,
   }).then(response => {
     notes.value = response.data.note
     isProcessingNote.value = false
@@ -206,8 +206,8 @@ const fetchNote = callSid => {
   })
 }
 
-const editItem = callSid => {
-  fetchNote(callSid)
+const editItem = callId => {
+  fetchNote(callId)
   editDialog.value = true
 }
 
@@ -376,7 +376,7 @@ const playRecording = url => {
         <div class="d-flex align-center gap-4">
           <VBtn
             variant="plain"
-            @click="editItem(item.raw.call_sid)"
+            @click="editItem(item.raw.call_id)"
           >
             + Add Note
           </VBtn>
