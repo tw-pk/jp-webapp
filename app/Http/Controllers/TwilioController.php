@@ -24,6 +24,7 @@ use App\Models\UserCredit;
 use App\Models\CreditProduct;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\UpdateCallDetails;
+use Carbon\Carbon;
 
 class TwilioController extends Controller
 {
@@ -273,9 +274,9 @@ class TwilioController extends Controller
         $call->sid = $d['CallSid'];
         $call->from = $d['From'];
         $call->to = $d['To'];
-        $call->user_id = $d['agent'];
+        $call->user_id = $d['agent'] ?? 1;
         $call->contact_id = null;
-        $call->date_time = now();
+        $call->date_time = "From " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') . " - To " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
         $call->duration = '0 seconds';
         $call->direction = $d['Direction'];
         $call->status = $d['CallStatus'];

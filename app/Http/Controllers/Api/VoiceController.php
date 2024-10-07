@@ -72,7 +72,14 @@ class VoiceController extends Controller
             'contact_id' => Auth::user()->contacts->where('phone', $request->to)->first()->id,
             'sid' => $call->sid,
             'to' => $request->to,
-            'from' => Auth::user()->numbers->where('active', true)->first()->phone_number
+            'from' => Auth::user()->numbers->where('active', true)->first()->phone_number,
+            'status' => $call->status ?? "-",
+            'duration' => $call->duration ? $call->duration . " seconds" : '-',
+            'direction' => $call->direction ?? "-",
+            'date_time' => isset($call->startTime, $call->endTime) 
+                ? "From " . Carbon::parse($call->startTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') . " - To " . Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A')
+                : "From " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') . " - To " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A'),
+
         ]);
 
         Log::info('inside VoiceController');

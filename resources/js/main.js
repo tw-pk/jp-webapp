@@ -1,5 +1,12 @@
 /* eslint-disable import/order */
 // import '@/@fake-db/db'
+
+if (typeof structuredClone !== 'function') {
+  function structuredClone(obj) {
+    return JSON.parse(JSON.stringify(obj))
+  }
+}
+
 import '@/@iconify/icons-bundle'
 
 import App from '@/App.vue'
