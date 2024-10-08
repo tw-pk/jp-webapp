@@ -22,7 +22,7 @@ const router = createRouter({
         const userData = JSON.parse(localStorage.getItem('userData') || '{}')
         const userRole = (userData && userData.role) ? userData.role : null
         if (userRole === 'Admin' || "Member")
-          return { name: 'dashboards' }
+          return { name: 'dashboard' }
 
         return { name: 'login', query: to.query }
       },
@@ -370,7 +370,7 @@ router.beforeEach(async (to, from, next) => {
                 isSubscribed &&
                 to.name === 'team-members-invite'
       ) {
-        return next({ name: "dashboards" })
+        return next({ name: "dashboard" })
       } else if (
         to.name === 'purchase-summary' &&
                 userData.data.email_verified &&
@@ -378,7 +378,7 @@ router.beforeEach(async (to, from, next) => {
                 userData.data.invitations &&
                 isSubscribed
       ) {
-        return next({ name: "dashboards" })
+        return next({ name: "dashboard" })
       } else if (
         userData.data.email_verified &&
                 userData.data.numbers &&

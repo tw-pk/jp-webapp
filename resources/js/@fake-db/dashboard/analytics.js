@@ -47,7 +47,7 @@ const database = [
   },
   {
     logo: figmaLabel,
-    name: 'Figma Dashboards',
+    name: 'Figma Dashboard',
     date: '08 Apr 2021',
     leader: 'Harmonica',
     team: [avatar5, avatar4, avatar1],
