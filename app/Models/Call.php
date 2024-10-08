@@ -22,6 +22,10 @@ class Call extends Model
         'price'
     ];
 
+    protected $casts = [
+        'price' => 'decimal:4',
+    ];
+
     public function contact(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Contact::class);

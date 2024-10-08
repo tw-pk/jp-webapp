@@ -10,4 +10,5 @@ interface CallRepositoryInterface
     public function getAllCalls();
     public function getCallById($id);
     public function saveCall(array $data);
+    public function updateCall(array $data);
 }
