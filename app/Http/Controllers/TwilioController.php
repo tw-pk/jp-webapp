@@ -332,12 +332,12 @@ class TwilioController extends Controller
             $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
             $call = $client->calls($callSid)->fetch();     
 
-            $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
-            $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
+            $startTime = $call->startTime ? Carbon::parse($call->startTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
+            $endTime = $call->endTime ? Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
             $duration = $call->duration ? (int) $call->duration : 0; // Duration in seconds
             $status = $call->status;
             $price = $call->price; // This might be null if not provided
-            $dateTime = $startTime . '-' . $endTime;
+            $dateTime = "From " . $startTime . " - To " . $endTime;
 
             // Prepare data for updating
             $updateData = [

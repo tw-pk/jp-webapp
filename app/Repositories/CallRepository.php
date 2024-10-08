@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Call;
 use Twilio\Rest\Client;
-
+use Carbon\Carbon;
 
 class CallRepository implements CallRepositoryInterface
 {
@@ -23,6 +23,11 @@ class CallRepository implements CallRepositoryInterface
     {
         // $numberPrice = $this->getNumberPrice($data['To']);
         $numberPrice = 0.023;
+
+        $startTime = $data['startTime'] ? Carbon::parse($data['startTime'])->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
+        $endTime = $data['endTime'] ? Carbon::parse($data['endTime'])->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
+        $dateTime = "From " . $startTime . " - To " . $endTime;
+
         $createData = [
             'sid'       =>    $data['CallSid'],
             'to'        =>    $data['To'],
@@ -31,7 +36,7 @@ class CallRepository implements CallRepositoryInterface
             'duration'  =>    0,
             'status'    =>    $data['CallStatus'],
             'direction' =>    $data['Direction'],
-            'date_time' =>    now(),
+            'date_time' =>    $dateTime,
             'contact_id'=>    null,
             'price'     =>    $numberPrice
 
