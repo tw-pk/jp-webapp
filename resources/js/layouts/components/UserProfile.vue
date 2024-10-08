@@ -1,11 +1,14 @@
 <script setup>
 import { initialAbility } from '@/plugins/casl/ability'
 import { useAppAbility } from '@/plugins/casl/useAppAbility'
+import { useRouter } from "vue-router"
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 
 const router = useRouter()
 const ability = useAppAbility()
 const userData = ref(null)
+const statusColor = ref('secondary')
+const activityAt = ref()
 
 const logout = () => {
 
@@ -89,8 +92,31 @@ const userProfileList = [
   },
 ]
 
+const updateUserStatus = () => {
+  if (activityAt.value) {
+    const activityTime = new Date(activityAt.value)
+    const currentTime = new Date()
+    const difference = Math.floor((currentTime - activityTime) / (1000 * 60))
+    
+    if (difference <= 30) {
+      statusColor.value = 'success'
+    } else if (difference > 30 && difference <= 60) {
+      statusColor.value = 'warning'
+    } else {
+      statusColor.value = 'secondary'
+    }
+  } else {
+    statusColor.value = 'secondary'
+  }
+}
+
 onMounted(async () => {
   userData.value = JSON.parse(localStorage.getItem('userData') || 'null')
+  
+  activityAt.value = localStorage.getItem('activityAt')
+  updateUserStatus()
+
+  setInterval(updateUserStatus, 60000)
 })
 </script>
 
@@ -101,7 +127,7 @@ onMounted(async () => {
     location="bottom right"
     offset-x="3"
     offset-y="3"
-    color="success"
+    :color="statusColor"
   >
     <VAvatar
       class="cursor-pointer"
@@ -134,7 +160,7 @@ onMounted(async () => {
                   location="bottom right"
                   offset-x="3"
                   offset-y="3"
-                  color="success"
+                  :color="statusColor"
                   bordered
                 >
                   <VAvatar

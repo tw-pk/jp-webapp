@@ -24,6 +24,7 @@ use App\Models\UserCredit;
 use App\Models\CreditProduct;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\UpdateCallDetails;
+use Carbon\Carbon;
 
 class TwilioController extends Controller
 {
@@ -273,9 +274,9 @@ class TwilioController extends Controller
         $call->sid = $d['CallSid'];
         $call->from = $d['From'];
         $call->to = $d['To'];
-        $call->user_id = $d['agent'];
+        $call->user_id = $d['agent'] ?? 1;
         $call->contact_id = null;
-        $call->date_time = now();
+        $call->date_time = "From " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') . " - To " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
         $call->duration = '0 seconds';
         $call->direction = $d['Direction'];
         $call->status = $d['CallStatus'];
@@ -331,12 +332,12 @@ class TwilioController extends Controller
             $client = new Client(config('app.TWILIO_CLIENT_ID'), config('app.TWILIO_AUTH_TOKEN'));
             $call = $client->calls($callSid)->fetch();     
 
-            $startTime = $call->startTime ? $call->startTime->format('Y-m-d H:i:s') : null;
-            $endTime = $call->endTime ? $call->endTime->format('Y-m-d H:i:s') : null;
+            $startTime = $call->startTime ? Carbon::parse($call->startTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
+            $endTime = $call->endTime ? Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
             $duration = $call->duration ? (int) $call->duration : 0; // Duration in seconds
             $status = $call->status;
             $price = $call->price; // This might be null if not provided
-            $dateTime = $startTime . '-' . $endTime;
+            $dateTime = "From " . $startTime . " - To " . $endTime;
 
             // Prepare data for updating
             $updateData = [

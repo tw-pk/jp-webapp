@@ -9,5 +9,5 @@ class Note extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['sid', 'notes',];
+    protected $fillable = ['call_id', 'notes',];
 }

@@ -1,14 +1,13 @@
 <script setup>
 import { paginationMeta } from '@/@fake-db/utils'
 import { useRecentCallsDashStore } from "@/views/apps/recent-calls/useRecentCallsDashStore"
+import { can } from "@layouts/plugins/casl"
 import { requiredValidator } from '@validators'
 import { ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
 const recentCallsDashStore = useRecentCallsDashStore()
 const currentTab = ref(0)
-const route = useRoute()
-const router = useRouter()
 const searchQuery = ref('')
 const error = ref(false)
 const errorMessage = ref('')
@@ -21,12 +20,11 @@ const editDialog = ref(false)
 const notes = ref()
 const isDisabled = ref(false)
 const isLoading = ref(false)
-const call_sid = ref()
+const call_id = ref()
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
 const form = ref()
-const isPlaying = ref(false)
 
 //const members = ['All members']
 const members = ref([])
@@ -73,16 +71,6 @@ const headers = [
     sortable: false,
   },
   {
-    title: "RATING",
-    key: "rating",
-    sortable: false,
-  },
-  {
-    title: "DISPOSITION",
-    key: "disposition",
-    sortable: false,
-  },
-  {
     title: "RECORD",
     key: "record",
     sortable: false,
@@ -91,17 +79,33 @@ const headers = [
 
 const tabTitles = ['all', 'outbound-dial', 'inbound', 'missed', 'voicemail']
 
+
 const resolveUserRoleVariant = call => {
-  if (call.direction === 'outbound-api' || call.direction === 'outbound-dial')
-    return {
-      color: 'success',
-      icon: 'tabler-phone-outgoing',
-    }
-  if (call.direction === 'inbound')
-    return {
-      color: 'error',
-      icon: 'tabler-phone-incoming',
-    }
+  const directions = {
+    'outbound-api': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'outbound-dial': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'inbound': { color: 'error', icon: 'tabler-phone-incoming' },
+  }
+  
+  if (call.status === 'no-answer' && directions[call.direction]) {
+    return { color: 'warning', icon: 'tabler-phone-calling' }
+  }
+
+  return directions[call.direction] || { color: 'error', icon: 'tabler-phone-off' }
+}
+
+const resolveStatusColorVariant = status => {
+  const statusColors = {
+    completed: { color: 'success' },
+    'no-answer': { color: 'warning' },
+    failed: { color: 'error' },
+    busy: { color: 'primary' },
+    'in-progress': { color: 'primary' },
+    ringing: { color: 'info' },
+    queued: { color: 'secondary' },
+  }
+
+  return statusColors[status] || { color: 'secondary' }
 }
 
 // 👉 Fetching recent calls
@@ -147,7 +151,7 @@ const addNote = () => {
   isDisabled.value = true
   isLoading.value = true
   recentCallsDashStore.addNote({
-    call_sid: call_sid.value,
+    call_id: call_id.value,
     notes: notes.value,
   }).then(response => {
     editDialog.value = false
@@ -187,11 +191,11 @@ const submitNotes = () => {
 }
 
 // 👉 Fetching note
-const fetchNote = callSid => {
+const fetchNote = callId => {
   isProcessingNote.value = true
-  call_sid.value = callSid,
+  call_id.value = callId,
   recentCallsDashStore.fetchNote({
-    sid: callSid,
+    call_id: callId,
   }).then(response => {
     notes.value = response.data.note
     isProcessingNote.value = false
@@ -201,8 +205,8 @@ const fetchNote = callSid => {
   })
 }
 
-const editItem = callSid => {
-  fetchNote(callSid)
+const editItem = callId => {
+  fetchNote(callId)
   editDialog.value = true
 }
 
@@ -210,7 +214,7 @@ onMounted(async () => {
   await recentCallsDashStore.fetchMemberList()
     .then(res => {
       if (res.data.status) {
-        members.value = res.data.members
+        members.value = [{ id: "all", fullname: "All" }, ...res.data.members]
       } else {
         error.value = true
         errorMessage.value = res.data.message
@@ -224,20 +228,46 @@ onMounted(async () => {
     })
 })
 
+const currentAudio = ref(null)
+const isPlayingId = ref(null)
+const currentTime = ref(0)
+const duration = ref(0)
+
 const playRecording = url => {
-  const audio = new Audio(url)
-
-  //audio.play()
-
-  if (isPlaying.value) {
-    audio.pause()
-  } else {
-    if (!audio || audio.src !== url) {
-      audio = new Audio(url)
-    }
-    audio.play()
+  if (currentAudio.value && currentAudio.value.src !== url) {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+    currentTime.value = 0
   }
-  isPlaying.value = !isPlaying.value
+
+  if (!currentAudio.value || currentAudio.value.src !== url) {
+    currentAudio.value = new Audio(url)
+
+    currentAudio.value.addEventListener('timeupdate', () => {
+      currentTime.value = currentAudio.value.currentTime
+      duration.value = currentAudio.value.duration
+    })
+
+    currentAudio.value.addEventListener('ended', () => {
+      currentTime.value = duration.value
+    })
+
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else if (currentAudio.value.paused) {
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+  }
+}
+
+const formatTime = time => {
+  const minutes = Math.floor(time / 60).toString().padStart(2, '0')
+  const seconds = Math.floor(time % 60).toString().padStart(2, '0')
+  
+  return `${minutes}:${seconds}`
 }
 </script>
 
@@ -272,24 +302,23 @@ const playRecording = url => {
           sm="8"
           md="6"
           lg="6"
-          class="d-flex align-center justify-center mt-7 pl-15"
+          class="d-flex align-center justify-center mt-3"
         >
-          <div class="v-tabs-wrapper w-100">
-            <VTabs
-              v-model="currentTab"
-              class="v-tabs-pill"
-              show-arrows
-            >
-              <VTab>All</VTab>
-              <VTab>Outbound</VTab>
-              <VTab>Inbound</VTab>
-              <VTab>Missed</VTab>
-              <VTab>Voicemail</VTab>
-            </VTabs>
-          </div>
+          <VTabs
+            v-model="currentTab"
+            class="v-tabs-pill"
+            show-arrows
+          >
+            <VTab>All</VTab>
+            <VTab>Outbound</VTab>
+            <VTab>Inbound</VTab>
+            <VTab>Missed</VTab>
+            <VTab>Voicemail</VTab>
+          </VTabs>
         </VCol>
 
         <VCol
+          v-if="can('manage', 'all')"
           cols="12"
           sm="4"
           md="3"
@@ -305,6 +334,14 @@ const playRecording = url => {
             dense
           />
         </VCol>
+        <VCol
+          v-else
+          cols="12"
+          sm="4"
+          md="3"
+          lg="2"
+          class="d-flex justify-end"
+        />
         <VCol
           cols="12"
           sm="4"
@@ -364,7 +401,7 @@ const playRecording = url => {
         <div class="d-flex align-center gap-4">
           <VBtn
             variant="plain"
-            @click="editItem(item.raw.call_sid)"
+            @click="editItem(item.raw.call_id)"
           >
             + Add Note
           </VBtn>
@@ -375,7 +412,7 @@ const playRecording = url => {
       <template #item.status="{ item }">
         <VChip
           label
-          color="success"
+          :color="resolveStatusColorVariant(item.raw?.status)?.color"
         >
           {{ item.raw.status }}
         </VChip>
@@ -390,13 +427,24 @@ const playRecording = url => {
             elevation="0"
             @click="playRecording(item.raw.record)"
           >
-            <VIcon :icon="isPlaying ? 'tabler-pause' : 'tabler-play'" />
+            <VIcon :icon="isPlayingId === item.raw.record ? 'tabler-pause' : 'tabler-play'" />
           </VBtn>
+          <span
+            v-if="isPlayingId === item.raw.record"
+            class="ml-2"
+            style="display: inline-block; width: 60px; text-align: end;"
+          >
+            {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+          </span>
         </div>
-        <div v-else>
+        <div
+          v-else
+          class="ml-3"
+        >
           {{ item.raw.record }}
         </div>
       </template>
+
 
       <!-- pagination -->
       <template #bottom>

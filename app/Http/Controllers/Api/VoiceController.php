@@ -22,6 +22,7 @@ use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use App\Services\StatusService;
 use App\Services\AssignPhoneNumberService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class VoiceController extends Controller
 {
@@ -71,7 +72,14 @@ class VoiceController extends Controller
             'contact_id' => Auth::user()->contacts->where('phone', $request->to)->first()->id,
             'sid' => $call->sid,
             'to' => $request->to,
-            'from' => Auth::user()->numbers->where('active', true)->first()->phone_number
+            'from' => Auth::user()->numbers->where('active', true)->first()->phone_number,
+            'status' => $call->status ?? "-",
+            'duration' => $call->duration ? $call->duration . " seconds" : '-',
+            'direction' => $call->direction ?? "-",
+            'date_time' => isset($call->startTime, $call->endTime) 
+                ? "From " . Carbon::parse($call->startTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') . " - To " . Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A')
+                : "From " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') . " - To " . Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A'),
+
         ]);
 
         Log::info('inside VoiceController');
@@ -123,7 +131,7 @@ class VoiceController extends Controller
 
         $user = Auth::user();
 
-        if (!empty($member)) {
+        if (!empty($member) && $member !="all") {
             $user = User::find($member);
         }
 
@@ -192,7 +200,9 @@ class VoiceController extends Controller
             foreach ($twilioCalls as $call) {
                 //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
                 //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
-                $recordingUrl = $call->sid ? asset('storage/voicemail/' . $call->sid) : '-';
+                $recordingPath = 'voicemail/' . $call->sid . '.mp3';
+                $filePath = storage_path('app/public/' . $recordingPath);
+                $recordingUrl = file_exists($filePath) ? asset('storage/' . $recordingPath) : '-';
 
                 if($call->direction == 'inbound'){
                     $teamdialerNumber = $call->to;
@@ -202,6 +212,7 @@ class VoiceController extends Controller
                     $number = $call->to;
                 }
                 $allCalls[] = [
+                    'call_id' => $call->id,
                     'call_sid' => $call->sid,
                     'teamdialer_number' => $teamdialerNumber,
                     'number' => $number,
@@ -210,8 +221,6 @@ class VoiceController extends Controller
                     'date' => Carbon::parse($call->created_at)->setTimezone('Asia/Karachi')->diffForHumans(),
                     'duration' => $call->duration ?? '-',
                     'notes' => '',
-                    'rating' => '-',
-                    'disposition' => '-',
                     'record' => $recordingUrl
                 ];
             }
@@ -239,126 +248,76 @@ class VoiceController extends Controller
         $callType = $request->input('callType');
         $searchQuery = $request->input('q');
         $options = $request->input('options');
-
-        $perPage = $options['itemsPerPage'];
-        $currentPage = $options['page'] ?? 1;
-
-        if ($this->isUserAdmin()) {
-
-            if (!Auth::user()->numbers->count()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => "You don't have any active number, please verify if you have an active number",
-                ], 404);
-            }
-
-            try {
-
-                if (!empty($searchQuery)) {
-                    $twilioCalls = Auth::user()->calls()
-                        ->where('to', 'LIKE', '%' . $searchQuery . '%')
-                        ->paginate($perPage, ['*'], 'page', $currentPage);
-                } else {
-                    if ($callType !== 'all') {
-                        $twilioCalls = Auth::user()->calls()
-                            ->where(fn ($q) => $this->getCallTypeCriteria($q, $callType))
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    } else {
-                        $twilioCalls = Auth::user()->calls()
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    }
-                }
-
-                $totalRecord = $twilioCalls->total();
-                $totalPage = ceil($totalRecord / $perPage);
-                $allCalls = [];
-                foreach ($twilioCalls as $call) {
-                    if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
-                        $allCalls[] = [
-                            'call_sid' => $call->sid,
-                            'teamdialer_number' => $this->getTeamsDialerNumber($call),
-                            'number' => $this->getNumber($call),
-                            'status' => $call->status ?? '-',
-                            'direction' => $call->direction,
-                            'date' => $call->date_time,
-                            'duration' => $call->duration . " seconds" ?? '-',
-                            'notes' => '',
-                            'rating' => '-',
-                            'disposition' => '-',
-                            'record' => '-'
-                        ];
-                    }
-                }
-                return response()->json([
-                    'status' => true,
-                    "calls" => $allCalls,
-                    'totalPage' => $totalPage,
-                    'totalRecord' => $totalRecord,
-                    'page' => $currentPage,
-                ]);
-            } catch (TwilioException $e) {
-                return response()->json([
-                    'status' => false,
-                    'error' => $e->getMessage(),
-                ], 500);
-            }
-        } else {
-            try {
-                $from = Invitation::where('member_id', Auth::user()->id)->first()?->number;
-                
-                if (!empty($searchQuery)) {
-                    $twilioCalls = Auth::user()->calls()
-                        ->where('to', 'LIKE', '%' . $searchQuery . '%')
-                        ->where('from', $from)
-                        ->paginate($perPage, ['*'], 'page', $currentPage);
-                } else {
-                    if ($callType !== 'all') {
-                        $twilioCalls = Auth::user()->calls()
-                            ->where(fn ($q) => $this->getCallTypeCriteria($q, $callType))
-                            ->where('from', $from)
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    } else {
-                        $twilioCalls = Auth::user()->calls()
-                            ->where('from', $from)
-                            ->paginate($perPage, ['*'], 'page', $currentPage);
-                    }
-                }
-
-                $totalRecord = $twilioCalls->total();
-                $totalPage = ceil($totalRecord / $perPage);
-                $allCalls = [];
-                foreach ($twilioCalls as $call) {
-                    if (!Str::startsWith($call->from, 'client') && !Str::startsWith($call->to, 'client')) {
-                        $allCalls[] = [
-                            'call_sid' => $call->sid,
-                            'teamdialer_number' => $this->getTeamsDialerNumber($call),
-                            'number' => $this->getNumber($call),
-                            'status' => $call->status ?? '-',
-                            'direction' => $call->direction,
-                            'date' => $call->date_time,
-                            'duration' => $call->duration . " seconds" ?? '-',
-                            'notes' => '',
-                            'rating' => '-',
-                            'disposition' => '-',
-                            'record' => '-'
-                        ];
-                    }
-                }
-                return response()->json([
-                    'status' => true,
-                    "calls" => $allCalls,
-                    'totalPage' => $totalPage,
-                    'totalRecord' => $totalRecord,
-                    'page' => $currentPage,
-                ]);
-            } catch (TwilioException $e) {
-                return response()->json([
-                    'status' => false,
-                    'error' => $e->getMessage(),
-                ], 500);
-            }
+        
+        $user = Auth::user();
+        $assignPhoneNumbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($user->id);
+        if (count($assignPhoneNumbers) === 0) {
+            return response()->json([
+                'status' => false,
+                'message' => "You don't have any active number, please verify if you have an active number",
+            ], 404);
         }
-   
+
+        try {
+            $perPage = $options['itemsPerPage'];
+            $currentPage = $options['page'] ?? 1;
+            $filter = [];
+
+            $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
+                    $query->whereIn('to', $assignPhoneNumbers)
+                        ->orWhereIn('from', $assignPhoneNumbers);
+                })
+                ->when($searchQuery, function ($query, $searchQuery) {
+                    $query->where('to', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('from', 'LIKE', "%{$searchQuery}%");
+                })
+                ->when($callType && $callType !== 'all', function ($query) use ($callType) {
+                    $this->getCallTypeCriteria($query, $callType);
+                })
+                ->orderByDesc('created_at')
+                ->get();
+            
+            $twilioCalls = $this->formattedDateTime($twilioCalls);
+            $totalRecord = $twilioCalls->count(); 
+            $totalPage = ceil($totalRecord / $perPage);
+
+            $allCalls = [];
+            foreach ($twilioCalls as $call) {
+                if($call->direction == 'inbound'){
+                    $teamdialerNumber = $call->to;
+                    $number = $call->from;
+                }else{
+                    $teamdialerNumber = $call->from;
+                    $number = $call->to;
+                }
+                $allCalls[] = [
+                    'call_id' => $call->id,
+                    'call_sid' => $call->sid,
+                    'teamdialer_number' => $teamdialerNumber,
+                    'number' => $number,
+                    'status' => $call->status ?? '-',
+                    'direction' => $call->direction,
+                    'date' => Carbon::parse($call->created_at)->setTimezone('Asia/Karachi')->diffForHumans(),
+                    'duration' => $call->duration ?? '-',
+                ];
+            }
+
+            $startIndex = ($currentPage - 1) * $perPage;
+            $slicedCalls = array_slice($allCalls, $startIndex, $perPage);
+            return response()->json([
+                'status' => true,
+                'calls' => $slicedCalls,
+                'totalPage' => $totalPage,
+                'totalRecord' => $totalRecord,
+                'page' => $currentPage,
+            ]);
+
+        } catch (TwilioException $e) {
+            return response()->json([
+                'status' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     private function getTeamsDialerNumber($call)
@@ -388,7 +347,7 @@ class VoiceController extends Controller
 
         $user = Auth::user();
 
-        if (!empty($member)) {
+        if (!empty($member) && $member !="all") {
             $user = User::find($member);
         }
 
@@ -427,7 +386,9 @@ class VoiceController extends Controller
             foreach ($twilioCalls as $call) {
                 //$recordings = $this->twilio->recordings->read(["callSid" => $call->sid]);
                 //$recordingUrl = count($recordings) > 0 ? $recordings[0]->uri : '-';
-                $recordingUrl = $call->sid ? asset('storage/voicemail/' . $call->sid) : '-';
+                $recordingPath = 'voicemail/' . $call->sid . '.mp3';
+                $filePath = storage_path('app/public/' . $recordingPath);
+                $recordingUrl = file_exists($filePath) ? asset('storage/' . $recordingPath) : '-';
 
                 if($call->direction == 'inbound'){
                     $teamdialerNumber = $call->to;
@@ -437,6 +398,7 @@ class VoiceController extends Controller
                     $number = $call->to;
                 }
                 $allCalls[] = [
+                    'call_id' => $call->id,
                     'call_sid' => $call->sid,
                     'teamdialer_number' => $teamdialerNumber,
                     'number' => $number,
@@ -445,8 +407,6 @@ class VoiceController extends Controller
                     'date' => Carbon::parse($call->created_at)->setTimezone('Asia/Karachi')->diffForHumans(),
                     'duration' => $call->duration ?? '-',
                     'notes' => '',
-                    'rating' => '-',
-                    'disposition' => '-',
                     'record' => $recordingUrl
                 ];
             }

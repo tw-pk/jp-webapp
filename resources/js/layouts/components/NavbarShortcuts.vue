@@ -22,7 +22,7 @@ const shortcuts = [
     icon: 'tabler-layout',
     title: 'Dashboard',
     subtitle: 'Dashboard Analytics',
-    to: { name: 'dashboards' },
+    to: { name: 'dashboard' },
   },
   {
     icon: 'tabler-settings',

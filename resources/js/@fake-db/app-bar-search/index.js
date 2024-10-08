@@ -4,24 +4,24 @@ import mock from '@/@fake-db/mock'
 const database = [
   {
     id: 1,
-    url: { name: 'dashboards' },
+    url: { name: 'dashboard' },
     icon: 'tabler-timeline',
     title: 'Analytics Dashboard',
-    category: 'dashboards',
+    category: 'dashboard',
   },
   {
     id: 2,
-    url: { name: 'dashboards-ecommerce' },
+    url: { name: 'dashboard-ecommerce' },
     icon: 'tabler-shopping-cart',
     title: 'eCommerce Dashboard',
-    category: 'dashboards',
+    category: 'dashboard',
   },
   {
     id: 3,
-    url: { name: 'dashboards-crm' },
+    url: { name: 'dashboard-crm' },
     icon: 'tabler-shopping-cart',
     title: 'CRM Dashboard',
-    category: 'dashboards',
+    category: 'dashboard',
   },
   {
     id: 4,
@@ -642,7 +642,7 @@ mock.onGet('/app-bar/search').reply(config => {
   const queryLowered = q.toLowerCase()
 
   const exactData = {
-    dashboards: [],
+    dashboard: [],
     appsPages: [],
     userInterface: [],
     formsTables: [],
@@ -650,7 +650,7 @@ mock.onGet('/app-bar/search').reply(config => {
   }
 
   const includeData = {
-    dashboards: [],
+    dashboard: [],
     appsPages: [],
     userInterface: [],
     formsTables: [],

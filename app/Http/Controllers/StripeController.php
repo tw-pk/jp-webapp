@@ -47,8 +47,8 @@ class StripeController extends Controller
         $checkout = Auth::user()->newSubscription('Basic', $stripe_price_id)
             ->trialUntil(Carbon::now()->addMonth())
             ->checkout([
-                "success_url" => config('app.url') . "/dashboards",
-                "cancel_url" => config('app.url') . "/dashboards"
+                "success_url" => config('app.url') . "/dashboard",
+                "cancel_url" => config('app.url') . "/dashboard"
             ]);
 
         return response()->json([
@@ -74,8 +74,8 @@ class StripeController extends Controller
 
         $checkout = Auth::user()?->newSubscription('Basic', $stripe_price_id)
             ->checkout([
-                "success_url" => config('app.url') . "/dashboards",
-                "cancel_url" => config('app.url') . "/dashboards"
+                "success_url" => config('app.url') . "/dashboard",
+                "cancel_url" => config('app.url') . "/dashboard"
             ]);
 
         return response()->json([

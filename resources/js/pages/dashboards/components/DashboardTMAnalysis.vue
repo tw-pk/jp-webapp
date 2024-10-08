@@ -69,31 +69,14 @@ const fetchMembers = async () => {
 watchEffect(fetchMembers)
 
 const resolveStatusVariant = status => {
-  if (status == 'Online')
-    return {
-      color: 'success',
-      text: 'Available',
-    }
-  else if (status == 'Away')
-    return {
-      color: 'warning',
-      text: 'Do Not Disturb',
-    }
-  else if (status == 'Offline')
-    return {
-      color: 'secondary',
-      text: 'Out of Office',
-    }
-  else if (status == 'In Meeting')
-    return {
-      color: 'error',
-      text: 'Busy',
-    }
-  else
-    return {
-      color: 'secondary',
-      text: "Out of Office",
-    }
+  const statusVariants = {
+    Online: { color: 'success', text: 'Available' },
+    Away: { color: 'warning', text: 'Do Not Disturb' },
+    Offline: { color: 'secondary', text: 'Out of Office' },
+    'In Meeting': { color: 'error', text: 'Busy' },
+  }
+
+  return statusVariants[status] || { color: 'secondary', text: 'Out of Office' }
 }
 </script>
 

@@ -61,7 +61,7 @@ const login = () => {
     localStorage.setItem('accessToken', JSON.stringify(accessToken))
     
     isDisabled.value = false
-    router.replace(route.query.to ? String(route.query.to) : '/dashboards')
+    router.replace(route.query.to ? String(route.query.to) : '/dashboard')
   }).catch(e => {
     isDisabled.value = false
     errors.value = e.response.data

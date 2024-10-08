@@ -1,8 +1,8 @@
 export default [
   {
-    title: 'Dashboards',
-    icon: { icon: 'tabler-smart-home' },
-    to: 'dashboards',
+    title: 'Dashboard',
+    icon: { icon: 'tabler-layout-dashboard' },
+    to: 'dashboard',
     badgeContent: '',
     badgeClass: 'bg-primary',
     action: 'read',

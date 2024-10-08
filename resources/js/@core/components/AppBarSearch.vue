@@ -90,8 +90,8 @@ const dialogModelValueUpdate = val => {
 }
 
 const resolveCategories = val => {
-  if (val === 'dashboards')
-    return 'Dashboards'
+  if (val === 'dashboard')
+    return 'Dashboard'
   if (val === 'appsPages')
     return 'Apps & Pages'
   if (val === 'userInterface')

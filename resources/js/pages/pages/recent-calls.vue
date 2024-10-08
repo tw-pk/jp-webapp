@@ -14,7 +14,7 @@ const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
 const isProcessing = ref(false)
 const isProcessingNote = ref(false)
-const call_sid = ref()
+const call_id = ref()
 const error = ref(false)
 const errorMessage = ref('')
 const editDialog = ref(false)
@@ -61,14 +61,6 @@ const headers = [
     key: "notes",
   },
   {
-    title: "RATING",
-    key: "rating",
-  },
-  {
-    title: "DISPOSITION",
-    key: "disposition",
-  },
-  {
     title: "RECORD",
     key: "record",
   },
@@ -87,6 +79,8 @@ const fetchMemberList = async () => {
     const res = await recentCallsStore.fetchMemberList()
     if (res.data.status) {
       members.value = res.data.members
+
+      members.value = [{ id: "all", fullname: "All" }, ...res.data.members]
     } else {
       error.value = true
       errorMessage.value = res.data.message
@@ -132,29 +126,39 @@ const fetchRecentCalls = () => {
 
 watchEffect(fetchRecentCalls)
 
-const resolveUserRoleVariant = direction => {
-  if (direction === 'outbound-api')
-    return {
-      color: 'info',
-      icon: 'tabler-phone-call',
-    }
-  if (direction === 'inbound')
-    return {
-      color: 'error',
-      icon: 'tabler-phone-off',
-    }
-  
-  return {
-    color: 'error',
-    icon: 'tabler-phone-off',
+const resolveUserRoleVariant = call => {
+  const directions = {
+    'outbound-api': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'outbound-dial': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'inbound': { color: 'error', icon: 'tabler-phone-incoming' },
   }
+  
+  if (call.status === 'no-answer' && directions[call.direction]) {
+    return { color: 'warning', icon: 'tabler-phone-calling' }
+  }
+
+  return directions[call.direction] || { color: 'error', icon: 'tabler-phone-off' }
+}
+
+const resolveStatusColorVariant = status => {
+  const statusColors = {
+    completed: { color: 'success' },
+    'no-answer': { color: 'warning' },
+    failed: { color: 'error' },
+    busy: { color: 'primary' },
+    'in-progress': { color: 'primary' },
+    ringing: { color: 'info' },
+    queued: { color: 'secondary' },
+  }
+
+  return statusColors[status] || { color: 'secondary' }
 }
 
 const addNote = () => {
   isDisabled.value = true
   isLoading.value = true
   recentCallsStore.addNote({
-    call_sid: call_sid.value,
+    call_id: call_id.value,
     notes: notes.value,
   }).then(response => {
     editDialog.value = false
@@ -196,9 +200,9 @@ const submitNotes = () => {
 // 👉 Fetching note
 const fetchNote = callSid => {
   isProcessingNote.value = true
-  call_sid.value = callSid,
+  call_id.value = callSid,
   recentCallsStore.fetchNote({
-    sid: callSid,
+    call_id: callSid,
   }).then(response => {
     notes.value = response.data.note
     isProcessingNote.value = false
@@ -213,20 +217,46 @@ const editItem = callSid => {
   editDialog.value = true
 }
 
+const currentAudio = ref(null)
+const isPlayingId = ref(null)
+const currentTime = ref(0)
+const duration = ref(0)
+
 const playRecording = url => {
-  const audio = new Audio(url)
-
-  //audio.play()
-
-  if (isPlaying.value) {
-    audio.pause()
-  } else {
-    if (!audio || audio.src !== url) {
-      audio = new Audio(url)
-    }
-    audio.play()
+  if (currentAudio.value && currentAudio.value.src !== url) {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+    currentTime.value = 0
   }
-  isPlaying.value = !isPlaying.value
+
+  if (!currentAudio.value || currentAudio.value.src !== url) {
+    currentAudio.value = new Audio(url)
+
+    currentAudio.value.addEventListener('timeupdate', () => {
+      currentTime.value = currentAudio.value.currentTime
+      duration.value = currentAudio.value.duration
+    })
+
+    currentAudio.value.addEventListener('ended', () => {
+      currentTime.value = duration.value
+    })
+
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else if (currentAudio.value.paused) {
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+  }
+}
+
+const formatTime = time => {
+  const minutes = Math.floor(time / 60).toString().padStart(2, '0')
+  const seconds = Math.floor(time % 60).toString().padStart(2, '0')
+  
+  return `${minutes}:${seconds}`
 }
 </script>
 
@@ -355,10 +385,10 @@ const playRecording = url => {
               <div class="d-flex align-center gap-4">
                 <VIcon
                   :size="20"
-                  :color="resolveUserRoleVariant(item.raw.direction).color"
-                  :icon="resolveUserRoleVariant(item.raw.direction).icon"
+                  :color="resolveUserRoleVariant(item.raw)?.color || 'default'"
+                  :icon="resolveUserRoleVariant(item.raw)?.icon || 'default-icon'"
                 />
-                <span class="text-capitalize">{{ item.raw.teamdialer_number }}</span>
+                <span class="text-capitalize">{{ item.raw?.teamdialer_number || 'N/A' }}</span>
               </div>
             </template>
     
@@ -367,7 +397,7 @@ const playRecording = url => {
               <div class="d-flex align-center gap-4">
                 <VBtn
                   variant="plain"
-                  @click="editItem(item.raw.call_sid)"
+                  @click="editItem(item.raw.call_id)"
                 >
                   + Add Note
                 </VBtn>
@@ -378,7 +408,7 @@ const playRecording = url => {
             <template #item.status="{ item }">
               <VChip
                 label
-                color="success"
+                :color="resolveStatusColorVariant(item.raw?.status)?.color"
               >
                 {{ item.raw.status }}
               </VChip>
@@ -393,10 +423,20 @@ const playRecording = url => {
                   elevation="0"
                   @click="playRecording(item.raw.record)"
                 >
-                  <VIcon :icon="isPlaying ? 'tabler-pause' : 'tabler-play'" />
+                  <VIcon :icon="isPlayingId === item.raw.record ? 'tabler-pause' : 'tabler-play'" />
                 </VBtn>
+                <span
+                  v-if="isPlayingId === item.raw.record"
+                  class="ml-2"
+                  style="display: inline-block; width: 60px; text-align: end;"
+                >
+                  {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+                </span>
               </div>
-              <div v-else>
+              <div
+                v-else
+                class="ml-3"
+              >
                 {{ item.raw.record }}
               </div>
             </template>

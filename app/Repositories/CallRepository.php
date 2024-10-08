@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Call;
 use Twilio\Rest\Client;
+use Carbon\Carbon;
 use App\Jobs\FetchCallPriceJob;
 
 
@@ -21,21 +22,32 @@ class CallRepository implements CallRepositoryInterface
     }
 
     public function saveCall(array $data)
-    {        
-        $createData = [
-            'sid'       => $data['CallSid'],
-            'to'        => $data['To'],
-            'from'      => $data['Caller'],
-            'user_id'   => $data['agent'],
-            'duration'  => 0,
-            'status'    => $data['CallStatus'],
-            'direction' => $data['Direction'],
-            'date_time' => now(),
-            'contact_id'=> null,
-            'price'     => 0
-        ];
+    {
+        // $numberPrice = $this->getNumberPrice($data['To']);
+        $numberPrice = 0.023;
 
-        $result = Call::create($createData);        
+        $startTime = $data['startTime'] ? Carbon::parse($data['startTime'])->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
+        $endTime = $data['endTime'] ? Carbon::parse($data['endTime'])->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A') : Carbon::now()->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A');
+        $dateTime = "From " . $startTime . " - To " . $endTime;
+
+        $createData = [
+            'sid'       =>    $data['CallSid'],
+            'to'        =>    $data['To'],
+            'from'      =>    $data['Caller'],
+            'user_id'   =>    $data['agent'],
+            'duration'  =>    0,
+            'status'    =>    $data['CallStatus'],
+            'direction' =>    $data['Direction'],
+            'date_time' =>    $dateTime,
+            'contact_id'=>    null,
+            'price'     =>    $numberPrice
+
+        ]; 
+
+        \Log::info("here is cretaed data =>". $createData);
+
+        $result = Call::insert($createData);
+        \Log::info("Here is the call created successfully =>". $result);
         return $result;
     }
 
