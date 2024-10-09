@@ -32,6 +32,7 @@ const defaultButton = ref('Submit')
 const assignNumber = ref()
 const existingNumberOptionSelected = ref(false)
 const userPermission = ref(false)
+const isConfirmDialogOpen = ref(false)
 
 const options = ref({
   page: 1,
@@ -56,13 +57,14 @@ const headers = [
     key: 'role',
   },
   {
-    title: 'Registered',
+    title: 'Status',
     key: 'registered',
   },
   {
     title: 'ACTION',
     key: 'action',
     sortable: false,
+
   },
 ]
 
@@ -171,12 +173,12 @@ const resolveUserRegistered = val => {
   if (val == 1)
     return {
       color: 'primary',
-      text: 'True',
+      text: 'Active',
     }
   else
     return {
       color: 'error',
-      text: 'False',
+      text: 'Pending',
     }
 }
 
@@ -274,6 +276,20 @@ watch(assignNumber, value => {
     number.value = ''
   }
 })
+
+const handleConfirmation = async action => {
+  // if(action===true){
+  //   try {
+  //     const accountResponse = await User.accountDeactivate()
+  //     if(accountResponse.data.status){
+  //       deactivated.value = true
+  //       isAccountDeactivated.value = false
+  //     }
+  //   } catch (error) {
+  //     console.error('Error deactivating account:', error)
+  //   }
+  // }
+}
 </script>
 
 <template>
@@ -563,20 +579,21 @@ watch(assignNumber, value => {
 
             <!-- Actions -->
             <template #item.action="{ item }">
-              <IconBtn
-                class=" user-list-name"
+              <VBtn
+                variant="text"
+                color="black"
                 @click="editItem(item.raw)"
               >
                 Edit
-              </IconBtn>
-            
+              </VBtn>
               <VIcon icon="tabler-minus-vertical" />
-              <RouterLink
-                :to="{ name: 'pages-teams-member-analysis', params: { analysis: item.raw.id } }"
-                class="user-list-name"
+              <VBtn
+                variant="text"
+                color="black"
+                @click="isConfirmDialogOpen = true"
               >
-                Analysis
-              </RouterLink>
+                Remove
+              </VBtn>
             </template>
             
             <!-- pagination -->
@@ -637,6 +654,16 @@ watch(assignNumber, value => {
         </VBtn>
       </template>
     </VSnackbar>
+    <!-- Confirm Dialog -->
+    <ConfirmDialog
+      v-model:isDialogVisible="isConfirmDialogOpen"
+      confirmation-question="Are you sure you want to delete your member?"
+      confirm-title="Deleted!"
+      confirm-msg="Your member has been soft deleted successfully."
+      cancel-title="Cancelled"
+      cancel-msg="Member deletion cancelled!"
+      @confirm="handleConfirmation"
+    />
   </div>
 </template>
 
