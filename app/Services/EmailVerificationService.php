@@ -32,8 +32,7 @@ class EmailVerificationService
             return false;
         }
 
-        $otp = random_int(0, 1000000);
-
+        $otp = random_int(100000, 999999);
         $password_verification = new PasswordVerification();
         $password_verification->otp = $otp;
         $password_verification->user_id = $user->id;
@@ -60,8 +59,8 @@ class EmailVerificationService
                 'message' => 'Please wait, a new OTP will be generated after 3 minutes'
             ]);
         }
-        $otp = random_int(0, 1000000);
 
+        $otp = random_int(100000, 999999);
         $password_verification = new PasswordVerification();
         $password_verification->otp = $otp;
         $password_verification->user_id = $this->user->id;
