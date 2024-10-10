@@ -37,7 +37,7 @@ export const useTeamListStore = defineStore('TeamListStore', {
       })
     },
 
-    // 👉 Delete User
+    // 👉 Delete Team
     deleteTeam(id) {
       return new Promise((resolve, reject) => {
         axiosIns.delete(`api/auth/team/delete/${id}`).then(response => resolve(response)).catch(error => reject(error))

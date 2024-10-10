@@ -140,7 +140,8 @@ Route::group(['prefix' => 'auth'], function (){
         Route::post('members/list', [MembersController::class, 'list']);
         Route::post('fetch/members', [MembersController::class, 'fetchMembers']); 
         Route::post('fetch/members-for-chart', [MembersController::class, 'fetchMembersForChart']); 
-
+        Route::delete('member/delete/{id}', [MembersController::class, 'deleteMember']);
+        
         Route::post('member/detail', [MembersController::class, 'fetchMemberDetail']);
         Route::post('connect/transfer-call', [TwilioController::class, 'transferCall']);
 

@@ -7,6 +7,7 @@ use App\Jobs\SendInvitationLink;
 use App\Models\Invitation;
 use App\Models\AssignNumber;
 use App\Models\User;
+use App\Models\UserNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -77,7 +78,6 @@ class MembersController extends Controller
 
     public function list(Request $request)
     {
-
         $searchQuery = $request->input('q');
         $options = $request->input('options');
 
@@ -217,4 +217,38 @@ class MembersController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function deleteMember($id)
+    {
+        $memberId = $id;
+        try {
+            $invitation = Invitation::find($id);
+            if (!$invitation) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ], 404);
+            }
+
+            if ($invitation->member_id) {
+                $user = User::find($invitation->member_id);
+                if ($user) {
+                    $user->numbers()->delete();
+                    $user->delete();
+                }
+            }
+            $invitation->delete();
+            return response()->json([
+                'status' => true,
+                'message' => 'Member deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete member',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
