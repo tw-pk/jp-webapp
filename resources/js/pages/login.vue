@@ -54,6 +54,9 @@ const login = () => {
   }).then( response => {
       
     const { accessToken, userData, userAbilities } = response.data
+    
+    console.log('userAbilities userAbilities userAbilities')
+    console.log(userAbilities)
 
     localStorage.setItem('userAbilities', JSON.stringify(userAbilities))
     ability.update(userAbilities)

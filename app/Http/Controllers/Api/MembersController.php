@@ -11,6 +11,7 @@ use App\Models\UserNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 
 class MembersController extends Controller
@@ -234,7 +235,10 @@ class MembersController extends Controller
                 $user = User::find($invitation->member_id);
                 if ($user) {
                     $user->numbers()->delete();
-                    $user->delete();
+
+                    $user->syncRoles([]);
+                    $role = Role::where('name', 'InactiveMember')->first();
+                    $user->assignRole($role);
                 }
             }
             $invitation->delete();
@@ -245,7 +249,7 @@ class MembersController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to delete member',
+                'message' => 'Failed to deleted member',
                 'error' => $e->getMessage()
             ], 500);
         }
