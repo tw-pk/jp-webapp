@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use App\Services\TwilioServices;
 use Carbon\Carbon;
 
 class MembersController extends Controller
@@ -234,8 +235,15 @@ class MembersController extends Controller
             if ($invitation->member_id) {
                 $user = User::find($invitation->member_id);
                 if ($user) {
-                    $user->numbers()->delete();
+                    if ($user->numbers()->exists()) {
 
+                        $twilioServices = new TwilioServices();
+                        $user->numbers->each(function ($number) use ($twilioServices) {
+                            $twilioServices->deleteTwilioPhoneNo($number->phone_number_sid);
+                        });
+                        $user->numbers()->delete();
+                    }
+                    
                     $user->syncRoles([]);
                     $role = Role::where('name', 'InactiveMember')->first();
                     $user->assignRole($role);

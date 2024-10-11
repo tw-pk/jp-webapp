@@ -239,14 +239,12 @@ class AuthController extends Controller
                 ['action' => 'read', 'subject' => 'security']
             ],
             'InactiveMember' => [
-                ['action' => 'read', 'subject' => 'Member'],
+                ['action' => 'read', 'subject' => 'InactiveMember'],
                 ['action' => 'read', 'subject' => 'dashboard-analytics'],
-                ['action' => 'read', 'subject' => 'inbox'],
                 ['action' => 'read', 'subject' => 'Auth'],
                 ['action' => 'read', 'subject' => 'teams'],
                 ['action' => 'read', 'subject' => 'contact'],
                 ['action' => 'read', 'subject' => 'contact-details'],
-                ['action' => 'read', 'subject' => 'reports'],
                 ['action' => 'read', 'subject' => 'phone-numbers'],
                 ['action' => 'read', 'subject' => 'pages-account-settings-tab'],
                 ['action' => 'read', 'subject' => 'account'],

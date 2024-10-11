@@ -132,16 +132,20 @@ const addNumber = item => {
     city: item.raw.city,
   }).then(response => {
     // Handle the successful purchase response
-    const number = response.data.number
+    const number = response?.data?.number
     if(number){
-      snackbarMessage.value = response.data.message
+      snackbarMessage.value = response?.data?.message
 
       //snackbarColor.value = `success`
       isSnackbarVisible.value = true
       item.raw.isLoading = false
       item.raw.isDisabled = true
+
+      if(response?.data?.isInactiveMember){
+        router.replace({ name: 'team-members-invite' })
+      }
     }else{
-      snackbarMessage.value = response.data.message
+      snackbarMessage.value = response?.data?.message
 
       //snackbarColor.value = `primary`
       isSnackbarVisible.value = true

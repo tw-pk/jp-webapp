@@ -21,7 +21,8 @@ const router = createRouter({
       redirect: to => {
         const userData = JSON.parse(localStorage.getItem('userData') || '{}')
         const userRole = (userData && userData.role) ? userData.role : null
-        if (userRole === 'Admin' || "Member")
+        
+        if (userRole === 'Admin' || "Member" || "InactiveMember")
           return { name: 'dashboard' }
 
         return { name: 'login', query: to.query }
@@ -299,7 +300,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     const userRole = await User.isRole()
-  
+    
     if(to.name === 'dialer'){
       themeConfig.app.theme.value = 'light'
       localStorage.setItem('JotPhone-theme', 'light')
@@ -416,6 +417,69 @@ router.beforeEach(async (to, from, next) => {
       } 
 
       if(userData.data.email_verified && to.name === 'verify-email'){
+        return next("/")
+      }
+      
+    } 
+
+    if (userRole.data.isInactiveMember) {
+      
+      if (!sessionIsVerified.data.status && isSubscribed && userData.data.email_verified && userData.data.numbers && userData.data.invitations && to.name !== '2fa-verify') {
+        return to.redirectedFrom && to.redirectedFrom.path !== "2fa-verify" ? next({
+          name: '2fa-verify',
+          query: { to: to.redirectedFrom.path },
+        }) : next({ name: '2fa-verify', query: { to: "/" } })
+      }
+
+      if (sessionIsVerified.data.status && isSubscribed && userData.data.email_verified && userData.data.numbers && userData.data.invitations && to.name === '2fa-verify') {
+        return next("/")
+      }
+
+      if (!userData.data.email_verified && to.name !== 'verify-email') {
+        return next({ name: 'verify-email' })
+      } else if (
+        userData.data.email_verified &&
+                userData.data.numbers &&
+                !userData.data.invitations &&
+                !isSubscribed &&
+                to.name !== 'team-members-invite'
+      ) {
+        return next({ name: "team-members-invite" })
+      } else if (
+        to.name !== 'purchase-summary' &&
+                userData.data.email_verified &&
+                userData.data.numbers &&
+                userData.data.invitations &&
+                !isSubscribed
+      ) {
+        return next({ name: "purchase-summary" })
+      } else if (
+        userData.data.email_verified &&
+                userData.data.numbers &&
+                userData.data.invitations &&
+                isSubscribed &&
+                to.name === 'team-members-invite'
+      ) {
+        return next({ name: "dashboard" })
+      } else if (
+        to.name === 'purchase-summary' &&
+                userData.data.email_verified &&
+                userData.data.numbers &&
+                userData.data.invitations &&
+                isSubscribed
+      ) {
+        return next({ name: "dashboard" })
+      } else if (
+        userData.data.email_verified &&
+                userData.data.numbers &&
+                isSubscribed &&
+                to.name === 'available-numbers-select'
+      ) { 
+        return next("/")
+      } else if (
+        userData.data.email_verified &&
+                to.name === 'verify-email'
+      ) {
         return next("/")
       }
       
