@@ -348,10 +348,7 @@ const holdCall = async () => {
   })
     .then(response => {
       onHold.value = true                    
-      childCallSid.value = response.data.childCallSid
-      console.log(response, 'here is response');
-          
-      console.log(childCallSid.value, 'here is childCallSid')
+      childCallSid.value = response.data.childCallSid                      
                                     
     })
     .catch(error => {
@@ -554,22 +551,7 @@ const toggleCall = async event => {
           });
         });                                    
 
-        call.on('disconnect', () => {       
-          console.log(childCallSid.value, 'here is the childCallSid.value');
-          
-          // Call disconnect status to fetch details
-          axiosIns.post('/call-disconnected', {
-            callSid: callSid.value, 
-            childCallSid: childCallSid.value,
-            to: userNumber.value,   
-            from: from.value                     
-          })
-          .then(response => {            
-            console.log(response, 'here is call disconnected response');                                                          
-          })
-          .catch(error => {
-            console.error(error.response.data.error);
-          });
+        call.on('disconnect', () => {                                     
           
           stopCallStatusCheck(); // Stop checking call status
           onPhone.value = false;
@@ -619,9 +601,9 @@ const toggleCall = async event => {
           });
           const device = dialerStore.twilioDevice;
           const status = response.data.status;
-          log.value = `Current Call Status: ${status}`;
+          log.value = `Current Call Status: ${status}`;          
           
-          if (status === 'completed' || status === 'ended') {
+          if (status === 'completed' || status === 'no-answer') {
             stopCallStatusCheck();
             onPhone.value = false;
             connected.value = false;
@@ -638,7 +620,7 @@ const toggleCall = async event => {
               connected.value = true;
               log.value = 'Connected';
               callSid.value = '';
-            }, 5000); 
+            }, 1000); 
 
           }
         } catch (error) {

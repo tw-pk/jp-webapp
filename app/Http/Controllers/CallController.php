@@ -43,12 +43,13 @@ class CallController extends Controller
                 'record'   => true
             ]);
 
-            $to = $request->To;
+            $to = $request->To;            
             $number = Str::replaceFirst('+', '', $to);
             $callResponse = $dial->number($number);            
             $response->enqueue('supportRoom');
             $data = $request->all();                         
             $this->callRepository->saveCall($data);
+            $dialerPrice = $this->getNumberPrice($request->From);            
             return response($response)->header('Content-Type', 'text/xml');            
             
         } catch (\Exception $e) {   
@@ -100,18 +101,8 @@ class CallController extends Controller
 
     public function getCallInfo(Request $request) 
     {   
-        \Log::info("Here is the data =>". print_r($request->all(), true));                
-    }
-
-
-    public function callDisconnected(Request $request)
-    {
-        try {
-            $data = $request->all();      
-            // \Log::info("here is the call disconnect =>". print_r($data, true));                      
-            $response = $this->callRepository->updateCall($data);            
-        } catch (\Exception $e) {
-            \Log::info("here is the error =>". $e->getMessage());
+        if($request->input('CallStatus') == 'completed'){
+            $this->callRepository->updateCall($request->all());
         }        
     }
 
@@ -133,16 +124,18 @@ class CallController extends Controller
         try {
             // Fetch the call details using the childCallSid
             $callDetails = $twilio->calls($childCallSid)->fetch();
+            
 
             // Prepare the response data
             $response = [
-                'status' => $callDetails->status, // Call status (e.g., queued, in-progress, completed, busy, failed)
-                'duration' => $callDetails->duration, // Duration of the call in seconds
-                'price' => $callDetails->price, // Price of the call, if available
-                'to' => $callDetails->to, // The number the call was made to
-                'from' => $callDetails->from, // The number the call was made from
-                'dateCreated' => $callDetails->dateCreated->format('Y-m-d H:i:s'), // Call creation date
-            ];
+                'status' => $callDetails->status, 
+                'duration' => $callDetails->duration,
+                'price' => $callDetails->price,
+                'to' => $callDetails->to,
+                'from' => $callDetails->from,
+                'dateCreated' => $callDetails->dateCreated->format('Y-m-d H:i:s'),
+            ];            
+            
 
             return response()->json($response);
         } catch (\Exception $e) {
@@ -153,10 +146,8 @@ class CallController extends Controller
     }
 
 
-
     public function fetchCallDetails($n) 
-    {                                 
-        \Log::info("here is the call disconnected function");
+    {                                         
         $numberResponse = $this->twilio->pricing->v2->voice->numbers($n)->fetch();
         $price = $this->getCallPrice(print_r($numberResponse, true));                        
         return $price;
@@ -232,7 +223,7 @@ class CallController extends Controller
         $to = $request->input('to');    
         $from = $request->input('From');
         $forwardNumber = $request->input('forwardNumber');        
-        $holdUrl = route('continue-conversation');
+        $holdUrl = route('continue-conversation');        
         $holdCallSid = $this->userCallSid($to);
         $this->updateCallUrl($holdCallSid, $holdUrl);                    
         
@@ -242,6 +233,7 @@ class CallController extends Controller
         ];
         
         $forwardUrl = route('forward-ringing', $queryParams);
+        
         $this->updateCallUrl($dialerCallSid, $forwardUrl);            
         return response()->json(['message' => 'Call Forwarded Successfully!']);
     }
@@ -249,17 +241,18 @@ class CallController extends Controller
 
 
     public function forwardRinging(Request $request)
-    {
+    {        
         $forwardNumber = $request->input('forwardNumber');
         $from  = $request->input('from');
-        \Log::info("here is the  forward number => ". $forwardNumber);
-        \Log::info("here is the from number => ". $from);
-
         $response = new VoiceResponse();                    
         $dial = $response->dial('', ['callerId' => $from]);        
         $number = Str::replaceFirst('+', '', $forwardNumber);
-        $dial->number($number);                           
+        $dial->number($number);        
+
+        $dialerCallSid = $request->input('CallSid');                   
+
         $response->enqueue('supportRoom');
+        $this->callRepository->saveForwardCallDetail($dialerCallSid, $forwardNumber); 
         return response($response, 200)->header('Content-Type', 'text/xml');
     }
 
@@ -272,12 +265,13 @@ class CallController extends Controller
 
         $forwardCallSid = $this->userCallSid($forwardNumber);
         $currentUserCallSid = $this->userCallSid($currentUser);
-
+        
         // Define the base URL for call updates        
-        $baseUrl = route('transfer-call-conference');        
+        $baseUrl = route('transfer-call-conference');                     
         $this->updateCallUrl($forwardCallSid, $baseUrl);
         $this->updateCallUrl($currentUserCallSid, $baseUrl);
         $this->updateCallUrl($dialerCallSid, $baseUrl);
+        $this->callRepository->saveForwardCallSid($dialerCallSid, $forwardCallSid);
     }
 
     
@@ -286,7 +280,8 @@ class CallController extends Controller
     {
         $response = new VoiceResponse();
         $dial = $response->dial();
-        $conference = $dial->conference('TransferCallConferenceRoom'.time(), [
+        $conferenceName = 'TransferCallConferenceRoom'.time();
+        $conference = $dial->conference($conferenceName, [
             'beep' => false,                             
             'endConferenceOnExit' => true
         ]);        
@@ -321,5 +316,22 @@ class CallController extends Controller
         ]);
     }
 
+
+    public function getNumberPrice($phoneNumber)
+    {
+        $sid = config('app.TWILIO_CLIENT_ID');
+        $token = config('app.TWILIO_AUTH_TOKEN');
+        $twilio = new Client($sid, $token);
+        
+        $number = $twilio->pricing->v2->voice->numbers($phoneNumber)->fetch();
+        
+        $price = isset($number->inboundCallPrice['current_price']) 
+        ? json_encode($number->inboundCallPrice['current_price']) 
+        : (isset($number->outboundCallPrices[0]['current_price']) 
+            ? json_encode($number->outboundCallPrices[0]['current_price']) 
+            : null);                
+
+        return $price;       
+    }
 
 }

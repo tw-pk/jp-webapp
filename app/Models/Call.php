@@ -19,12 +19,14 @@ class Call extends Model
         'date_time',
         'sid',
         'contact_id',
-        'price'
+        'price',
+        'country_price',
+        'conference_name',
+        'mobile_call_sid',        
+        'total_price'
+
     ];
 
-    protected $casts = [
-        'price' => 'decimal:4',
-    ];
 
     public function contact(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

@@ -50,8 +50,6 @@ Route::post('/get-mobile-callsid', [CallController::class, 'mobileCallLeg'])->na
 
 Route::post('/get-call-info', [CallController::class, 'getCallInfo'])->name('get-call-info');
 
-Route::post('/call-disconnected', [CallController::class, 'callDisconnected'])->name('call-disconnected');
-
 Route::post('/check-call-status', [CallController::class, 'checkCallStatus'])->name('check-call-status');
 
 Route::post('twiml/place-on-hold', [CallController::class, 'placeOnHold']);
