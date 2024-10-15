@@ -33,6 +33,7 @@ const assignNumber = ref()
 const existingNumberOptionSelected = ref(false)
 const userPermission = ref(false)
 const isConfirmDialogOpen = ref(false)
+const selectedItemId = ref(null)
 
 const options = ref({
   page: 1,
@@ -110,13 +111,11 @@ const fetchMembers = () => {
   })
 }
 
-
 onMounted(() => {
   fetchNumbers()
   fetchRoles()
  
   //fetchMembers()
- 
 })
 
 watchEffect(fetchMembers)
@@ -182,14 +181,6 @@ const resolveUserRegistered = val => {
     }
 }
 
-
-// const deleteUser = id => {
-//   memberListStore.deleteMember(id)
-
-//   // re-fetch Members
-//   fetchMembers()
-// }
-
 const inviteUser = () => {
   isDisabled.value = true
   isLoading.value = true
@@ -236,7 +227,7 @@ const inviteUser = () => {
 }
 
 const editItem = item => {
-
+  
   defaultTitle.value = "Update Member"
   defaultButton.value = "Update"
   id.value = item.id,
@@ -277,18 +268,23 @@ watch(assignNumber, value => {
   }
 })
 
+const openConfirmDialog = itemId => {
+  selectedItemId.value = itemId  
+  isConfirmDialogOpen.value = true
+}
+
 const handleConfirmation = async action => {
-  // if(action===true){
-  //   try {
-  //     const accountResponse = await User.accountDeactivate()
-  //     if(accountResponse.data.status){
-  //       deactivated.value = true
-  //       isAccountDeactivated.value = false
-  //     }
-  //   } catch (error) {
-  //     console.error('Error deactivating account:', error)
-  //   }
-  // }
+  if(action === true && selectedItemId.value){
+    try {
+      const memberResponse = await memberListStore.deleteMember(selectedItemId.value)
+      if(memberResponse.data.status){
+        // re-fetch Members
+        fetchMembers()
+      }
+    } catch (error) {
+      console.error('Error deactivating account:', error)
+    }
+  }
 }
 </script>
 
@@ -590,7 +586,7 @@ const handleConfirmation = async action => {
               <VBtn
                 variant="text"
                 color="black"
-                @click="isConfirmDialogOpen = true"
+                @click="openConfirmDialog(item.raw.id)"
               >
                 Remove
               </VBtn>

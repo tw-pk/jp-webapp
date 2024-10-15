@@ -74,6 +74,13 @@ class ApexChartController extends Controller
         $totalInboundCalls = [];
         $totalMissedCalls = [];
 
+        $months = $this->getLastSevenMonths();
+        $monthlyData = [
+            'outbound' => array_fill(0, 7, 0),
+            'inbound' => array_fill(0, 7, 0),
+            'missed' => array_fill(0, 7, 0),
+        ];
+        
         $user = Auth::user();
         if (!empty($member) && $member !="All Members") {
             $user = User::find($member);
@@ -96,13 +103,6 @@ class ApexChartController extends Controller
                 ->orderBy('month')
                 ->get();
    
-            $monthlyData = [
-                'outbound' => array_fill(0, 7, 0),
-                'inbound' => array_fill(0, 7, 0),
-                'missed' => array_fill(0, 7, 0),
-            ];
-            
-            $months = $this->getLastSevenMonths();
             foreach ($callRecords as $record) {
                 $index = array_search($record->month, $months); 
                 if ($index !== false) {

@@ -192,69 +192,10 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
-
         $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(3));
         $token = $tokenResult->plainTextToken;
 
-        if (Auth::user()->hasRole(['Admin'])) {
-            $userAbilities = [
-                [
-                    'action' => 'manage',
-                    'subject' => 'all'
-                ]
-            ];
-        } else {
-            $userAbilities = [
-                [
-                    'action' => 'read',
-                    'subject' => 'Member'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'dashboard-analytics'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'inbox'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'Auth'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'teams'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'contact'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'contact-details'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'reports'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'phone-numbers'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'pages-account-settings-tab'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'account'
-                ],
-                [
-                    'action' => 'read',
-                    'subject' => 'security'
-                ]
-            ];
-        }
+        $userAbilities = $this->getUserAbilities();
 
         $userData = [
             'id' => $user->id,
@@ -269,12 +210,56 @@ class AuthController extends Controller
         ];
 
         return response()->json([
-            'message' => 'Successfully created user!',
+            'message' => 'Successfully logged in!',
             'accessToken' => $token,
             'userData' => $userData,
             'token_type' => 'Bearer',
             'userAbilities' => $userAbilities
         ]);
+    }
+
+    private function getUserAbilities()
+    {
+        $abilities = [
+            'Admin' => [
+                ['action' => 'manage', 'subject' => 'all']
+            ],
+            'Member' => [
+                ['action' => 'read', 'subject' => 'Member'],
+                ['action' => 'read', 'subject' => 'dashboard-analytics'],
+                ['action' => 'read', 'subject' => 'inbox'],
+                ['action' => 'read', 'subject' => 'Auth'],
+                ['action' => 'read', 'subject' => 'teams'],
+                ['action' => 'read', 'subject' => 'contact'],
+                ['action' => 'read', 'subject' => 'contact-details'],
+                ['action' => 'read', 'subject' => 'reports'],
+                ['action' => 'read', 'subject' => 'phone-numbers'],
+                ['action' => 'read', 'subject' => 'pages-account-settings-tab'],
+                ['action' => 'read', 'subject' => 'account'],
+                ['action' => 'read', 'subject' => 'security']
+            ],
+            'InactiveMember' => [
+                ['action' => 'read', 'subject' => 'InactiveMember'],
+                ['action' => 'read', 'subject' => 'dashboard-analytics'],
+                ['action' => 'read', 'subject' => 'Auth'],
+                ['action' => 'read', 'subject' => 'teams'],
+                ['action' => 'read', 'subject' => 'contact'],
+                ['action' => 'read', 'subject' => 'contact-details'],
+                ['action' => 'read', 'subject' => 'phone-numbers'],
+                ['action' => 'read', 'subject' => 'pages-account-settings-tab'],
+                ['action' => 'read', 'subject' => 'account'],
+                ['action' => 'read', 'subject' => 'security']
+            ],
+        ];
+    
+        // Check the user's role and return the corresponding abilities
+        if (Auth::user()->hasRole('Admin')) {
+            return $abilities['Admin'];
+        } elseif (Auth::user()->hasRole('InactiveMember')) {
+            return $abilities['InactiveMember'];
+        } else {
+            return $abilities['Member'];
+        }
     }
 
     public function forgotPassword(ForgotPasswordRequest $request)

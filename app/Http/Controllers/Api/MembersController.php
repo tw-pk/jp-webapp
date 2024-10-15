@@ -7,9 +7,12 @@ use App\Jobs\SendInvitationLink;
 use App\Models\Invitation;
 use App\Models\AssignNumber;
 use App\Models\User;
+use App\Models\UserNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
+use App\Services\TwilioServices;
 use Carbon\Carbon;
 
 class MembersController extends Controller
@@ -77,7 +80,6 @@ class MembersController extends Controller
 
     public function list(Request $request)
     {
-
         $searchQuery = $request->input('q');
         $options = $request->input('options');
 
@@ -217,4 +219,48 @@ class MembersController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function deleteMember($id)
+    {
+        $memberId = $id;
+        try {
+            $invitation = Invitation::find($id);
+            if (!$invitation) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ], 404);
+            }
+
+            if ($invitation->member_id) {
+                $user = User::find($invitation->member_id);
+                if ($user) {
+                    if ($user->numbers()->exists()) {
+
+                        $twilioServices = new TwilioServices();
+                        $user->numbers->each(function ($number) use ($twilioServices) {
+                            $twilioServices->deleteTwilioPhoneNo($number->phone_number_sid);
+                        });
+                        $user->numbers()->delete();
+                    }
+                    
+                    $user->syncRoles([]);
+                    $role = Role::where('name', 'InactiveMember')->first();
+                    $user->assignRole($role);
+                }
+            }
+            $invitation->delete();
+            return response()->json([
+                'status' => true,
+                'message' => 'Member deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to deleted member',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

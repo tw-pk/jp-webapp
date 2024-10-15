@@ -12,7 +12,6 @@ export const useMemberListStore = defineStore('MemberListStore', {
       })
     },
     
-
     // 👉 Fetch user phone numbers 
     fetchNumbers(params) { return axiosIns.post('api/auth/fetch/user/numbers', { params }) },
 
@@ -45,12 +44,13 @@ export const useMemberListStore = defineStore('MemberListStore', {
       })
     },
 
-    // 👉 Delete User
+    // 👉 Delete Member
     deleteMember(id) {
       return new Promise((resolve, reject) => {
-        axiosIns.delete(`api/auth/members/${id}`).then(response => resolve(response)).catch(error => reject(error))
+        axiosIns.delete(`api/auth/member/delete/${id}`).then(response => resolve(response)).catch(error => reject(error))
       })
     },
+    
 
   },
 })

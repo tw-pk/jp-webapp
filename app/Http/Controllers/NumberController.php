@@ -166,9 +166,11 @@ class NumberController extends Controller
 
             $phoneNumberSid = $incomingPhoneNumbers->sid;
             $this->storeNumber($phoneNumber, $request->state, $request->city, $phoneNumberSid);
+            
             return response()->json([
                 'message' => "You have successfully purchased $phoneNumber",
-                'number' => $phoneNumber
+                'number' => $phoneNumber,
+                'isInactiveMember' =>  Auth::user()->hasRole('InactiveMember') ?? false,
             ]);
         } catch (\Exception $e) {
             return response()->json([

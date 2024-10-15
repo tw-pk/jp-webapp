@@ -237,4 +237,18 @@ class TwilioServices
             return $e->getMessage();
         }
     }
+
+    public function deleteTwilioPhoneNo($phoneNumberSid = null)
+    {
+        if (!$phoneNumberSid) {
+            return false;
+        }
+        try {
+            $this->twilio->incomingPhoneNumbers($phoneNumberSid)->delete();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+    
 }

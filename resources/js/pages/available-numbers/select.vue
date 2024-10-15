@@ -56,7 +56,6 @@ onMounted(async () => {
   }
 })
 
-
 const type = [
   {
     name: 'Number',
