@@ -36,15 +36,20 @@ class CallController extends Controller
             $to = $request->input('to');    
             $from = $request->input('From');                                                                                            
 
-            $response = new VoiceResponse();            
-            $dial = $response->dial('', ['callerId' => $request->From]);
-            $to = $request->To;
+            $response = new VoiceResponse();   
+
+            $dial = $response->dial('', [
+                'callerId' => $request->From,
+                'record'   => true
+            ]);
+
+            $to = $request->To;            
             $number = Str::replaceFirst('+', '', $to);
             $callResponse = $dial->number($number);            
             $response->enqueue('supportRoom');
-            $data = $request->all();             
-            $this->createCallRecord($data);    
-
+            $data = $request->all();                         
+            $this->callRepository->saveCall($data);
+            $dialerPrice = $this->getNumberPrice($request->From);            
             return response($response)->header('Content-Type', 'text/xml');            
             
         } catch (\Exception $e) {   
@@ -55,129 +60,94 @@ class CallController extends Controller
     }
         
 
+    public function mobileCallLeg(Request $request) 
+    {   
+         // Access the incoming request data
+         $callSid = $request->input('callSid');
+         $to = $request->input('to');
+         $from = $request->input('From');
+ 
+         $mobileCallSid = null;
 
-    public function createCallRecord($data) // Ensure the parameter is an array
-    {
-        try {
+        $dialCall = $this->twilio->calls->read([
+            'to' => $to,
+            'status' => 'ringing'
+        ]);                
+        
 
-            \Log::info("inside the create call Record ". (print_r($data, true)));            
-            // \Log::info("here is the type of data => ". gettype(print_r($data, true)));
-            // \Log::info("inside the create call Record ". print_r($data, true));            
-    
-            // Call the repository method to save the data
-            $this->callRepository->saveCall($data);
-    
-        } catch (\Exception $e) {
-            \Log::info("here is call info =>". $e->getMessage());
-        }        
+        if (!empty($dialCall)) {            
+            foreach ($dialCall as $call) {
+                $mobileCallSid = $call->sid; 
+                $updateChildCallSid = $this->callRepository->updateMobileCallSid($callSid, $mobileCallSid);                            
+                return $mobileCallSid;
+            }
+
+        } else {
+            return null;
+        }
+
+
+         // You can now use these variables as needed
+         // For example, return a response
+         return response()->json([
+             'callSid' => $callSid,
+             'to' => $to,
+             'from' => $from,
+             'mobileCallSid' => $mobileCallSid,
+             'message' => 'Data received successfully!',
+         ]);
+                
     }
-    
-
 
     public function getCallInfo(Request $request) 
-    {                               
-         // Log the incoming request to ensure it's hitting this endpoint
-        Log::info('Call Status Callback', $request->all());
-        // return response('OK', 200);
+    {   
+        if($request->input('CallStatus') == 'completed'){
+            $this->callRepository->updateCall($request->all());
+        }        
     }
 
 
-    public function callDisconnected(Request $request)
+    public function checkCallStatus(Request $request)
     {
-        $dialerCallSid  = $request->input('callSid');
-        $childCallSid  = $request->input('childCallSid');
-        $forwardNumber  = $request->input('ForwardNumber');
-        $phoneNumbers  = $request->input('PhoneNumbers');
+        // Validate the incoming request
+        $request->validate([
+            'childCallSid' => 'required|string',
+        ]);
 
+        $childCallSid = $request->input('childCallSid');
 
-        // \Log::info("Here is the dialer call sid => ". $dialerCallSid);
-        // \Log::info("Here is the child call sid => ". $childCallSid);
-        // \Log::info("Here is the forward number => ". $forwardNumber);
-        // \Log::info("Here is the phone numbers => ". $phoneNumbers);
+        // Initialize the Twilio client
+        $sid = config('app.TWILIO_CLIENT_ID');
+        $token = config('app.TWILIO_AUTH_TOKEN');
+        $twilio = new Client($sid, $token);
 
-        // if($dialerCallSid){
-        //     $dialerCallSidResponse = $this->twilio->calls($dialerCallSid)->fetch();
-        //     $dialerCallPrice = $this->getCallPrice($dialerCallSidResponse);
-        //     \Log::info("dialer Call Price =>". $dialerCallPrice);
-        // }
-        
+        try {
+            // Fetch the call details using the childCallSid
+            $callDetails = $twilio->calls($childCallSid)->fetch();
+            
 
-        // if($childCallSid){
-        //     $childCallSidResponse = $this->twilio->calls($childCallSid)->fetch();
-        //     $childCallPrice = $this->getCallPrice($childCallSidResponse);
-        //     \Log::info("child Call Price =>". $childCallPrice);
-        // }        
+            // Prepare the response data
+            $response = [
+                'status' => $callDetails->status, 
+                'duration' => $callDetails->duration,
+                'price' => $callDetails->price,
+                'to' => $callDetails->to,
+                'from' => $callDetails->from,
+                'dateCreated' => $callDetails->dateCreated->format('Y-m-d H:i:s'),
+            ];            
+            
 
-
-        // if($forwardNumber){
-        //     $forwardCallSidResponse =  $this->userCallSid($forwardNumber); 
-        //     $forwardCallPrice = $this->getCallPrice($forwardCallSidResponse);
-        //     \Log::info("forward call Price =>". $forwardCallPrice);
-        // }
-        
-
-        // $conferenceCallPrice = 0;
-
-        // foreach ($phoneNumbers as $key => $number) {
-        //     $cconferenceCallSid = $this->userCallSid($number); 
-        //     $conferenceCallPrice += $this->getCallPrice($childCallSidResponse);
-        //     # code...
-        // }
-        
-                
-        // \Log::info("conference call Price =>". $conferenceCallPrice);
-
-        // $to = $request->input('to');    
-                  
-        // $completedCalls = $this->twilio->calls->read([
-        //     'to' => $to, 
-        //     'status' => 'completed',
-        //     'limit' => 50
-        // ]);
-
-        // $callRecords = [];
-        // \Log::info("here is the call disconnected function");
-        // foreach ($completedCalls as $call) {
-        //     $callSid = $call->sid;
-        //     $from = $call->from;
-        //     $to = $call->to;
-        //     $dateTime = $call->dateCreated->format('Y-m-d H:i:s');
-        //     $duration = $call->duration ?? '0 seconds';
-        //     $direction = $call->direction;
-        //     $status = $call->status;
-
-        //     $callDetails = $this->twilio->calls($callSid)->fetch();
-        //     $price = $callDetails->price ?? '0.00';
-
-        //     $callRecords[] = [
-        //         'sid' => $callSid,
-        //         'from' => $from,
-        //         'to' => $to,
-        //         'user_id' => Auth::user()->id,
-        //         'contact_id' => null,
-        //         'date_time' => $dateTime,
-        //         'duration' => $duration,
-        //         'direction' => $direction,
-        //         'status' => $status,
-        //         'price' => $price
-        //     ];
-        // }
-
-        // // Bulk insert call records
-        // if (!empty($callRecords)) {
-        //     Call::insert($callRecords);
-        // }
-
-        // return response()->json([
-        //     'message' => 'Call details saved successfully.' 
-        // ]);                     
+            return response()->json($response);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error fetching call status: ' . $e->getMessage()
+            ], 500);
+        }
     }
-
 
 
     public function fetchCallDetails($n) 
-    {                                 
-        \Log::info("here is the call disconnected function");
+    {                                         
         $numberResponse = $this->twilio->pricing->v2->voice->numbers($n)->fetch();
         $price = $this->getCallPrice(print_r($numberResponse, true));                        
         return $price;
@@ -253,7 +223,7 @@ class CallController extends Controller
         $to = $request->input('to');    
         $from = $request->input('From');
         $forwardNumber = $request->input('forwardNumber');        
-        $holdUrl = route('continue-conversation');
+        $holdUrl = route('continue-conversation');        
         $holdCallSid = $this->userCallSid($to);
         $this->updateCallUrl($holdCallSid, $holdUrl);                    
         
@@ -263,6 +233,7 @@ class CallController extends Controller
         ];
         
         $forwardUrl = route('forward-ringing', $queryParams);
+        
         $this->updateCallUrl($dialerCallSid, $forwardUrl);            
         return response()->json(['message' => 'Call Forwarded Successfully!']);
     }
@@ -270,17 +241,18 @@ class CallController extends Controller
 
 
     public function forwardRinging(Request $request)
-    {
+    {        
         $forwardNumber = $request->input('forwardNumber');
         $from  = $request->input('from');
-        \Log::info("here is the  forward number => ". $forwardNumber);
-        \Log::info("here is the from number => ". $from);
-
         $response = new VoiceResponse();                    
         $dial = $response->dial('', ['callerId' => $from]);        
         $number = Str::replaceFirst('+', '', $forwardNumber);
-        $dial->number($number);                           
+        $dial->number($number);        
+
+        $dialerCallSid = $request->input('CallSid');                   
+
         $response->enqueue('supportRoom');
+        $this->callRepository->saveForwardCallDetail($dialerCallSid, $forwardNumber); 
         return response($response, 200)->header('Content-Type', 'text/xml');
     }
 
@@ -293,12 +265,13 @@ class CallController extends Controller
 
         $forwardCallSid = $this->userCallSid($forwardNumber);
         $currentUserCallSid = $this->userCallSid($currentUser);
-
+        
         // Define the base URL for call updates        
-        $baseUrl = route('transfer-call-conference');        
+        $baseUrl = route('transfer-call-conference');                     
         $this->updateCallUrl($forwardCallSid, $baseUrl);
         $this->updateCallUrl($currentUserCallSid, $baseUrl);
         $this->updateCallUrl($dialerCallSid, $baseUrl);
+        $this->callRepository->saveForwardCallSid($dialerCallSid, $forwardCallSid);
     }
 
     
@@ -307,7 +280,8 @@ class CallController extends Controller
     {
         $response = new VoiceResponse();
         $dial = $response->dial();
-        $conference = $dial->conference('TransferCallConferenceRoom'.time(), [
+        $conferenceName = 'TransferCallConferenceRoom'.time();
+        $conference = $dial->conference($conferenceName, [
             'beep' => false,                             
             'endConferenceOnExit' => true
         ]);        
@@ -334,7 +308,7 @@ class CallController extends Controller
     }
 
 
-    public function updateCallUrl($callSid = null, $url)
+    public function updateCallUrl($callSid, $url)
     {        
         $this->twilio->calls($callSid)->update([
             'url' => $url,
@@ -342,5 +316,22 @@ class CallController extends Controller
         ]);
     }
 
+
+    public function getNumberPrice($phoneNumber)
+    {
+        $sid = config('app.TWILIO_CLIENT_ID');
+        $token = config('app.TWILIO_AUTH_TOKEN');
+        $twilio = new Client($sid, $token);
+        
+        $number = $twilio->pricing->v2->voice->numbers($phoneNumber)->fetch();
+        
+        $price = isset($number->inboundCallPrice['current_price']) 
+        ? json_encode($number->inboundCallPrice['current_price']) 
+        : (isset($number->outboundCallPrices[0]['current_price']) 
+            ? json_encode($number->outboundCallPrices[0]['current_price']) 
+            : null);                
+
+        return $price;       
+    }
 
 }

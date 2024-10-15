@@ -75,7 +75,7 @@ const userNumber  = ref('')
 const phoneNumbers = ref('')
 const dialog = ref(false)
 const forwardNumber = ref('');
-
+const callStatusInterval = ref(null);
 //hold track
 const onHold = ref(false) 
 const phoneNumbersMsg = ref(false);
@@ -348,10 +348,7 @@ const holdCall = async () => {
   })
     .then(response => {
       onHold.value = true                    
-      childCallSid.value = response.data.childCallSid
-      console.log(response, 'here is response')
-          
-      console.log(childCallSid.value, 'here is childCallSid')
+      childCallSid.value = response.data.childCallSid                      
                                     
     })
     .catch(error => {
@@ -472,152 +469,175 @@ const stopTimer = () => {
 }
 
 
-
 const toggleCall = async event => {
-  event.preventDefault()
+  event.preventDefault();
 
   // Code for making outbound call...
-  const user = await User.auth()
-  const device = dialerStore.twilioDevice
-  const userId = user.data.id
+  const user = await User.auth();
+  const device = dialerStore.twilioDevice;
+  const userId = user.data.id;
 
   // Function to check the user's credit balance
   const checkBalance = async userId => {
     try {
-      const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`)            
+      const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`);            
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
             
-      const contentType = response.headers.get('content-type')
+      const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        throw new TypeError("Received non-JSON response")
+        throw new TypeError("Received non-JSON response");
       }
       
-      return await response.json()
+      return await response.json();
     } catch (error) {
-      console.error('Error checking balance:', error)
-      
-      return null
+      console.error('Error checking balance:', error);
+      return null;
     }
-  }
+  };
 
   if (!onPhone.value) {
-    muted.value = false
-    onPhone.value = true
+    muted.value = false;
+    onPhone.value = true;
 
     // Check user's balance
-    const balanceResult = await checkBalance(userId)
+    const balanceResult = await checkBalance(userId);
     if (balanceResult && balanceResult.lowBalance) {
       // Show low balance message        
-      connected.value = false
-      log.value = 'Your balance is currently low. Please contact your team lead.'
-      onPhone.value = false
-      muted.value = true      
+      connected.value = false;
+      log.value = 'Your balance is currently low. Please contact your team lead.';
+      onPhone.value = false;
+      muted.value = true;      
     } else {
       // Make outbound call with current number
-      userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '')      
+      userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '');      
 
       try {                
-
         const call = await device.connect({
           params: {
             To: userNumber.value,
             agent: JSON.stringify(userId),
             From: from.value,
           },
-        })      
-
+        });      
 
         call.on('ringing', () => {                                 
-          log.value = 'Ringing'
-          isCallAccepted.value = true          
-        })         
-        
-
+          log.value = 'Ringing';
+          isCallAccepted.value = true;          
+        });         
 
         call.on('accept', () => {                                                                   
-          log.value = 'Progress'
+          log.value = 'Progress';
           if (call.parameters && call.parameters.CallSid) {
-            callSid.value = call.parameters.CallSid    
-            console.log(callSid.value, 'here is dialer CallSid ')
-                                                   
+            callSid.value = call.parameters.CallSid;                                                                   
           }          
 
-          isCallAccepted.value = true
-          startTimer()
+          isCallAccepted.value = true;
+          startTimer();
 
-          // check Call status
-          axiosIns.post('/get-call-info', {
-            callSid: callSid.value,
-            to: userNumber.value,
-            From: from.value,
+          // Fetch the child call SID
+          axiosIns.post('/get-mobile-callsid', {
+              callSid: callSid.value,
+              to: userNumber.value,
+              From: from.value,
           })
-          .then(response => {            
-            console.log(response, 'here is call info response')                                                          
-          })
-          .catch(error => {
-            console.error(error.response.data.error)
-          })
-
-
-        })                                    
-
-
-        call.on('disconnect', () => {       
-          //call Discconnect status to fetch details
-          axiosIns.post('/call-disconnected', {
-            callSid: callSid.value, 
-            childCallSid: childCallSid.value,
-            to: userNumber.value,
-            From: from.value,
-            ForwardNumber: forwardNumber.value,
-            PhoneNumbers: phoneNumbers
-
-          })
-          .then(response => {            
-            console.log(response, 'here is call disconnected response')                                                          
+          .then(response => {          
+            childCallSid.value = response.data;
+            startCallStatusCheck();
           })
           .catch(error => {
-            console.error(error.response.data.error)
-          })
+              console.error(error.response.data.error);
+          });
+        });                                    
+
+        call.on('disconnect', () => {                                     
           
-          onPhone.value = false
-          connected.value = false
-          callSid.value = null
-          log.value = 'Call has ended'
-          userNumber.value = null
+          stopCallStatusCheck(); // Stop checking call status
+          onPhone.value = false;
+          connected.value = false;
+          callSid.value = null;
+          log.value = 'Call has ended';
+          userNumber.value = null;
           isCallAccepted.value = false;         
           isConference.value = false;
-          onForward.value   = false; 
+          onForward.value = false; 
           stopTimer();          
           muted.value = true;
           setTimeout(() => {
-            connected.value = true
-            log.value = 'Connected'
-            callSid.value = ''
-          }, 5000)
-        })        
+            connected.value = true;
+            log.value = 'Connected';
+            callSid.value = '';
+          }, 5000);
+        });        
 
         device.disconnect(() => {
-            console.log('here is  call disconnected');            
+            console.log('here is call disconnected');            
         });
         
       } catch (error) {
-        console.error('Error connecting:', error)
+        console.error('Error connecting:', error);
       }
-
 
     }
   } else {    
-    log.value = 'Hanging Up'
-    device.disconnectAll()
-    log.value = 'Connected'
-    muted.value = true
-    onPhone.value = false
+    log.value = 'Hanging Up';
+    device.disconnectAll();
+    log.value = 'Connected';
+    muted.value = true;
+    onPhone.value = false;
   }
-}
 
+  
+  const startCallStatusCheck = () => {
+    if (callStatusInterval.value) {
+      clearInterval(callStatusInterval.value);
+    }
+    callStatusInterval.value = setInterval(async () => {
+      if (childCallSid.value) {
+        try {
+          const response = await axiosIns.post('/check-call-status', {
+            childCallSid: childCallSid.value,
+          });
+          const device = dialerStore.twilioDevice;
+          const status = response.data.status;
+          log.value = `Current Call Status: ${status}`;          
+          
+          if (status === 'completed' || status === 'no-answer') {
+            stopCallStatusCheck();
+            onPhone.value = false;
+            connected.value = false;
+            callSid.value = null;
+            log.value = 'Call has ended';
+            userNumber.value = null;
+            isCallAccepted.value = false;         
+            isConference.value = false;
+            onForward.value = false; 
+            stopTimer();          
+            muted.value = true;
+            device.disconnectAll();
+            setTimeout(() => {
+              connected.value = true;
+              log.value = 'Connected';
+              callSid.value = '';
+            }, 1000); 
+
+          }
+        } catch (error) {
+          console.error('Error fetching call status:', error);
+        }
+      }
+    }, 5000);
+  };
+
+  // Function to stop checking call status
+  const stopCallStatusCheck = () => {
+    if (callStatusInterval.value !== null) {
+      clearInterval(callStatusInterval.value);
+      callStatusInterval.value = null; // Reset the interval variable
+    }
+  };
+};
 
 
 const playIncomingCallSound = connection => {
