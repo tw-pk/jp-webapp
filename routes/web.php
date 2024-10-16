@@ -46,9 +46,11 @@ Route::post('/voice-{number}', [NumberController::class, 'handleVoice'])->name('
 //new croute to make calls
 Route::post('/make-call', [CallController::class, 'makeCall']);
 
+Route::post('/get-mobile-callsid', [CallController::class, 'mobileCallLeg'])->name('get-mobile-callsid');
+
 Route::post('/get-call-info', [CallController::class, 'getCallInfo'])->name('get-call-info');
 
-Route::post('/call-disconnected', [CallController::class, 'callDisconnected'])->name('call-disconnected');
+Route::post('/check-call-status', [CallController::class, 'checkCallStatus'])->name('check-call-status');
 
 Route::post('twiml/place-on-hold', [CallController::class, 'placeOnHold']);
 
