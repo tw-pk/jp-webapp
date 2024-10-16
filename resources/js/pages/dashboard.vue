@@ -21,6 +21,7 @@ const totalOutboundCalls = ref(0)
 const totalInboundCalls = ref(0)
 const totalCompletedCalls = ref(0)
 const series = ref([])
+const userHaveNumber = ref(false)
 
 const moreList = [
   {
@@ -78,6 +79,7 @@ const fetchLiveCalls = async () => {
       totalInboundCalls.value = liveCallsResponse.data.totalInboundCalls
       totalCompletedCalls.value = liveCallsResponse.data.totalCompletedCalls
       totalMissed.value = liveCallsResponse.data.totalMissed
+      userHaveNumber.value = liveCallsResponse.data.userHaveNumber
 
       series.value = [
         totalOutboundCalls.value,
@@ -93,6 +95,9 @@ const fetchLiveCalls = async () => {
 onMounted(fetchLiveCalls)
       
 //watchEffect(fetchLiveCalls)
+
+const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+const userRole = (userData && userData.role) ? userData.role : null
 </script>
 
 <template>
@@ -100,6 +105,15 @@ onMounted(fetchLiveCalls)
     <div class="pb-4 font-weight-bold text-h4">
       Dashboard
     </div>
+    <VAlert
+      v-if="userHaveNumber && userRole=='InactiveMember'"
+      border="start"
+      color="primary"
+      variant="tonal"
+      class="mb-5"
+    >
+      Success! Thank you very much for using our system. You have been made an admin, please logout and login again get admin dashboard.
+    </VAlert>
     <VRow class="match-height">
       <DashboardStatistics class="h-100" />
 

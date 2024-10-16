@@ -32,11 +32,14 @@ class ApexChartController extends Controller
         $totalCompletedCalls = 0;
         $totalLiveCalls = 0;
         $totalMissed = 0;
+        $userHaveNumber = false;
 
         $userId = Auth::user()->id;
         $numbers = $this->assignPhoneNumberService->getAssignPhoneNumbers($userId);
-
         if (!empty($numbers)) {
+
+            $userHaveNumber = true;
+
             $callRecords = Call::selectRaw("
                 SUM(CASE WHEN direction IN ('outbound-dial', 'outbound-api') THEN 1 ELSE 0 END) AS outboundCalls,
                 SUM(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) AS inboundCalls,
@@ -56,13 +59,14 @@ class ApexChartController extends Controller
             $totalLiveCalls = intval($callRecords->liveCalls ?? 0);
             $totalMissed = intval($callRecords->missedCalls ?? 0);
         }
-
+        
         return response()->json([
             'totalOutboundCalls' => $totalOutboundCalls,
             'totalInboundCalls' => $totalInboundCalls,
             'totalCompletedCalls' => $totalCompletedCalls,
             'totalLiveCalls' => $totalLiveCalls,
             'totalMissed' => $totalMissed,
+            'userHaveNumber' => $userHaveNumber,
         ]);
     }
 

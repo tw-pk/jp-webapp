@@ -17,6 +17,7 @@ use Laravel\Cashier\Http\Controllers\WebhookController;
 use Laravel\Cashier\Http\Middleware\VerifyWebhookSignature;
 use Laravel\Cashier\Payment;
 use Laravel\Cashier\Subscription;
+use Spatie\Permission\Models\Role;
 use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,10 +38,14 @@ class StripeWebhookController extends WebhookController
         $method = 'handle'.Str::studly(str_replace('.', '_', $payload['type']));
 
         WebhookReceived::dispatch($payload);
-
+        
         if($method == 'handlePaymentIntentSucceeded'){
             $this->billingHistory($payload);
             $this->creditCustomerAccount($payload);
+        }
+
+        if($method == 'handleInvoicePaymentSucceeded'){
+            $this->changeRoleInactiveMember($payload);
         }
 
         if (method_exists($this, $method)) {
@@ -66,7 +71,7 @@ class StripeWebhookController extends WebhookController
             if ($user) {
                 if ($user->credit) {
                     $user->credit->credit += $amount;
-                    $user->credit->save();
+                    $user->credit->save();                  
                 } else {
                     UserCredit::create([
                         'credit' => $amount,
@@ -99,6 +104,22 @@ class StripeWebhookController extends WebhookController
                 'status' => $paymentStatus,
                 'receipt_url' => $receipt_url,
             ]);
+        }
+    }
+
+    private function changeRoleInactiveMember(array $payload)
+    {
+        $paymentIntent = $payload['data']['object'];
+        $customerId = $paymentIntent['customer'];
+        $user = User::where('stripe_id', $customerId)->first();
+
+        if ($user) {
+            if ($user->hasRole('InactiveMember')) {
+                $role = Role::where('name', 'Admin')->first();
+                if ($role) {
+                    $user->syncRoles([$role]);
+                } 
+            }
         }
     }
 
