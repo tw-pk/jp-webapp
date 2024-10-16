@@ -101,7 +101,7 @@ class CallController extends Controller
 
     public function getCallInfo(Request $request) 
     {   
-        if($request->input('CallStatus') == 'completed'){
+        if($request->input('CallStatus') == 'completed' || $request->input('CallStatus') == 'no-answer' || $request->input('CallStatus') == 'busy' || $request->input('CallStatus') == 'canceled'){
             $this->callRepository->updateCall($request->all());
         }        
     }
@@ -233,7 +233,6 @@ class CallController extends Controller
         ];
         
         $forwardUrl = route('forward-ringing', $queryParams);
-        
         $this->updateCallUrl($dialerCallSid, $forwardUrl);            
         return response()->json(['message' => 'Call Forwarded Successfully!']);
     }
@@ -267,7 +266,7 @@ class CallController extends Controller
         $currentUserCallSid = $this->userCallSid($currentUser);
         
         // Define the base URL for call updates        
-        $baseUrl = route('transfer-call-conference');                     
+        $baseUrl = route('transfer-call-conference');                             
         $this->updateCallUrl($forwardCallSid, $baseUrl);
         $this->updateCallUrl($currentUserCallSid, $baseUrl);
         $this->updateCallUrl($dialerCallSid, $baseUrl);
