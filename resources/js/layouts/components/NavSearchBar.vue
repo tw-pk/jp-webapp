@@ -58,28 +58,27 @@ const suggestionGroups = [
       {
         icon: 'tabler-users',
         title: 'Profile',
-        path: 'pages/account-settings/account',
+        url: { name: 'pages-account-settings-account' },
       },
-  
       {
         icon: 'tabler-lock',
         title: 'Security',
-        path: 'pages/account-settings/security',
+        url: { name: 'pages-account-settings-security' },
       },
       {
         icon: 'tabler-file-text',
         title: 'Payment Methods',
-        path: 'pages/account-settings/billing-plans',
+        url: { name: 'pages-account-settings-billing-plans' },
       },
       {
         icon: 'tabler-bell',
         title: 'Notifications',
-        path: 'pages/account-settings/notification',
+        url: { name: 'pages-account-settings-notification' },
       },
       {
         icon: 'tabler-building-skyscraper',
         title: 'Business Profile',
-        path: 'pages/account-settings/business-profile',
+        url: { name: 'pages-account-settings-business-profile' },
       },
     ],
   },
