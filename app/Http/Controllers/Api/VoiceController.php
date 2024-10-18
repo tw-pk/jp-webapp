@@ -153,14 +153,23 @@ class VoiceController extends Controller
             }
 
             if (!empty($dateRange) && is_string($dateRange)) {
-                $dateArray = explode('to', $dateRange);
-                if (!empty($dateArray[0])) {
-                    $startTimeBefore = $dateArray[0];
-                    $filter['startTimeBefore'] = Carbon::parse($startTimeBefore)->format('Y-m-d H:i:s');
+
+                $dateRange = trim($dateRange);
+            
+                if (str_contains($dateRange, ' to ')) {
+                    list($startDate, $endDate) = explode(' to ', $dateRange);
+                    $startDate = Carbon::parse(trim($startDate))->format('Y-m-d H:i:s');
+                    $endDate = Carbon::parse(trim($endDate))->format('Y-m-d H:i:s');
+                } else {
+                    $startDate = Carbon::parse($dateRange)->format('Y-m-d H:i:s');
+                    $endDate = null;
                 }
-                if (!empty($dateArray[1])) {
-                    $startTimeAfter = $dateArray[1];
-                    $filter['startTimeAfter'] = Carbon::parse($startTimeAfter)->format('Y-m-d H:i:s');
+            
+                if (!empty($startDate)) {
+                    $filter['startTimeBefore'] = $startDate;
+                }
+                if (!empty($endDate)) {
+                    $filter['startTimeAfter'] = $endDate;
                 }
             }
             

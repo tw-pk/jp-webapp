@@ -13,60 +13,57 @@ const isAppSearchBarVisible = ref(false)
 // 👉 Default suggestions
 const suggestionGroups = [
   {
-    title: 'Popular Searches',
+    title: 'Dashboard',
     content: [
       {
-        icon: 'tabler-chart-donut',
-        title: 'Analytics',
+        icon: 'tabler-layout-dashboard',
+        title: 'Dashboard',
         url: { name: 'dashboard' },
       },
       {
-        icon: 'tabler-chart-bubble',
-        title: 'CRM',
-        url: { name: 'dashboard-crm' },
+        icon: 'tabler-phone',
+        title: 'Phone Numbers',
+        url: { name: 'pages-phone-numbers' },
       },
       {
-        icon: 'tabler-file',
-        title: 'Invoice List',
-        url: { name: 'apps-invoice-list' },
+        icon: 'tabler-user-circle',
+        title: 'Contact',
+        url: { name: 'pages-contact' },
+      },
+      {
+        icon: 'tabler-phone-call',
+        title: 'Recent Calls',
+        url: { name: 'pages-recent-calls' },
+      },
+      {
+        icon: 'tabler-message-circle-2',
+        title: 'SMS & MMS',
+        url: { name: 'messages-inbox' },
+      },
+      {
+        icon: 'tabler-transfer-in',
+        title: 'Top Up Credit',
+        url: { name: 'pages-top-up-credit-payment' },
+      },
+    ],
+  },
+  {
+    title: 'Teams',
+    content: [
+      {
+        icon: 'tabler-users',
+        title: 'Manage Members',
+        url: { name: 'pages-teams-manage-members' },
       },
       {
         icon: 'tabler-users',
-        title: 'User List',
-        url: { name: 'apps-user-list' },
+        title: 'Manage Team',
+        url: { name: 'pages-teams-manage-groups' },
       },
     ],
   },
   {
-    title: 'Apps & Pages',
-    content: [
-      {
-        icon: 'tabler-calendar',
-        title: 'Calendar',
-        url: { name: 'apps-calendar' },
-      },
-      {
-        icon: 'tabler-file-plus',
-        title: 'Invoice Add',
-        url: { name: 'apps-invoice-add' },
-      },
-      {
-        icon: 'tabler-currency-dollar',
-        title: 'Pricing',
-        url: { name: 'pages-pricing' },
-      },
-      {
-        icon: 'tabler-user',
-        title: 'Account Settings',
-        url: {
-          name: 'pages-account-settings-tab',
-          params: { tab: 'account' },
-        },
-      },
-    ],
-  },
-  {
-    title: 'User Interface',
+    title: 'Settings',
     content: [
       {
         icon: 'tabler-letter-a',
@@ -90,31 +87,7 @@ const suggestionGroups = [
       },
     ],
   },
-  {
-    title: 'Popular Searches',
-    content: [
-      {
-        icon: 'tabler-list',
-        title: 'Select',
-        url: { name: 'forms-select' },
-      },
-      {
-        icon: 'tabler-space',
-        title: 'Combobox',
-        url: { name: 'forms-combobox' },
-      },
-      {
-        icon: 'tabler-calendar',
-        title: 'Date & Time Picker',
-        url: { name: 'forms-date-time-picker' },
-      },
-      {
-        icon: 'tabler-hexagon',
-        title: 'Rating',
-        url: { name: 'forms-rating' },
-      },
-    ],
-  },
+  
 ]
 
 // 👉 No Data suggestion
