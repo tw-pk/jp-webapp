@@ -58,7 +58,7 @@ const suggestionGroups = [
       {
         icon: 'tabler-users',
         title: 'Profile',
-        to: {
+        url: {
           name: 'pages-account-settings-tab',
           params: { tab: 'account' },
         },
@@ -66,7 +66,7 @@ const suggestionGroups = [
       {
         icon: 'tabler-lock',
         title: 'Security',
-        to: {
+        url: {
           name: 'pages-account-settings-tab',
           params: { tab: 'security' },
         },
@@ -74,7 +74,7 @@ const suggestionGroups = [
       {
         icon: 'tabler-file-text',
         title: 'Payment Methods',
-        to: {
+        url: {
           name: 'pages-account-settings-tab',
           params: { tab: 'billing-plans' },
         },
@@ -82,7 +82,7 @@ const suggestionGroups = [
       {
         icon: 'tabler-bell',
         title: 'Notifications',
-        to: {
+        url: {
           name: 'pages-account-settings-tab',
           params: { tab: 'notification' },
         },
@@ -90,7 +90,7 @@ const suggestionGroups = [
       {
         icon: 'tabler-building-skyscraper',
         title: 'Business Profile',
-        to: {
+        url: {
           name: 'pages-account-settings-tab',
           params: { tab: 'business-profile' },
         },
