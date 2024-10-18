@@ -62,7 +62,7 @@ const router = createRouter({
     },
     {
       path: '/pages/teams-manage-teams',
-      redirect: () => ({ name: 'pages-teams-manage-groups' }),
+      redirect: () => ({ name: 'pages-teams-manage-teams' }),
     },
     {
       path: '/pages/phone-numbers',

@@ -21,9 +21,14 @@ const suggestionGroups = [
         url: { name: 'dashboard' },
       },
       {
-        icon: 'tabler-phone',
-        title: 'Phone Numbers',
-        url: { name: 'pages-phone-numbers' },
+        icon: 'tabler-users',
+        title: 'Manage Members',
+        url: { name: 'pages-teams-manage-members' },
+      },
+      {
+        icon: 'tabler-users',
+        title: 'Manage Team',
+        url: { name: 'pages-teams-manage-teams' },
       },
       {
         icon: 'tabler-user-circle',
@@ -43,22 +48,7 @@ const suggestionGroups = [
       {
         icon: 'tabler-transfer-in',
         title: 'Top Up Credit',
-        url: { name: 'pages-top-up-credit-payment' },
-      },
-    ],
-  },
-  {
-    title: 'Teams',
-    content: [
-      {
-        icon: 'tabler-users',
-        title: 'Manage Members',
-        url: { name: 'pages-teams-manage-members' },
-      },
-      {
-        icon: 'tabler-users',
-        title: 'Manage Team',
-        url: { name: 'pages-teams-manage-groups' },
+        url: { name: 'pages-top-up-credit' },
       },
     ],
   },
@@ -66,27 +56,43 @@ const suggestionGroups = [
     title: 'Settings',
     content: [
       {
-        icon: 'tabler-letter-a',
-        title: 'Typography',
-        url: { name: 'pages-typography' },
+        icon: 'tabler-users',
+        title: 'Profile',
+        url: { name: 'pages-account-settings-account' },
       },
       {
-        icon: 'tabler-square',
-        title: 'Tabs',
-        url: { name: 'components-tabs' },
+        icon: 'tabler-lock',
+        title: 'Security',
+        url: { name: 'pages-account-settings-security' },
       },
       {
-        icon: 'tabler-hand-click',
-        title: 'Buttons',
-        url: { name: 'components-button' },
+        icon: 'tabler-file-text',
+        title: 'Payment Methods',
+        url: { name: 'pages-account-settings-billing-plans' },
       },
       {
-        icon: 'tabler-keyboard',
-        title: 'Statistics',
-        url: { name: 'pages-cards-card-statistics' },
+        icon: 'tabler-bell',
+        title: 'Notifications',
+        url: { name: 'pages-account-settings-notification' },
+      },
+      {
+        icon: 'tabler-building-skyscraper',
+        title: 'Business Profile',
+        url: { name: 'pages-account-settings-business-profile' },
       },
     ],
   },
+  {
+    title: 'Phone Numbers',
+    content: [
+      {
+        icon: 'tabler-phone',
+        title: 'Phone Numbers',
+        url: { name: 'pages-phone-numbers' },
+      },
+    ],
+  },
+  
   
 ]
 
