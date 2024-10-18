@@ -79,6 +79,9 @@ class CallController extends Controller
             foreach ($dialCall as $call) {
                 $mobileCallSid = $call->sid; 
                 $updateChildCallSid = $this->callRepository->updateMobileCallSid($callSid, $mobileCallSid);                            
+                if($updateChildCallSid){
+                    $this->callRepository->updateCallDirection($callSid);
+                }
                 return $mobileCallSid;
             }
 

@@ -91,6 +91,12 @@ class CallRepository implements CallRepositoryInterface
         return $data;            
     }
 
+    public function updateCallDirection(string $callSid)
+    {
+        $call = Call::where('sid', $callSid)->first();
+        $call->direction = 'outbound-dial';
+        $call->save();
+    }
 
     public function updateCall(array $data)
     {                          
@@ -106,41 +112,45 @@ class CallRepository implements CallRepositoryInterface
             $mobileDetails = $this->fetchCallSidDetails($callDetail->mobile_call_sid);
             $forwardCallDetails = $callDetail->forwarded_call_sid 
                                   ? $this->fetchCallSidDetails($callDetail->forwarded_call_sid) 
-                                  : null;            
-    
+                                  : null;
+            \Log::info("here is the forward call details =>". $forwardCallDetails);
             // Total call duration from the current call
             $totalCallDuration = $data['CallDuration'];
             $totalPriceWithMargin = 0;
         
-            // Case 1: Zero duration call
+            // If the mobile call duration is 0, calculate base price without forward details
             if ($mobileDetails['duration'] == '0') {
-                // Calculate price for zero duration call
                 $totalPriceWithMargin = $this->calCulateTotalPrice(
                     $totalCallDuration, 
                     $callDetail->country_price, 
                     0, 0, 0
-                );                
-    
+                );
+
+                \Log::info("here is the price with zero duration  =>". $totalPriceWithMargin);
+
             } else {
-                // Case 2: Non-zero duration call with/without forwarding
-                if ($forwardCallDetails) {                    
-                    // Calculate price for forwarded call
+                // If forward call details exist, include them in price calculation
+                if ($forwardCallDetails) {
                     $totalPriceWithMargin = $this->calCulateTotalPrice(
                         $totalCallDuration, 
                         $callDetail->country_price, 
                         $callDetail->price, 
                         $callDetail->forward_call_price, 
-                        $forwardCallDetails['duration'] 
-                    );                    
+                        $forwardCallDetails['duration']
+                    );
+
+                    \Log::info("here is the if total margin details  =>". $totalPriceWithMargin);
 
                 } else {
-                    // Case 3: Non-forwarded call
+                    // Forward call details don't exist, only calculate based on base and mobile details
                     $totalPriceWithMargin = $this->calCulateTotalPrice(
                         $totalCallDuration, 
                         $callDetail->country_price, 
                         $callDetail->price, 
                         0, 0
                     );
+
+                    \Log::info("here is the else total margin details  =>". $totalPriceWithMargin);
                 }
             }
         
@@ -153,9 +163,10 @@ class CallRepository implements CallRepositoryInterface
                 'duration'      => $data['CallDuration'],
                 'date_time'     => $data['Timestamp'],
                 'total_price'   => $totalPriceWithMargin,
-                'forward_call_duration' => $forwardCallDetails['duration'] ?? 0
+                'forward_call_duration' => $forwardCallDetails['duration'] ?? null
             ]);
-            
+
+            \Log::info("here is the update call details =>". $updateCallDetails);
         
             if (!$updateCallDetails) {
                 throw new \Exception('Failed to update call details for CallSid: ' . $data['CallSid']);
@@ -173,7 +184,7 @@ class CallRepository implements CallRepositoryInterface
                               ? $user->id 
                               : $user->invitations->user_id;
         
-    
+            \Log::info("here is the userId to charge =>". $updateCallDetails);
             // Deduct admin credit based on the calculated total price
             $deductAdminPrice = $this->deductAdmiCredit($userIdToCharge, $totalPriceWithMargin);
         
@@ -188,6 +199,7 @@ class CallRepository implements CallRepositoryInterface
             DB::rollBack();            
             return $e->getMessage();
         }
+        
     }
     
 
