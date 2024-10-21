@@ -18,11 +18,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->job(new FetchTwilioCallsJob())
-                ->everyFiveMinutes()
-                //->everyMinute()
-                ->name('fetch-twilio-calls-job')
-                ->withoutOverlapping();
+        // $schedule->job(new FetchTwilioCallsJob())
+        //         ->everyFiveMinutes()
+        //         //->everyMinute()
+        //         ->name('fetch-twilio-calls-job')
+        //         ->withoutOverlapping();
                  
         $schedule->call(function () {
             $service = new AutoTopUpPaymentService();
