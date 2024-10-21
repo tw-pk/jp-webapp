@@ -218,7 +218,7 @@ Route::group(['prefix' => 'auth'], function (){
         Route::delete('role/delete/{id}', [RoleController::class, 'delete_role']);
 
         //Notifications
-        Route::post('notifications', [NotificationController::class, 'get_notifications']);
+        Route::post('notifications', [NotificationController::class, 'getNotifications']);
 
         //Credit
         Route::post('fetch/top-up-credit', [CreditController::class, 'fetch_top_up_credit']);

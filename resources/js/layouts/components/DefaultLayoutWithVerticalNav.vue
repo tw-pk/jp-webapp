@@ -6,21 +6,22 @@ import { useThemeConfig } from '@core/composable/useThemeConfig'
 import Footer from '@/layouts/components/Footer.vue'
 import NavBarI18n from '@/layouts/components/NavBarI18n.vue'
 import NavBarNotifications from '@/layouts/components/NavBarNotifications.vue'
-import NavbarShortcuts from '@/layouts/components/NavbarShortcuts.vue'
+
+//import NavbarShortcuts from '@/layouts/components/NavbarShortcuts.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import NavSearchBar from '@/layouts/components/NavSearchBar.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
 
 // @layouts plugin
+import Dialer from "@/layouts/components/Dialer.vue"
 import { VerticalNavLayout } from '@layouts'
-import Dialer from "@/layouts/components/Dialer.vue";
 
-import {useTopUpCreditStore} from "@/views/apps/credit/useTopUpCreditStore";
+import { useTopUpCreditStore } from "@/views/apps/credit/useTopUpCreditStore"
 
 
 const { appRouteTransition, isLessThanOverlayNavBreakpoint } = useThemeConfig()
 const { width: windowWidth } = useWindowSize()
-const topUpCreditStore = useTopUpCreditStore();
+const topUpCreditStore = useTopUpCreditStore()
 const credit = ref()
 
 
@@ -31,7 +32,10 @@ topUpCreditStore.fetchTopUpCreditInfo()
 </script>
 
 <template>
-  <VerticalNavLayout :nav-items="navItems" :credit="credit">
+  <VerticalNavLayout
+    :nav-items="navItems"
+    :credit="credit"
+  >
     <!-- 👉 navbar -->
     <template #navbar="{ toggleVerticalOverlayNavActive }">
       <div class="d-flex h-100 align-center">
@@ -51,10 +55,10 @@ topUpCreditStore.fetchTopUpCreditInfo()
 
         <VSpacer />
 
-        <Dialer class="me-1"/>
+        <Dialer class="me-1" />
         <NavBarI18n class="me-1" />
         <NavbarThemeSwitcher class="me-1" />
-        <NavbarShortcuts class="me-1" />
+        <!-- <NavbarShortcuts class="me-1" /> -->
         <NavBarNotifications class="me-2" />
         <UserProfile />
       </div>

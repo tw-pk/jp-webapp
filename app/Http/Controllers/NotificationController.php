@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Event;
 class NotificationController extends Controller
 {
 
-    public function get_notifications()
+    public function getNotifications()
     {
         event(new TestHello(1, 'This is a test message'));
 
