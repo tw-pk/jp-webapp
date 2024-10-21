@@ -10,242 +10,106 @@ defineOptions({ inheritAttrs: false })
 // 👉 Is App Search Bar Visible
 const isAppSearchBarVisible = ref(false)
 
-const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-const userRole = (userData && userData.role) ? userData.role : null
-
-if(userRole == "Admin"){
-  // 👉 Default suggestions
-  const suggestionGroups = [
-    {
-      title: 'Dashboard',
-      content: [
-        {
-          icon: 'tabler-layout-dashboard',
-          title: 'Dashboard',
-          url: { name: 'dashboard' },
+// 👉 Default suggestions
+const suggestionGroups = [
+  {
+    title: 'Dashboard',
+    content: [
+      {
+        icon: 'tabler-layout-dashboard',
+        title: 'Dashboard',
+        url: { name: 'dashboard' },
+      },
+      {
+        icon: 'tabler-users',
+        title: 'Manage Members',
+        url: { name: 'pages-teams-manage-members' },
+      },
+      {
+        icon: 'tabler-users',
+        title: 'Manage Team',
+        url: { name: 'pages-teams-manage-teams' },
+      },
+      {
+        icon: 'tabler-user-circle',
+        title: 'Contact',
+        url: { name: 'pages-contact' },
+      },
+      {
+        icon: 'tabler-phone-call',
+        title: 'Recent Calls',
+        url: { name: 'pages-recent-calls' },
+      },
+      {
+        icon: 'tabler-message-circle-2',
+        title: 'SMS & MMS',
+        url: { name: 'messages-inbox' },
+      },
+      {
+        icon: 'tabler-transfer-in',
+        title: 'Top Up Credit',
+        url: { name: 'pages-top-up-credit' },
+      },
+    ],
+  },
+  {
+    title: 'Settings',
+    content: [
+      {
+        icon: 'tabler-users',
+        title: 'Profile',
+        url: {
+          name: 'pages-account-settings-tab',
+          params: { tab: 'account' },
         },
-        {
-          icon: 'tabler-users',
-          title: 'Manage Members',
-          url: { name: 'pages-teams-manage-members' },
+      },
+      {
+        icon: 'tabler-lock',
+        title: 'Security',
+        url: {
+          name: 'pages-account-settings-tab',
+          params: { tab: 'security' },
         },
-        {
-          icon: 'tabler-users',
-          title: 'Manage Team',
-          url: { name: 'pages-teams-manage-teams' },
+      },
+      {
+        icon: 'tabler-file-text',
+        title: 'Payment Methods',
+        url: {
+          name: 'pages-account-settings-tab',
+          params: { tab: 'billing-plans' },
         },
-        {
-          icon: 'tabler-user-circle',
-          title: 'Contact',
-          url: { name: 'pages-contact' },
+      },
+      {
+        icon: 'tabler-bell',
+        title: 'Notifications',
+        url: {
+          name: 'pages-account-settings-tab',
+          params: { tab: 'notification' },
         },
-        {
-          icon: 'tabler-phone-call',
-          title: 'Recent Calls',
-          url: { name: 'pages-recent-calls' },
+      },
+      {
+        icon: 'tabler-building-skyscraper',
+        title: 'Business Profile',
+        url: {
+          name: 'pages-account-settings-tab',
+          params: { tab: 'business-profile' },
         },
-        {
-          icon: 'tabler-message-circle-2',
-          title: 'SMS & MMS',
-          url: { name: 'messages-inbox' },
-        },
-        {
-          icon: 'tabler-transfer-in',
-          title: 'Top Up Credit',
-          url: { name: 'pages-top-up-credit' },
-        },
-      ],
-    },
-    {
-      title: 'Settings',
-      content: [
-        {
-          icon: 'tabler-users',
-          title: 'Profile',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'account' },
-          },
-        },
-        {
-          icon: 'tabler-lock',
-          title: 'Security',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'security' },
-          },
-        },
-        {
-          icon: 'tabler-file-text',
-          title: 'Payment Methods',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'billing-plans' },
-          },
-        },
-        {
-          icon: 'tabler-bell',
-          title: 'Notifications',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'notification' },
-          },
-        },
-        {
-          icon: 'tabler-building-skyscraper',
-          title: 'Business Profile',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'business-profile' },
-          },
-        },
-      ],
-    },
-    {
-      title: 'Phone Numbers',
-      content: [
-        {
-          icon: 'tabler-phone',
-          title: 'Phone Numbers',
-          url: { name: 'pages-phone-numbers' },
-        },
-      ],
-    },
-  ]
-}else if(userRole == "InactiveMember"){
-  // 👉 Default suggestions
-  const suggestionGroups = [
-    {
-      title: 'Dashboard',
-      content: [
-        {
-          icon: 'tabler-layout-dashboard',
-          title: 'Dashboard',
-          url: { name: 'dashboard' },
-        },
-        {
-          icon: 'tabler-users',
-          title: 'Manage Team',
-          url: { name: 'pages-teams-manage-teams' },
-        },
-        {
-          icon: 'tabler-user-circle',
-          title: 'Contact',
-          url: { name: 'pages-contact' },
-        },
-        {
-          icon: 'tabler-phone-call',
-          title: 'Recent Calls',
-          url: { name: 'pages-recent-calls' },
-        },
-        
-      ],
-    },
-    {
-      title: 'Settings',
-      content: [
-        {
-          icon: 'tabler-users',
-          title: 'Profile',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'account' },
-          },
-        },
-        {
-          icon: 'tabler-lock',
-          title: 'Security',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'security' },
-          },
-        },
-      ],
-    },
-    {
-      title: 'Phone Numbers',
-      content: [
-        {
-          icon: 'tabler-phone',
-          title: 'Phone Numbers',
-          url: { name: 'pages-phone-numbers' },
-        },
-      ],
-    },
+      },
+    ],
+  },
+  {
+    title: 'Phone Numbers',
+    content: [
+      {
+        icon: 'tabler-phone',
+        title: 'Phone Numbers',
+        url: { name: 'pages-phone-numbers' },
+      },
+    ],
+  },
   
   
-  ]
-}else{
-  // 👉 Default suggestions
-  const suggestionGroups = [
-    {
-      title: 'Dashboard',
-      content: [
-        {
-          icon: 'tabler-layout-dashboard',
-          title: 'Dashboard',
-          url: { name: 'dashboard' },
-        },
-        {
-          icon: 'tabler-users',
-          title: 'Manage Team',
-          url: { name: 'pages-teams-manage-teams' },
-        },
-        {
-          icon: 'tabler-user-circle',
-          title: 'Contact',
-          url: { name: 'pages-contact' },
-        },
-        {
-          icon: 'tabler-phone-call',
-          title: 'Recent Calls',
-          url: { name: 'pages-recent-calls' },
-        },
-        {
-          icon: 'tabler-message-circle-2',
-          title: 'SMS & MMS',
-          url: { name: 'messages-inbox' },
-        },
-      ],
-    },
-    {
-      title: 'Settings',
-      content: [
-        {
-          icon: 'tabler-users',
-          title: 'Profile',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'account' },
-          },
-        },
-        {
-          icon: 'tabler-lock',
-          title: 'Security',
-          url: {
-            name: 'pages-account-settings-tab',
-            params: { tab: 'security' },
-          },
-        },
-        
-      ],
-    },
-    {
-      title: 'Phone Numbers',
-      content: [
-        {
-          icon: 'tabler-phone',
-          title: 'Phone Numbers',
-          url: { name: 'pages-phone-numbers' },
-        },
-      ],
-    },
-  
-  
-  ]
-}
-
-
+]
 
 // 👉 No Data suggestion
 const noDataSuggestions = [
