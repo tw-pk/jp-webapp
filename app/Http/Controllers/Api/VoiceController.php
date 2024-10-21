@@ -82,8 +82,6 @@ class VoiceController extends Controller
 
         ]);
 
-        Log::info('inside VoiceController');
-        
         if ($call_created) {
             return response()->json([
                 'status' => true,
