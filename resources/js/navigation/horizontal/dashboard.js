@@ -1,21 +1,21 @@
 export default [
   {
-    title: 'Dashboards',
-    icon: { icon: 'tabler-smart-home' },
+    title: 'Dashboard',
+    icon: { icon: 'tabler-layout-dashboard' },
     children: [
       {
         title: 'Analytics',
-        to: 'dashboards',
+        to: 'dashboard',
         icon: { icon: 'tabler-chart-pie-2' },
       },
       {
         title: 'eCommerce',
-        to: 'dashboards-ecommerce',
+        to: 'dashboard-ecommerce',
         icon: { icon: 'tabler-atom-2' },
       },
       {
         title: 'CRM',
-        to: 'dashboards-crm',
+        to: 'dashboard-crm',
         icon: { icon: 'tabler-3d-cube-sphere' },
       },
     ],

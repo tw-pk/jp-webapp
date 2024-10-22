@@ -32,12 +32,12 @@ class EmailVerificationService
             return false;
         }
 
-        $otp = random_int(0, 1000000);
-
+        $otp = random_int(100000, 999999);
         $password_verification = new PasswordVerification();
         $password_verification->otp = $otp;
         $password_verification->user_id = $user->id;
-        $password_verification->expires_at = Carbon::now()->addSeconds(30)->format('Y-m-d h:i');
+        $password_verification->expires_at = Carbon::now()->addMinutes(3)->format('Y-m-d h:i'); 
+        //Carbon::now()->addSeconds(30)->format('Y-m-d h:i');
         $password_verification->save();
 
 
@@ -59,8 +59,8 @@ class EmailVerificationService
                 'message' => 'Please wait, a new OTP will be generated after 3 minutes'
             ]);
         }
-        $otp = random_int(0, 1000000);
 
+        $otp = random_int(100000, 999999);
         $password_verification = new PasswordVerification();
         $password_verification->otp = $otp;
         $password_verification->user_id = $this->user->id;
@@ -97,16 +97,12 @@ class EmailVerificationService
     }
 
     private function checkIfOtpIsValid($otp){
+
         if($this->user->otps->count()){
             $latest_record = $this->user->otps->sortByDesc('created_at')->first();
             if($latest_record) {
                 if (($latest_record->expires_at > Carbon::now()->format('Y-m-d h:i'))) {
-                    if($otp === $latest_record->otp){
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Invalid OTP provided!'
-                        ], 401);
-                    }else{
+                    if($otp === strval($latest_record->otp)){
                         $latest_record->verified = true;
                         $latest_record->save();
                         $this->user->email_verified_at = Carbon::now();
@@ -114,6 +110,11 @@ class EmailVerificationService
                         return response()->json([
                             'status' => true,
                             'message' => 'OTP verified successfully.'
+                        ]);
+                    }else{
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Invalid OTP provided!'
                         ]);
                     }
                 } else {
@@ -124,10 +125,11 @@ class EmailVerificationService
                 }
             }
         }else{
-            return false;
+            return response()->json([
+                'status' => false,
+                'message' => 'Please generate new OTP!'
+            ]);
         }
-
-
     }
 
 }

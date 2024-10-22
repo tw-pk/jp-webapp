@@ -69,10 +69,7 @@ class TwilioServices
                         "type" => "business"
                     ]
                 );
-            echo '<pre>';
-            echo 'customerProfile </br>';
-            print_r($customerProfile->sid);
-            echo '</pre>';
+           
             $secondary_customer_profile_sid = $customerProfile->sid;
 
             $endUsers = $this->twilio->trusthub->v1->endUsers->create(
@@ -240,4 +237,18 @@ class TwilioServices
             return $e->getMessage();
         }
     }
+
+    public function deleteTwilioPhoneNo($phoneNumberSid = null)
+    {
+        if (!$phoneNumberSid) {
+            return false;
+        }
+        try {
+            $this->twilio->incomingPhoneNumbers($phoneNumberSid)->delete();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+    
 }

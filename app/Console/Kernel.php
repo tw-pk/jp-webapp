@@ -3,10 +3,13 @@
 namespace App\Console;
 
 use App\Jobs\FetchTwilioCallsJob;
-use http\Client\Curl\User;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Auth;
+use App\Services\AutoTopUpPaymentService;
+use App\Models\User;
+use App\Models\CreditProduct;
+
 
 class Kernel extends ConsoleKernel
 {
@@ -15,8 +18,31 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
-        $schedule->job(new FetchTwilioCallsJob())->everyFiveMinutes();
+        // $schedule->job(new FetchTwilioCallsJob())
+        //         ->everyFiveMinutes()
+        //         //->everyMinute()
+        //         ->name('fetch-twilio-calls-job')
+        //         ->withoutOverlapping();
+                 
+        $schedule->call(function () {
+            $service = new AutoTopUpPaymentService();
+
+            User::with('credit')->get()->each(function ($user) use ($service) {
+                // Ensure the user has a credit entry
+                if ($user->credit && $user->stripe_id) {
+                    $thresholdValue = CreditProduct::where('price_id', $user->credit->threshold_value)
+                        ->pluck('price')
+                        ->first();
+
+                    // Check if the user's credit is below the threshold value
+                    if ($user->credit->credit < $thresholdValue && $user->credit->threshold_enabled == '1') {
+                        $service->checkAndTopUp($user);
+                    }
+                }
+            });
+        })->daily()
+          ->name('auto-top-up')
+          ->withoutOverlapping();
     }
 
     /**

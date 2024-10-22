@@ -40,5 +40,26 @@ class PopulateRolesTable extends Command
         $memberRole->last_updated_by = 'admin';
         $memberRole->save();
 
+        $memberRole = new Role();
+        $memberRole->name = 'InactiveMember';
+        $memberRole->guard_name = 'api';
+        $memberRole->created_by = 'admin';
+        $memberRole->last_updated_by = 'admin';
+        $memberRole->save();
+
+        // $memberRole = new Role();
+        // $memberRole->name = 'Manager';
+        // $memberRole->guard_name = 'api';
+        // $memberRole->created_by = 'admin';
+        // $memberRole->last_updated_by = 'admin';
+        // $memberRole->save();
+
+        // $memberRole = new Role();
+        // $memberRole->name = 'SuperAdmin';
+        // $memberRole->guard_name = 'api';
+        // $memberRole->created_by = 'admin';
+        // $memberRole->last_updated_by = 'admin';
+        // $memberRole->save();
+
     }
 }

@@ -18,6 +18,9 @@ const emit = defineEmits([
   'submit',
 ])
 
+const isDisabled = ref(false)
+const isLoading = ref(false)
+
 const otpGenerated = ref(false)
 const phoneNumber = ref(structuredClone(toRaw(props.mobileNumber)))
 const otp = ref(null)
@@ -33,6 +36,8 @@ const error = ref({
 
 const formSubmit = async () => {
   if (phoneNumber.value) {
+    isDisabled.value = true
+    isLoading.value = true 
     emit('submit', phoneNumber.value)
     if(otpGenerated.value){
       if (otp.value ==null || otp.value =='' ) {
@@ -40,22 +45,28 @@ const formSubmit = async () => {
           otp: 'Please enter a valid otp',
         }
       }  
+      error.value = {
+        otp: undefined,
+      }
       await twoFactor.verifyCode({
         'to': phoneNumber.value,
-        'code': otp.value,
+        'otp': otp.value,
       })
         .then(res => {
           if (res.data.status) {
+            isDisabled.value = false
+            isLoading.value = false
             otpGenerated.value = false
             emit('update:isDialogVisible', false)
 
             snackbarMessage.value = res.data.message
             snackbarActionColor.value = `success`
             isSnackbarVisible.value = true
+          }else{
+            errorMessageFunction(res)
           }
         }).catch(error => {
-          error.value = error.response.data.errors
-          
+          errorMessageFunction(error)
         })
     }else{
       await twoFactor.enableTwoFactor({
@@ -64,19 +75,48 @@ const formSubmit = async () => {
       })
         .then(res => {
           if (res.data.status) {
+            isDisabled.value = false
+            isLoading.value = false
             otpGenerated.value = true
+
+            snackbarMessage.value = res.data.message
+            snackbarActionColor.value = `success`
+            isSnackbarVisible.value = true
+          }else{
+            errorMessageFunction(res)
           }
         }).catch(error => {
-          console.log(error)
-          error.value = error.response.data.errors
+          errorMessageFunction(error)
         })
     }
-
   } else {
     error.value = {
       phoneNumber: 'Please enter a valid phone number',
     }
   }
+
+}
+
+const errorMessageFunction = error => {
+  
+  isDisabled.value = false
+  isLoading.value = false
+  let errorMsg = ''
+
+  // Error: Display validation errors
+  if (error.response && error.response.data && error.response.data.errors) {
+    const validationErrors = error.response.data.errors
+
+    errorMsg = Object.values(validationErrors).flat().join('\n')
+  } else if(error.data && error.data.message) {
+    errorMsg = error.data.message
+  }else {
+    console.log('An error occurred:', error.message)
+    errorMsg = error.message
+  }
+  snackbarMessage.value = errorMsg
+  snackbarActionColor.value = 'error'
+  isSnackbarVisible.value = true
 }
 
 const resetPhoneNumber = () => {
@@ -149,7 +189,7 @@ const changeNumber = () => {
               :error-messages="error.otp"
               name="otp"
               label="OTP"
-              type="number"
+              type="text"
               min="0"
               max="6"
               placeholder="XXXXXX"
@@ -165,6 +205,8 @@ const changeNumber = () => {
               Cancel
             </VBtn>
             <VBtn
+              :disabled="isDisabled"
+              :loading="isLoading"
               type="submit"
               @click.prevent="formSubmit"
             >
@@ -184,6 +226,8 @@ const changeNumber = () => {
   <VSnackbar
     v-model="isSnackbarVisible"
     multi-line
+    transition="scroll-y-reverse-transition"
+    location="top end"
   >
     {{ snackbarMessage }}
 

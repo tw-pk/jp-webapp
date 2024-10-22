@@ -15,10 +15,10 @@ import DialerLoader from "./dialerLoader.vue"
 //import ChatLog from '@/views/apps/chat/ChatLog.vue'
 import { useChatStore } from '@/views/apps/chat/useChatStore'
 import DialerSettings from "@/views/apps/dialer/components/DialerSettings.vue"
+import axiosIns from "@axios"
 import { avatarText } from '@core/utils/formatters'
 
 const incomingCallSound = ref(null)
-let isCallAccepted = false
 const vuetifyTheme = useTheme()
 const dialerStore = useDialerStore()
 const showNotification = ref(false)
@@ -29,7 +29,11 @@ const twilioDevice = computed(() => dialerStore.twilioDevice)
 const currentNumber = ref('')
 const muted = ref(false)
 const onPhone = ref(false)
+const onForward = ref(false)
+const selectedTeamMember = ref(null)
+const teamMembers = ref([])
 const log = ref('Connecting...')
+const CallTimer = ref(0)
 const connection = ref(null)
 const connected = ref(false)
 const dropdownContainer = ref(null)
@@ -65,9 +69,26 @@ const searchLogs = ref('')
 const searchContact = ref('')
 const activeTabName = ref('home')
 const incomingCall = ref(null)
+const callSid = ref('')
+const childCallSid = ref('')
+const userNumber  = ref('')
+const phoneNumbers = ref('')
+const dialog = ref(false)
+const forwardNumber = ref('');
+const callStatusInterval = ref(null);
+//hold track
+const onHold = ref(false) 
+const phoneNumbersMsg = ref(false);
+const conferenceMsg = ref('');
+const isConference = ref(false);
 
 // Chat message
 const msg = ref('')
+
+const callStartTime = ref(null)
+const currentTime = ref(null)
+const timerInterval = ref(null)
+const isCallAccepted = ref(false)
 
 // file input
 const refInputEl = ref()
@@ -155,18 +176,6 @@ const testOutputDevice = async () => {
     
     return
   }
-
-  //check devices connected with laptop
-  // navigator.mediaDevices.enumerateDevices()
-  //   .then(devices => {
-  //     devices.forEach(device => {
-  //       console.log('devices')
-  //       console.log(device.kind, device.label, device.deviceId)
-  //     })
-  //   })
-  //   .catch(error => {
-  //     console.error('Error enumerating devices:', error)
-  //   })
      
   testOutputBtn.value = "Testing ..."
 
@@ -265,6 +274,21 @@ const fetchCountries = () => {
       console.log(error)
     })
 }
+
+const fetchTeamMembers = async () => {
+  try {
+    const res = await dialerStore.fetchMemberList()
+
+    console.log(res, 'here is the response of invite memeber')
+    teamMembers.value = res.map(member => ({
+      title: member.fullname,
+      value: member.id,
+    }))
+  } catch (error) {
+    console.error('Failed to fetch team members:', error)
+  }
+}
+
     
 const currentTab = ref('tab-phone')
 const filteredNumbers = ref([])
@@ -278,6 +302,7 @@ const validPhone = computed(() => {
 })
     
 const handleSuccessfulRegistration = device => {
+  console.log(device, 'here is device values')
   log.value = 'Connected'
   connected.value = true
   console.log('The device is ready to receive incoming calls.')
@@ -292,46 +317,329 @@ const toggleMute = () => {
 
   device.mute(muted.value)
 }
-    
-const toggleCall = async () => {
-  event.preventDefault()
 
-  //Code for making outbound call...
-  const user = await User.auth()
-  const device = dialerStore.twilioDevice
 
-  if (!onPhone.value) {
+const forwardCall = () => {  
+  onForward.value = true;
+}    
 
-    muted.value = false
-    onPhone.value = true
+const toggleConference = () => {
+  isConference.value = true;
+}
 
-    // make outbound call with current number
-    const n = '+' + currentNumber.value.replace(/\D/g, '')    
-    
-    try {
-      connection.value = device.connect({
-        params: {
-          To: n,
-          agent: user.data?.fullName,
-          From: from.value,
-        },
-      })
-      log.value = 'Calling ' + n
-    } catch (error) {
-      console.error('Error connecting:', error)
-    }
+// Function to toggle hold and resume
+const toggleHold = () => {
+  if (onHold.value) {
+    resumeCall()
   } else {
-    log.value = 'Hanging Up '
-
-    // Hang up call in progress
-    device.disconnectAll()
-    log.value = 'Connected'
-
-    muted.value = true
-    onPhone.value = false
+    holdCall()
   }
 }
-    
+
+// Function to hold the call
+const holdCall = async () => {
+  const user = await User.auth()      
+  const userId = user.data.id
+
+  axiosIns.post('/twiml/place-on-hold', {
+    callSid: callSid.value,
+    to: userNumber.value,
+    From: from.value,
+  })
+    .then(response => {
+      onHold.value = true                    
+      childCallSid.value = response.data.childCallSid                      
+                                    
+    })
+    .catch(error => {
+      console.error(error.response.data.error)
+    })
+}
+
+
+// Function to resume the call
+const resumeCall = () => {      
+  console.log('inside resume function => ', childCallSid.value)
+      
+  axiosIns.post('/twiml/resume-from-hold', { 
+    callSid: callSid.value,
+    childCallSid: childCallSid.value,
+    to: userNumber.value,
+    From: from.value,
+  })
+    .then(response => {
+      onHold.value = false         
+      console.log(response)
+           
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error)
+    })
+}
+
+
+  const transferCall = () => {      
+    axiosIns.post('/twiml/transfer-call', { 
+      callSid: callSid.value,      
+      to: userNumber.value,
+      From: from.value,
+      forwardNumber: forwardNumber.value
+    })
+    .then(response => {        
+      console.log(response)
+          
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error)
+    })    
+      
+  }
+
+
+  const connectForwardCall = () => {      
+    axiosIns.post('/twiml/connect-transfer-call', { 
+      callSid: callSid.value,      
+      to: userNumber.value,
+      From: from.value,
+      forwardNumber: forwardNumber.value
+    })
+    .then(response => {        
+      console.log(response)
+          
+    })
+    .catch(error => {
+      console.error("Error resuming the call:", error)
+    })    
+      
+  }
+
+
+
+const  openConferenceDialog = () => {
+  dialog.value = true
+} 
+
+  const createConference = () => {      
+      const numbers = (phoneNumbers.value).split(',').map(number => number.trim());
+      axiosIns.post('/twiml/create-conference', { 
+        numbers: JSON.stringify(numbers),
+        from :from.value,
+        callSid: callSid.value,
+        to: userNumber.value,
+        childCallSid: childCallSid.value
+
+      })
+      .then(response => {                  
+          console.log(response);           
+        })
+        .catch(error => {
+          console.error("Error resuming the call:", error.response.data.errors.message);
+          conferenceMsg.value = error.response.data.errors.message;
+
+    })
+}
+
+const callDuration = computed(() => {
+  if (!callStartTime.value || !currentTime.value) return '00:00:00'
+  
+  const diff = Math.floor((currentTime.value - callStartTime.value) / 1000)
+  const hours = Math.floor(diff / 3600).toString().padStart(2, '0')
+  const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0')
+  const seconds = (diff % 60).toString().padStart(2, '0')
+  
+  return `${hours}:${minutes}:${seconds}`
+})
+
+const startTimer = () => {
+  callStartTime.value = Date.now()
+  currentTime.value = Date.now()
+  timerInterval.value = setInterval(() => {
+    currentTime.value = Date.now()
+  }, 1000)
+}
+
+const stopTimer = () => {
+  if (timerInterval.value) {
+    clearInterval(timerInterval.value)
+    timerInterval.value = null
+  }
+  callStartTime.value = null
+  currentTime.value = null
+  isCallAccepted.value = false
+}
+
+
+const toggleCall = async event => {
+  event.preventDefault();
+
+  // Code for making outbound call...
+  const user = await User.auth();
+  const device = dialerStore.twilioDevice;
+  const userId = user.data.id;
+
+  // Function to check the user's credit balance
+  const checkBalance = async userId => {
+    try {
+      const response = await fetch(`/api/auth/check-balance/${JSON.stringify(userId)}`);            
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+            
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new TypeError("Received non-JSON response");
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      return null;
+    }
+  };
+
+  if (!onPhone.value) {
+    muted.value = false;
+    onPhone.value = true;
+
+    // Check user's balance
+    const balanceResult = await checkBalance(userId);
+    if (balanceResult && balanceResult.lowBalance) {
+      // Show low balance message        
+      connected.value = false;
+      log.value = 'Your balance is currently low. Please contact your team lead.';
+      onPhone.value = false;
+      muted.value = true;      
+    } else {
+      // Make outbound call with current number
+      userNumber.value  = '+' + currentNumber.value.replace(/\D/g, '');      
+
+      try {                
+        const call = await device.connect({
+          params: {
+            To: userNumber.value,
+            agent: JSON.stringify(userId),
+            From: from.value,
+          },
+        });      
+
+        call.on('ringing', () => {                                 
+          log.value = 'Ringing';
+          isCallAccepted.value = true;          
+        });         
+
+        call.on('accept', () => {                                                                   
+          log.value = 'Progress';
+          if (call.parameters && call.parameters.CallSid) {
+            callSid.value = call.parameters.CallSid;                                                                   
+          }          
+
+          isCallAccepted.value = true;
+          startTimer();
+
+          // Fetch the child call SID
+          axiosIns.post('/get-mobile-callsid', {
+              callSid: callSid.value,
+              to: userNumber.value,
+              From: from.value,
+          })
+          .then(response => {          
+            childCallSid.value = response.data;
+            startCallStatusCheck();
+          })
+          .catch(error => {
+              console.error(error.response.data.error);
+          });
+        });                                    
+
+        call.on('disconnect', () => {                                     
+          
+          stopCallStatusCheck(); // Stop checking call status
+          onPhone.value = false;
+          connected.value = false;
+          callSid.value = null;
+          log.value = 'Call has ended';
+          userNumber.value = null;
+          isCallAccepted.value = false;         
+          isConference.value = false;
+          onForward.value = false; 
+          stopTimer();          
+          muted.value = true;
+          setTimeout(() => {
+            connected.value = true;
+            log.value = 'Connected';
+            callSid.value = '';
+          }, 5000);
+        });        
+
+        device.disconnect(() => {
+            console.log('here is call disconnected');            
+        });
+        
+      } catch (error) {
+        console.error('Error connecting:', error);
+      }
+
+    }
+  } else {    
+    log.value = 'Hanging Up';
+    device.disconnectAll();
+    log.value = 'Connected';
+    muted.value = true;
+    onPhone.value = false;
+  }
+
+  
+  const startCallStatusCheck = () => {
+    if (callStatusInterval.value) {
+      clearInterval(callStatusInterval.value);
+    }
+    callStatusInterval.value = setInterval(async () => {
+      if (childCallSid.value) {
+        try {
+          const response = await axiosIns.post('/check-call-status', {
+            childCallSid: childCallSid.value,
+          });
+          const device = dialerStore.twilioDevice;
+          const status = response.data.status;
+          log.value = `Current Call Status: ${status}`;          
+          
+          if (status === 'completed' || status === 'no-answer') {
+            stopCallStatusCheck();
+            onPhone.value = false;
+            connected.value = false;
+            callSid.value = null;
+            log.value = 'Call has ended';
+            userNumber.value = null;
+            isCallAccepted.value = false;         
+            isConference.value = false;
+            onForward.value = false; 
+            stopTimer();          
+            muted.value = true;
+            device.disconnectAll();
+            setTimeout(() => {
+              connected.value = true;
+              log.value = 'Connected';
+              callSid.value = '';
+            }, 1000); 
+
+          }
+        } catch (error) {
+          console.error('Error fetching call status:', error);
+        }
+      }
+    }, 5000);
+  };
+
+  // Function to stop checking call status
+  const stopCallStatusCheck = () => {
+    if (callStatusInterval.value !== null) {
+      clearInterval(callStatusInterval.value);
+      callStatusInterval.value = null; // Reset the interval variable
+    }
+  };
+};
+
+
 const playIncomingCallSound = connection => {
   incomingCallSound.value = new Audio(defaultRingtone)
   incomingCallSound.value.play()
@@ -368,7 +676,7 @@ const handleIncomingCall = incomingCall => {
   const device = dialerStore.twilioDevice
 
   console.log('incomingCall')
-  console.log(device)
+  console.log(device, 'here is device')
   try {
     calledId.value = incomingCall.From
     callerId.value = incomingCall.To
@@ -399,7 +707,7 @@ const handleIncomingCall = incomingCall => {
     })
     
   } catch (error) {
-    console.log(error)
+    console.log(error, 'here is the twilio error')
   }
 }
     
@@ -412,9 +720,9 @@ const initializeTwilio = async () => {
   const device = dialerStore.twilioDevice
   
   device.on("ready", function (device) {
-    log("Twilio.Device Ready!")
+    log("Twilio.Device Ready!", device)
   })
-
+    
   // add event Listener to check if device is registered and ready
   device.on('registered', handleSuccessfulRegistration)
 
@@ -481,7 +789,7 @@ const rejectCall = () => {
 }
     
 initializeTwilio()
-    
+
 watch(from, value => {
   // Parse the phone number
   const parsedPhoneNumber = parsePhoneNumberFromString(value)
@@ -493,15 +801,19 @@ const selectedCountryCode = ref('+1')
 const phoneNumber = ref('')
     
 const clearInput = () => {
-  currentNumber.value = currentNumber.value.slice(0, -1)
+  currentNumber.value = currentNumber.value.slice(0, -1);
+  phoneNumbers.value = phoneNumbers.value.slice(0, -1);
+  forwardNumber.value = forwardNumber.value.slice(0, -1);
+
 }
    
-onMounted(() => {
+onMounted(() => {  
+  fetchTeamMembers()
   window.Echo.channel('incoming-calls')
-    .listen('IncomingCallEvent', event => {
-      if(event.CallStatus =='ringing'){
+    .listen('IncomingCallEvent', event => {      
+      if(event.CallStatus =='ringing'){       
         handleIncomingCall(event)
-      }
+      }      
     })
 })
 
@@ -540,23 +852,38 @@ const selectCountry = country => {
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
 }
-    
+
 const activeTab = ref('Dialer - JotPhone')
     
-const onMountedFunction = async () => {
+const onMountedFunction = async () => { 
   fetchCountries()
-  currentNumber.value = '+' + selectedCountry.value.phone_code
+
+  //currentNumber.value = '+' + selectedCountry.value.phone_code
+  
+  const userDefaultNumber = await dialerStore.fetchSetting()
+    .then(res => {    
+      return res.setting.number_outbound_calls
+    })
+    .catch(error => {
+      console.error(error)
+    })
+
   dialerStore.fetchUserOwnerNumbers()
     .then(res => {
       userNumbers.value = res.data
       filteredNumbers.value = userNumbers.value.filter(item => item.number)
 
-      const activeNumber = filteredNumbers.value.map(item => item.active ? item.number : '')
+      if(userDefaultNumber){
+        from.value = userDefaultNumber
+      }else{
+        const activeNumber = filteredNumbers.value.map(item => item.active ? item.number : '')
 
-      from.value = activeNumber[0]
+        from.value = activeNumber[0]
+      }
+
     })
     .catch(error => {
-      console.log(error)
+      console.log(error, 'No here is we are')
     })
     
   // Ask the user for microphone permission
@@ -616,7 +943,7 @@ const fetchContacts = () => {
     })
     .catch(error => {
       loading.value = false
-      console.log(error)
+      console.log(error, 'here is contacts')
     })
 }
 
@@ -636,7 +963,7 @@ const fetchSetting = () => {
     })
     .catch(error => {
       loading.value = false
-      console.log(error)
+      console.log(error, 'here is setting')
     })
 }
 
@@ -1071,7 +1398,7 @@ const moreList = [
           <input
             v-model="currentNumber"
             type="tel"
-            placeholder="Enter phone number"
+            placeholder="Enter Phone No +1XXXXXXXXXXX"
             class="phone-input"
           >
           <button
@@ -1087,7 +1414,9 @@ const moreList = [
           </button>
         </div>
 
-        <div class="d-flex flex-row justify-center status-container mt-10">
+        
+
+        <div class="d-flex flex-row justify-center status-container mt-4">
           <VChip
             label
             :color="connected ? 'success' : 'error'"
@@ -1103,6 +1432,113 @@ const moreList = [
             {{ log }}
           </VChip>
         </div>
+
+        <div
+          v-if="isCallAccepted"
+          class="d-flex flex-row justify-center status-container mt-4"
+        >          
+          <VChip
+            label
+            :color="isCallAccepted ? 'success' : 'error'"
+            class="ml-1"
+          >
+            <VIcon
+              start
+              :color="isCallAccepted ? 'success' : 'error'"
+              icon="tabler-point-filled"
+              class="mr-1"
+              size="18px"
+            />
+            {{ callDuration }}          
+          </VChip>            
+        </div>
+
+
+
+        <label v-if="isConference" class="text-info d-flex justify-center pt-2">Enter Numbers separated by commas and use country code</label>
+        <div v-if="isConference" class="p-2 d-flex justify-center mt-5">          
+          <div class="conference-container">
+            <input        
+              v-model="phoneNumbers"
+              type="tel"
+              placeholder="Enter Numbers separated by commas and use country code"
+              class="conference-input"
+            >
+            
+            <button
+              v-if="phoneNumbers"
+              class="clear-button"
+              @click="clearInput"
+            >
+              <VIcon
+                icon="tabler-backspace"
+                class="text-black"  
+                size="20px"
+              />
+            </button>
+          </div>          
+          <VBtn
+              :icon="onPhone ? 'tabler-phone-calling' : 'tabler-phone'"
+              size="small"
+              :color="onPhone ? 'success' : 'error'"              
+              @click.prevent="createConference"
+            />          
+        </div>                
+
+
+        <div
+          v-if="onForward"
+          class="d-flex flex-row justify-center align-items-center status-container mt-4 mr-4 ml-4 gap-4"
+        >                        
+
+            <input        
+              v-model="forwardNumber"
+              type="tel"
+              placeholder="Enter Number here to connect"
+              class="phone-input"
+            >
+
+            <button
+              v-if="forwardNumber"
+              class="clear-button"
+              @click="clearInput"
+            >
+              <VIcon
+                icon="tabler-backspace"
+                class="text-black"  
+                size="20px"
+              />
+            </button>
+            
+
+          <!-- <VSelect
+            v-model="selectedTeamMember"
+            label="Select Team Member"
+            :items="teamMembers"
+            item-value="value" 
+            item-title="title" 
+            density="compact"              
+            clearable
+            clear-icon="tabler-x"
+            style="width: 10rem;"
+          />      -->
+
+          <VBtn              
+            size="small"
+            color="success"
+            icon="tabler-letter-t"
+            @click.prevent="transferCall"
+          />  
+          
+          <VBtn              
+            size="small"
+            color="success"
+            icon="tabler-letter-c"
+            @click.prevent="connectForwardCall"
+          />  
+                   
+        </div>  
+        
 
         <div class="dialer-grid mt-10">
           <div
@@ -1131,17 +1567,44 @@ const moreList = [
               @click.prevent="toggleCall"
             />
 
+            
+
             <VBtn
               v-if="onPhone"
               :icon="muted ? 'tabler-microphone-off' : 'tabler-microphone'"
               size="large"
-              class="ml-10"
+              class="ml-3"
               @click="toggleMute"
+            />
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              icon="tabler-arrow-forward"
+              title="Forward Call"
+              @click="forwardCall"
+            />                  
+
+            <VBtn              
+              v-if="onPhone"
+              class="ml-3"
+              :icon= "isConference  ? 'tabler-letter-d' : 'tabler-letter-c'"
+              title="Conference"
+              @click="toggleConference"          
+            />
+            
+
+            <VBtn
+              v-if="onPhone"
+              class="ml-3"
+              :icon="onHold ? 'tabler-letter-r' : 'tabler-letter-h'"
+              title="Hold"
+              @click="toggleHold"
             />
           </div>
         </div>
 
-        <div class="d-flex flex-row justify-center mt-3 ml-auto mr-auto align-center">
+        <div class="d-flex flex-row justify-center mt-3 mb-3 ml-auto mr-auto align-center">
           <!-- Dialer input -->
           <small class="mr-2">Call via</small>
           <span :class="[flag]" />
@@ -1159,6 +1622,7 @@ const moreList = [
             />
           </VCol>
         </div>
+        
       </div>
 
       <div
@@ -1973,117 +2437,15 @@ const moreList = [
         <DialerSettings
           :countries="countries"
           :numbers="userNumbers"
-        />
-        <!--        <PerfectScrollbar -->
-        <!--          :options="{ wheelPropagation: false }" -->
-        <!--          style="max-block-size: 39rem;" -->
-        <!--        > -->
-        <!--          &lt;!&ndash; Show the loader &ndash;&gt; -->
-        <!--          <DialerLoader :is-processing="loading" /> -->
-
-        <!--        -->
-        <!--          <VCol cols="12"> -->
-        <!--            <VExpansionPanels multiple> -->
-        <!--              <VExpansionPanel> -->
-        <!--                <VExpansionPanelTitle> -->
-        <!--                  <VIcon -->
-        <!--                    icon="tabler-volume" -->
-        <!--                    size="18" -->
-        <!--                  /> -->
-        <!--                  <h4 class=""> -->
-        <!--                    &nbsp;&nbsp;Audio Settings -->
-        <!--                  </h4> -->
-        <!--                </VExpansionPanelTitle> -->
-        <!--                <VExpansionPanelText> -->
-        <!--                  <VCol -->
-        <!--                    cols="12" -->
-        <!--                    md="12" -->
-        <!--                  > -->
-        <!--                    <AppAutocomplete -->
-        <!--                      v-model="selectedAudioDevice" -->
-        <!--                      label="Select Output Devices" -->
-        <!--                      :items="audioDevices" -->
-        <!--                      item-title="name" -->
-        <!--                      item-value="value" -->
-        <!--                    /> -->
-        <!--                    <span -->
-        <!--                      v-if="audioDeviceError" -->
-        <!--                      class="error" -->
-        <!--                      :style="{ color: audioDeviceError.color || 'red' }" -->
-        <!--                    >{{ audioDeviceError.msg }}</span> -->
-        <!--                    <VSpacer /> -->
-        <!--                    <VBtn -->
-        <!--                      color="primary" -->
-        <!--                      class="mt-5" -->
-        <!--                      @click="testAudio" -->
-        <!--                    > -->
-        <!--                      {{ testAudioBtn }} -->
-        <!--                    </VBtn> -->
-        <!--                  </VCol> -->
-        <!--                  <p class="border-b" /> -->
-
-        <!--                  <VCol -->
-        <!--                    cols="12" -->
-        <!--                    md="12" -->
-        <!--                  > -->
-        <!--                    <AppAutocomplete -->
-        <!--                      v-model="selectedInputDevice" -->
-        <!--                      label="Select Input Devices" -->
-        <!--                      :items="inputDevices" -->
-        <!--                      item-title="name" -->
-        <!--                      item-value="value" -->
-        <!--                    /> -->
+        />        
         <span
           v-if="inputDeviceError"
           class="error"
           :style="{ color: inputDeviceError.color || 'red' }"
-        >{{ inputDeviceError.msg }}</span>
-        <!--                    <VSpacer /> -->
-        <!--                    <VBtn -->
-        <!--                      color="primary" -->
-        <!--                      class="mt-5" -->
-        <!--                      @click="testInputDevice" -->
-        <!--                    > -->
-        <!--                      {{ testInputBtn }} -->
-        <!--                    </VBtn> -->
-        <!--                  </VCol> -->
-        <!--                  <p class="border-b" /> -->
-
-        <!--                  <VCol -->
-        <!--                    cols="12" -->
-        <!--                    md="12" -->
-        <!--                  > -->
-        <!--                    <label>Select Ringtone Devices</label> -->
-        <!--                    <p><small>Output device that is used to play the ringing sound when receiving an incoming call.</small></p> -->
-        <!--                    <AppAutocomplete -->
-        <!--                      v-model="selectedOutputDevice" -->
-        <!--                      label="Select Output Devices" -->
-        <!--                      :items="audioDevices" -->
-        <!--                      item-title="name" -->
-        <!--                      item-value="value" -->
-        <!--                    /> -->
-        <!--                    <span -->
-        <!--                      v-if="outputDeviceError" -->
-        <!--                      class="error" -->
-        <!--                      :style="{ color: outputDeviceError.color || 'red' }" -->
-        <!--                    >{{ outputDeviceError.msg }}</span> -->
-        <!--                    <VSpacer /> -->
-        <!--                    <VBtn -->
-        <!--                      color="primary" -->
-        <!--                      class="mt-5" -->
-        <!--                      @click="testOutputDevice" -->
-        <!--                    > -->
-        <!--                      {{ testOutputBtn }} -->
-        <!--                    </VBtn> -->
-        <!--                  </VCol> -->
-        <!--                </VExpansionPanelText> -->
-        <!--              </VExpansionPanel> -->
-        <!--            </VExpansionPanels> -->
-        <!--          </VCol> -->
-        <!--        </PerfectScrollbar> -->
+        >{{ inputDeviceError.msg }}</span>     
       </div>
 
-      <div class="d-flex flex-row align-center position-absolute bottom__0">
+      <div class="d-flex flex-row align-center bottom__0">
         <div
           :class="isHomeActive ? 'tab-button active h-auto' : 'tab-button h-auto'"
           @click="openTab('home')"

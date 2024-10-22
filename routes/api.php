@@ -9,7 +9,6 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\NumberController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\CountryController;
@@ -22,6 +21,9 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\DialerSettingController;
+use App\Http\Controllers\TwilioController;
+use App\Http\Controllers\CallController;
+use App\Http\Controllers\ApexChartController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,8 +47,8 @@ Route::middleware('auth:sanctum')->post('broadcasting/auth', function (Request $
     return $pusher->socketAuth($request->request->get('channel_name'), ($request->request->get('socket_id')));
 });
 
-
-Route::group(['prefix' => 'auth'], function () {
+//'middleware' => ['check.balance']
+Route::group(['prefix' => 'auth'], function (){
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('register', [AuthController::class, 'register']);
     Route::post('/forgot/password', [AuthController::class, 'forgotPassword']);
@@ -120,7 +122,8 @@ Route::group(['prefix' => 'auth'], function () {
 
         //fetch twilio country from a database
         Route::post('twilio/country/list', [CountryController::class, 'twilio_country_list']);
-        Route::post('twilio/capability/token', [\App\Http\Controllers\TwilioController::class, 'retrieveToken']);
+        Route::post('twilio/capability/token', [TwilioController::class, 'retrieveToken']);
+        Route::get('check-balance/{userId}', [TwilioController::class, 'checkBalance']);
 
         Route::post('numbers/list', [NumberController::class, 'list']);
         Route::post('numbers', [NumberController::class, 'existingNumbers']);
@@ -135,7 +138,12 @@ Route::group(['prefix' => 'auth'], function () {
         //Manage Members
         Route::post('members/add', [MembersController::class, 'store']);
         Route::post('members/list', [MembersController::class, 'list']);
-        Route::post('fetch/members', [MembersController::class, 'fetchMembers']);
+        Route::post('fetch/members', [MembersController::class, 'fetchMembers']); 
+        Route::post('fetch/members-for-chart', [MembersController::class, 'fetchMembersForChart']); 
+        Route::delete('member/delete/{id}', [MembersController::class, 'deleteMember']);
+        
+        Route::post('member/detail', [MembersController::class, 'fetchMemberDetail']);
+        Route::post('connect/transfer-call', [TwilioController::class, 'transferCall']);
 
         //invite member routes
         Route::post('invitations/store', [InvitationController::class, 'store']);
@@ -145,6 +153,9 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('team/list', [TeamController::class, 'list']);
         Route::post('team/fetch/members/teams', [TeamController::class, 'membersTeams']);
         Route::delete('team/delete/{id}', [TeamController::class, 'delete_team']);
+
+        Route::post('team/fetch/members', [TeamController::class, 'teamFetchMembers']);
+        //Route::post('team/fetch/teams', [TeamController::class, 'fetch_teams']);
 
         //fetch user phone number
         Route::post('fetch/user/numbers', [TeamController::class, 'fetch_numbers']);
@@ -184,11 +195,14 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('recent-calls/list', [VoiceController::class, 'recent_calls']);
         Route::post('recent-calls-dash/list', [VoiceController::class, 'recent_calls_dash']);
         Route::post('recent-calls-contact/list', [VoiceController::class, 'recent_calls_contact']);
-        Route::post('dashboard/number-list', [VoiceController::class, 'dash_number_list']);
-        Route::post('dashboard/member-list', [VoiceController::class, 'dash_member_list']);
-        Route::post('dashboard/live/calls', [VoiceController::class, 'dash_live_calls']);
-        Route::post('dashboard/live/calls/past', [VoiceController::class, 'dash_live_calls_past']);
+        Route::post('dashboard/number/analysis', [VoiceController::class, 'dashNumberAnalysis']);
+        Route::post('dashboard/member-list', [VoiceController::class, 'dashMemberList']);
 
+        //Apex chart controller
+        Route::post('dashboard/live/calls', [ApexChartController::class, 'dashLiveCalls']);
+        Route::post('fetch/apex-chart-report', [ApexChartController::class, 'fetchApexChartReport']);
+        Route::post('fetch/statistics', [ApexChartController::class, 'fetchStatistics']);
+        
         //filter recent calls
         Route::post('recent-calls/list/filter', [VoiceController::class, 'filter_recent_calls']);
 
@@ -214,6 +228,8 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('fetch/credit-payment', [CreditController::class, 'fetch_credit_payment']);
         Route::post('add/credit-payment', [CreditController::class, 'add_credit_payment']);
         Route::post('stripe/payment-method/store', [StripeController::class, 'createPaymentMethod']);
+        Route::post('stripe/payment-method/update', [StripeController::class, 'updatePaymentMethod']);
+        Route::delete('stripe/payment-method/{id}', [StripeController::class, 'deletePaymentMethod']);
 
         //Dialer Routes
         Route::post('fetch/dialer/contacts', [PhoneController::class, 'dialer_contacts']);
@@ -225,6 +241,8 @@ Route::group(['prefix' => 'auth'], function () {
 });
 
 Route::post('/twilio-sms', [ChatController::class, 'handleIncomingMessage']);
-
+Route::post('/dial-status', [CallController::class, 'handleDialStatus']);
 Route::get('/stripe/top-up/checkout/success', [StripeController::class, 'topUpSuccess']);
 Route::get('/stripe/top-up/checkout/cancel', [StripeController::class, 'topUpCancel']);
+Route::post('/hold-call', [CallController::class, 'holdCall']);
+Route::post('/resume-call', [CallController::class, 'resumeCall']);

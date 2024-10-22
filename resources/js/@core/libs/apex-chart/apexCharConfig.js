@@ -1,6 +1,5 @@
 import { hexToRgb } from '@layouts/utils'
 
-
 // 👉 Colors variables
 const colorVariables = themeColors => {
   const themeSecondaryTextColor = `rgba(${hexToRgb(themeColors.colors['on-surface'])},${themeColors.variables['medium-emphasis-opacity']})`
@@ -13,9 +12,9 @@ const colorVariables = themeColors => {
 
 export const getScatterChartConfig = (themeColors, xAxisCategories) => {
   const scatterColors = {
-    series1: '#ea5455',
-    series2: '#3397cf',
-    series3: '#28c76f',
+    series1: '#3397cf',
+    series2: '#28c76f',
+    series3: '#ea5455',
   }
 
   const { themeSecondaryTextColor, themeBorderColor, themeDisabledTextColor } = colorVariables(themeColors)
@@ -74,7 +73,6 @@ export const getScatterChartConfig = (themeColors, xAxisCategories) => {
   
   }
 }
-
 
 export const getLineChartSimpleConfig = themeColors => {
   const { themeBorderColor, themeDisabledTextColor } = colorVariables(themeColors)
@@ -402,7 +400,6 @@ export const getDonutChartConfig = themeColors => {
     ],
   }
 }
-
 export const getCallsChartConfig = themeColors => {
   const donutColors = {
     series1: '#EA5455',
@@ -411,7 +408,7 @@ export const getCallsChartConfig = themeColors => {
   }
 
   const { themeSecondaryTextColor, themePrimaryTextColor } = colorVariables(themeColors)
-
+  
   return {
     stroke: { width: 0 },
     labels: ['Outbound', 'Inbound', 'Missed'],
@@ -460,7 +457,7 @@ export const getCallsChartConfig = themeColors => {
         breakpoint: 992,
         options: {
           chart: {
-            height: 300,
+            height: 380,
           },
           legend: {
             position: 'bottom',
@@ -471,7 +468,7 @@ export const getCallsChartConfig = themeColors => {
         breakpoint: 576,
         options: {
           chart: {
-            height: 300,
+            height: 320,
           },
           plotOptions: {
             pie: {
@@ -496,7 +493,6 @@ export const getCallsChartConfig = themeColors => {
     ],
   }
 }
-
 export const getAreaChartSplineConfig = themeColors => {
   const areaColors = {
     series3: '#e0cffe',

@@ -6,7 +6,7 @@ export const useAnalysisDashStore = defineStore('AnalysisDashStore', {
     // 👉 Fetch numbers analysis
     async fetchNumbers(data) {
       return new Promise((resolve, reject) => {
-        axiosIns.post('/api/auth/dashboard/number-list', data)
+        axiosIns.post('/api/auth/dashboard/number/analysis', data)
           .then(response => resolve(response))
           .catch(error => reject(error))
       })

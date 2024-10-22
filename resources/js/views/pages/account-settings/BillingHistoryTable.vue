@@ -1,9 +1,8 @@
 <script setup>
-import { VDataTableServer } from 'vuetify/labs/VDataTable'
 import { paginationMeta } from '@/@fake-db/utils'
 import { useInvoiceStore } from '@/views/apps/invoice/useInvoiceStore'
-import { avatarText } from '@core/utils/formatters'
-import {useRouter} from "vue-router";
+import { useRouter } from "vue-router"
+import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
 const invoiceListStore = useInvoiceStore()
 const searchQuery = ref('')
@@ -37,7 +36,7 @@ const headers = [
   },
 
   {
-    title: 'Total',
+    title: 'Amount',
     key: 'total',
   },
   {
@@ -45,8 +44,8 @@ const headers = [
     key: 'date',
   },
   {
-    title: 'Balance',
-    key: 'balance',
+    title: 'Status',
+    key: 'status',
   },
   {
     title: 'Actions',
@@ -75,21 +74,23 @@ const fetchInvoices = (query, currentStatus, firstDate, lastDate, option) => {
 }
 
 // 👉 Invoice balance variant resolver
-const resolveInvoiceBalanceVariant = (balance, total) => {
+const resolveInvoiceBalanceVariant = status => {
+  
 
-  if (balance !== 0 && balance === total)
+  if (status === 'succeeded')
+
     return {
-      status: 'Unpaid',
-      chip: { color: 'error' },
+      status: 'Succeeded',
+      chip: { color: 'success' },
     }
-  if (balance === 0)
+  if (status === 'failed')
     return {
-      status: 'Paid',
+      status: 'Failed',
       chip: { color: 'success' },
     }
   
   return {
-    status: balance,
+    status: status,
     chip: { variant: 'text' },
   }
 }
@@ -100,7 +101,7 @@ const resolveInvoiceStatusVariantAndIcon = status => {
       variant: 'warning',
       icon: 'tabler-circle-half-2',
     }
-  if (status === 'Paid' || status === 'paid')
+  if (status === 'succeeded' || status === 'Paid' || status === 'paid')
     return {
       variant: 'success',
       icon: 'tabler-circle-check',
@@ -183,13 +184,13 @@ const openInvoice = url => {
   >
     <VCardText class="d-flex align-center flex-wrap gap-3">
       <!-- 👉 Create invoice -->
-<!--      <VBtn-->
-<!--        prepend-icon="tabler-plus"-->
-<!--        :to="{ name: 'apps-invoice-add' }"-->
-<!--        class="me-3"-->
-<!--      >-->
-<!--        Create invoice-->
-<!--      </VBtn>-->
+      <!--      <VBtn -->
+      <!--        prepend-icon="tabler-plus" -->
+      <!--        :to="{ name: 'apps-invoice-add' }" -->
+      <!--        class="me-3" -->
+      <!--      > -->
+      <!--        Create invoice -->
+      <!--      </VBtn> -->
 
       <VSpacer />
 
@@ -273,30 +274,6 @@ const openInvoice = url => {
         </VTooltip>
       </template>
 
-      <!-- client -->
-<!--      <template #item.client="{ item }">-->
-<!--        <div class="d-flex align-center">-->
-<!--          <VAvatar-->
-<!--            size="38"-->
-<!--            :color="!item.raw.avatar.length ? resolveInvoiceStatusVariantAndIcon(item.raw.invoiceStatus).variant : undefined"-->
-<!--            :variant="!item.raw.avatar.length ? 'tonal' : undefined"-->
-<!--            class="me-3"-->
-<!--          >-->
-<!--            <VImg-->
-<!--              v-if="item.raw.avatar.length"-->
-<!--              :src="item.raw.avatar"-->
-<!--            />-->
-<!--            <span v-else>{{ avatarText(item.raw.client.name) }}</span>-->
-<!--          </VAvatar>-->
-<!--          <div class="d-flex flex-column">-->
-<!--            <h6 class="text-body-1 font-weight-medium mb-0">-->
-<!--              {{ item.raw.client.name }}-->
-<!--            </h6>-->
-<!--            <span class="text-sm">{{ item.raw.client.companyEmail }}</span>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </template>-->
-
       <!-- Total -->
       <template #item.total="{ item }">
         ${{ item.raw.total }}
@@ -308,37 +285,32 @@ const openInvoice = url => {
       </template>
 
       <!-- Balance -->
-      <template #item.balance="{ item }">
+      <template #item.status="{ item }">
         <VChip
-          v-if="typeof ((resolveInvoiceBalanceVariant(item.raw.balance, item.raw.total)).status) === 'string'"
-          :color="resolveInvoiceBalanceVariant(item.raw.balance, item.raw.total).chip.color"
+          
+          :color="resolveInvoiceBalanceVariant(item.raw.status).chip.color"
           label
         >
-          {{ (resolveInvoiceBalanceVariant(item.raw.balance, item.raw.total)).status }}
+          {{ (resolveInvoiceBalanceVariant(item.raw.status).status) }}
         </VChip>
-
-        <template v-else>
-          <span class="text-base">
-            {{ Number((resolveInvoiceBalanceVariant(item.raw.balance, item.raw.total)).status) > 0 ? `$${(resolveInvoiceBalanceVariant(item.raw.balance, item.raw.total)).status}` : `-$${Math.abs(Number((resolveInvoiceBalanceVariant(item.raw.balance, item.raw.total)).status))}` }}
-          </span>
-        </template>
       </template>
 
       <!-- Actions -->
       <template #item.actions="{ item }">
-        <IconBtn @click="deleteInvoice(item.raw.id)">
-          <VIcon icon="tabler-trash" />
-        </IconBtn>
-
         <IconBtn @click="openInvoice(item.raw.invoice_url)">
           <VIcon icon="tabler-eye" />
         </IconBtn>
 
-        <MoreBtn
+        <!--
+          <IconBtn @click="deleteInvoice(item.raw.id)">
+          <VIcon icon="tabler-trash" />
+          </IconBtn>
+          <MoreBtn
           :menu-list="computedMoreList(item.raw.id)"
           item-props
           color="undefined"
-        />
+          />
+        -->
       </template>
 
       <template #bottom>

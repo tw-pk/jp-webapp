@@ -31,6 +31,9 @@ const defaultTitle = ref('Add New Member')
 const defaultButton = ref('Submit')
 const assignNumber = ref()
 const existingNumberOptionSelected = ref(false)
+const userPermission = ref(false)
+const isConfirmDialogOpen = ref(false)
+const selectedItemId = ref(null)
 
 const options = ref({
   page: 1,
@@ -54,21 +57,31 @@ const headers = [
     title: 'ROLE',
     key: 'role',
   },
-
+  {
+    title: 'Status',
+    key: 'registered',
+  },
   {
     title: 'ACTION',
     key: 'action',
     sortable: false,
+
   },
 ]
 
 // 👉 Fetching phone numbers
 const fetchNumbers = () => {
-  memberListStore.fetchNumbers().then(response => {
-    numbers.value = response.data.userNumber
-  }).catch(error => {
-    console.error(error)
-  })
+  memberListStore.fetchNumbers()
+    .then(response => {
+      if(response.data.status){
+        numbers.value = response.data.userNumber
+        userPermission.value = false
+      }else{
+        userPermission.value = response.data.message
+      }
+    }).catch(error => {
+      console.error(error)
+    })
 }
 
 // 👉 Fetching roles
@@ -98,13 +111,11 @@ const fetchMembers = () => {
   })
 }
 
-
 onMounted(() => {
   fetchNumbers()
   fetchRoles()
  
   //fetchMembers()
- 
 })
 
 watchEffect(fetchMembers)
@@ -157,13 +168,18 @@ const resolveUserRoleVariant = status => {
     }
 }
 
-
-// const deleteUser = id => {
-//   memberListStore.deleteMember(id)
-
-//   // re-fetch Members
-//   fetchMembers()
-// }
+const resolveUserRegistered = val => {
+  if (val == 1)
+    return {
+      color: 'primary',
+      text: 'Active',
+    }
+  else
+    return {
+      color: 'error',
+      text: 'Pending',
+    }
+}
 
 const inviteUser = () => {
   isDisabled.value = true
@@ -211,7 +227,7 @@ const inviteUser = () => {
 }
 
 const editItem = item => {
-
+  
   defaultTitle.value = "Update Member"
   defaultButton.value = "Update"
   id.value = item.id,
@@ -251,6 +267,25 @@ watch(assignNumber, value => {
     number.value = ''
   }
 })
+
+const openConfirmDialog = itemId => {
+  selectedItemId.value = itemId  
+  isConfirmDialogOpen.value = true
+}
+
+const handleConfirmation = async action => {
+  if(action === true && selectedItemId.value){
+    try {
+      const memberResponse = await memberListStore.deleteMember(selectedItemId.value)
+      if(memberResponse.data.status){
+        // re-fetch Members
+        fetchMembers()
+      }
+    } catch (error) {
+      console.error('Error deactivating account:', error)
+    }
+  }
+}
 </script>
 
 <template>
@@ -285,7 +320,24 @@ watch(assignNumber, value => {
                   max-width="610"
                 >
                   <!-- Dialog Activator -->
-                  <template #activator="{ props }">
+                  <template
+                    v-if="userPermission"
+                    #activator="{ props }"
+                  >
+                    <VAlert
+                    
+                      border="start"
+                      color="primary"
+                      variant="tonal"
+                    >
+                      {{ userPermission }}
+                    </VAlert>
+                  </template>
+                  
+                  <template
+                    v-if="!userPermission"
+                    #activator="{ props }"
+                  >
                     <VBtn
                       v-bind="props"
                       class="mr-2"
@@ -427,7 +479,10 @@ watch(assignNumber, value => {
                     </VCardText>
                   </VCard>
                 </VDialog>
-                <IconBtn @click.prevent="">
+                <IconBtn
+                  v-if="!userPermission"
+                  @click.prevent=""
+                >
                   <VIcon icon="tabler-download" />
                 </IconBtn>
               </VRow>
@@ -475,7 +530,7 @@ watch(assignNumber, value => {
                 <div class="d-flex flex-column">
                   <h6 class="text-base">
                     <RouterLink
-                      :to="{ name: 'apps-user-view-id', params: { id: item.raw.id } }"
+                      :to="{ name: 'pages-member-view-id', params: { id: item.raw.id } }"
                       class="font-weight-medium user-list-name"
                     >
                       {{ item.raw.firstname }} {{ item.raw.lastname }}
@@ -508,22 +563,33 @@ watch(assignNumber, value => {
               </div>
             </template>
 
+            <template #item.registered="{ item }">
+              <VChip
+                label
+                :color="resolveUserRegistered(item.raw.registered).color"
+                size="small"
+              >
+                {{ resolveUserRegistered(item.raw.registered).text }}
+              </VChip>
+            </template>
+
             <!-- Actions -->
             <template #item.action="{ item }">
-              <IconBtn
-                class=" user-list-name"
+              <VBtn
+                variant="text"
+                color="black"
                 @click="editItem(item.raw)"
               >
                 Edit
-              </IconBtn>
-            
+              </VBtn>
               <VIcon icon="tabler-minus-vertical" />
-              <RouterLink
-                :to="{ name: 'pages-teams-member-analysis', params: { analysis: item.raw.id } }"
-                class="user-list-name"
+              <VBtn
+                variant="text"
+                color="black"
+                @click="openConfirmDialog(item.raw.id)"
               >
-                Analysis
-              </RouterLink>
+                Remove
+              </VBtn>
             </template>
             
             <!-- pagination -->
@@ -584,6 +650,16 @@ watch(assignNumber, value => {
         </VBtn>
       </template>
     </VSnackbar>
+    <!-- Confirm Dialog -->
+    <ConfirmDialog
+      v-model:isDialogVisible="isConfirmDialogOpen"
+      confirmation-question="Are you sure you want to delete your member?"
+      confirm-title="Deleted!"
+      confirm-msg="Your member has been soft deleted successfully."
+      cancel-title="Cancelled"
+      cancel-msg="Member deletion cancelled!"
+      @confirm="handleConfirmation"
+    />
   </div>
 </template>
 

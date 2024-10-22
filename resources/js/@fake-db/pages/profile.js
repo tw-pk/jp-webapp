@@ -599,7 +599,7 @@ const projectTable = [
     status: 25,
     leader: 'Harmonia',
     date: '08 Apr 2021',
-    name: 'Figma Dashboards',
+    name: 'Figma Dashboard',
     avatar: figmaLabel,
     avatarGroup: [avatar7, avatar8, avatar1],
   },

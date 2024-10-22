@@ -7,8 +7,13 @@ use App\Jobs\SendInvitationLink;
 use App\Models\Invitation;
 use App\Models\AssignNumber;
 use App\Models\User;
+use App\Models\UserNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
+use App\Services\TwilioServices;
+use Carbon\Carbon;
 
 class MembersController extends Controller
 {
@@ -75,12 +80,11 @@ class MembersController extends Controller
 
     public function list(Request $request)
     {
-
         $searchQuery = $request->input('q');
         $options = $request->input('options');
 
         $query = Invitation::with(['invitationAccept:id,email', 'invitationAccept.profile:id,user_id,avatar', 'roleInfo:id,name'])
-            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'role', 'number', 'can_have_new_number')
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email', 'role', 'number', 'can_have_new_number', 'registered')
             ->where('user_id', Auth::user()->id);
 
         if ($searchQuery) {
@@ -142,4 +146,121 @@ class MembersController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function fetchMembersForChart()
+    {
+        try {
+            $userId = Auth::user()->id;
+            $members = User::whereHas('invitationsMember', function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
+                ->whereHas('invitationsMember', function ($query) {
+                    $query->whereColumn('member_id', 'users.id');
+                })
+                ->with(['profile' => function($query) {
+                    $query->select('user_id', 'avatar'); 
+                }])
+                ->select(['id', 'firstname', 'lastname'])
+                ->get();
+            
+            $members->map(function ($item) {
+                $item->fullname = $item->firstname . ' ' . $item->lastname;
+
+                if (!empty($item->profile->avatar)) {
+                    $item->avatar_url = asset('storage/avatars/' . $item->profile->avatar);
+                } else {
+                    $item->avatar_url = asset('images/avatars/avatar-0.png');
+                }
+                return $item;
+            });
+
+            if(!$members){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ]);
+            }
+            return response()->json([
+                'status' => true,
+                'members' => $members->toArray()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function fetchMemberDetail(Request $request)
+    { 
+        try {
+            $member = Invitation::find($request->member_id);
+            if(!$member){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ]);
+            }
+            
+            $memberDetail = [
+                'fullName' => $member->fullName(),
+                'email' => $member->email,
+                'number' => $member->number,
+                'registered' => $member->registered ==1 ? "True" : "False",
+                'role' => $member->roleInfo ? $member->roleInfo->name : 'Role not found',
+                'invitationDate' => Carbon::parse($member->created_at)->format('d M, Y'),
+                'avatar' => $member->invitationAccept && $member->invitationAccept->profile && $member->invitationAccept->profile->avatar
+                ? asset('storage/avatars/' . $member->invitationAccept->profile->avatar)
+                : null,
+            ];
+            return response()->json([
+                'status' => true,
+                'memberDetail' => $memberDetail
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteMember($id)
+    {
+        $memberId = $id;
+        try {
+            $invitation = Invitation::find($id);
+            if (!$invitation) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Member not found'
+                ], 404);
+            }
+
+            if ($invitation->member_id) {
+                $user = User::find($invitation->member_id);
+                if ($user) {
+                    if ($user->numbers()->exists()) {
+
+                        $twilioServices = new TwilioServices();
+                        $user->numbers->each(function ($number) use ($twilioServices) {
+                            $twilioServices->deleteTwilioPhoneNo($number->phone_number_sid);
+                        });
+                        $user->numbers()->delete();
+                    }
+                    
+                    $user->syncRoles([]);
+                    $role = Role::where('name', 'InactiveMember')->first();
+                    $user->assignRole($role);
+                }
+            }
+            $invitation->delete();
+            return response()->json([
+                'status' => true,
+                'message' => 'Member deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to deleted member',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

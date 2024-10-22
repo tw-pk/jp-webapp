@@ -132,16 +132,20 @@ const addNumber = item => {
     city: item.raw.city,
   }).then(response => {
     // Handle the successful purchase response
-    const number = response.data.number
+    const number = response?.data?.number
     if(number){
-      snackbarMessage.value = response.data.message
+      snackbarMessage.value = response?.data?.message
 
       //snackbarColor.value = `success`
       isSnackbarVisible.value = true
       item.raw.isLoading = false
       item.raw.isDisabled = true
+
+      if(response?.data?.isInactiveMember){
+        router.replace({ name: 'team-members-invite' })
+      }
     }else{
-      snackbarMessage.value = response.data.message
+      snackbarMessage.value = response?.data?.message
 
       //snackbarColor.value = `primary`
       isSnackbarVisible.value = true
@@ -282,6 +286,16 @@ watch(address_requirements,  (newValue, oldValue) => {
 
 <template>
   <div class="">
+    <VAlert
+      type="info"
+      border="start"
+      color="primary"
+      variant="tonal"
+      closable
+      class="mb-3"
+    >
+      First! select the country and then search for the number of the country you want to add.
+    </VAlert>
     <VRow class="match-height">
       <VCol
         cols="12"

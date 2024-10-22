@@ -1,6 +1,7 @@
 <script setup>
 import { paginationMeta } from '@/@fake-db/utils'
 import { useAnalysisDashStore } from "@/views/apps/dashboard/useAnalysisDashStore"
+import { can } from "@layouts/plugins/casl"
 import { ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
@@ -48,7 +49,11 @@ const fetchNumbers = async() => {
   isProcessing.value = true
 
   try{
-    const { data } = await analysisDashStore.fetchNumbers({ q: searchQuery.value, options: options.value })
+    const { data } = await analysisDashStore.fetchNumbers({ 
+      q: searchQuery.value, 
+      options: options.value, 
+    })
+
     if(data.status){
       isProcessing.value = false
       numbers.value = data.numbers
@@ -78,13 +83,13 @@ watchEffect(fetchNumbers)
           </h5>
         </VCol>
         <VCol
-          cols="6"
-          md="6"
+          :cols="can('manage', 'all') ? 6 : 2"
+          :md="can('manage', 'all') ? 6 : 2"
         >
           <AppTextField
             v-model="searchQuery"
             density="compact"
-            placeholder="Search Phone Numbers"
+            placeholder="Search Numbers"
             append-inner-icon="tabler-search"
             single-line
             hide-details
@@ -124,7 +129,7 @@ watchEffect(fetchNumbers)
             <div class="d-flex align-center">
               <VAvatar
                 rounded="lg"
-                size="24"
+                size="20"
                 class="me-3"
               >
                 <VImg

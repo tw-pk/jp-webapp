@@ -29,8 +29,11 @@ class FetchTwilioCallsJob implements ShouldQueue
     public function handle(): void
     {
         $users = User::all();
-        $twilio = new Client(env('TWILIO_CLIENT_ID'), env('TWILIO_AUTH_TOKEN'));
-        //foreach all users
+        Log::info("Inside the FetchTwilioCallsJob");
+
+        $sid = config('app.TWILIO_CLIENT_ID');
+        $token = config('app.TWILIO_AUTH_TOKEN');
+        $twilio = new Client($sid, $token);
         //check whether a user is admin or not
         foreach ($users as $user) {
             if ($user->hasRole('Admin')) {
@@ -45,14 +48,14 @@ class FetchTwilioCallsJob implements ShouldQueue
                             if(!Call::where('sid', $call->sid)->first()){
                                 Call::create([
                                     'sid' => $call->sid,
-                                    'from' => $call->from,
                                     'to' => $call->to,
-                                    'user_id' => $user->id,
-                                    'contact_id' => Contact::where('phone', $call->to)->first()?->id,
-                                    'date_time' => "From ". Carbon::parse($call->startTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A')." - To ".Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A'),
-                                    'duration' => $call->duration . " seconds" ?? '-',
+                                    'from' => $call->from,
+                                    'status' => $call->status,
+                                    'duration' => $call->duration . "00 seconds" ?? '-',
                                     'direction' => $call->direction,
-                                    'status' => $call->status
+                                    'date_time' => "From ". Carbon::parse($call->startTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A')." - To ".Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A'),
+                                    'user_id' => $user->id,
+                                    'contact_id' => Contact::where('phone', $call->to)->first()?->id
                                 ]);
                             }
                         }

@@ -54,14 +54,14 @@ const login = () => {
   }).then( response => {
       
     const { accessToken, userData, userAbilities } = response.data
-
+    
     localStorage.setItem('userAbilities', JSON.stringify(userAbilities))
     ability.update(userAbilities)
     localStorage.setItem('userData', JSON.stringify(userData))
     localStorage.setItem('accessToken', JSON.stringify(accessToken))
     
     isDisabled.value = false
-    router.replace(route.query.to ? String(route.query.to) : '/dashboards')
+    router.replace(route.query.to ? String(route.query.to) : '/dashboard')
   }).catch(e => {
     isDisabled.value = false
     errors.value = e.response.data

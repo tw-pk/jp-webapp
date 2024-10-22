@@ -13,6 +13,11 @@ const isPricingPlanDialogVisible = ref(false)
 const isConfirmDialogVisible = ref(false)
 const isCardEditDialogVisible = ref(false)
 const isCardDetailSaveBilling = ref(false)
+const currentCardDetails = ref()
+const pmIdToDelete = ref(null)
+const isConfirmDialogOpen = ref(false)
+const isDisabled = ref(false)
+const isLoading = ref(false)
 
 const userPlan = ref({
   name: '',
@@ -38,6 +43,7 @@ const countryList = [
 ]
 
 const cardRef = ref()
+const cardError = ref('')
 
 //
 // // Replace 'your-publishable-key' with your actual Stripe publishable API key
@@ -50,12 +56,12 @@ const appearance = {
 
 const style = {
   base: {
-    color: '#FFFFFF99',
+    color: '#777581',
     fontFamily: '"Public Sans", sans-serif, -apple-system, blinkmacsystemfont, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
     fontSmoothing: 'antialiased',
     fontSize: '15px',
     '::placeholder': {
-      color: '#FFFFFF99',
+      color: '#777581',
     },
   },
   invalid: {
@@ -69,13 +75,6 @@ const elementsOptions = ref({
   style: style,
 })
 
-const currentCardDetails = ref()
-
-const openEditCardDialog = cardDetails => {
-  currentCardDetails.value = cardDetails
-  isCardEditDialogVisible.value = true
-}
-
 const cardNumber = ref()
 const cardName = ref('')
 const cardExpiryDate = ref('')
@@ -86,15 +85,21 @@ const key = import.meta.env.VITE_STRIPE_KEY
 const noDefaultMethod = ref(true)
 
 const resetPaymentForm = () => {
-  cardNumber.value = ''
-  cardName.value = ''
-  cardExpiryDate.value = ''
-  cardCvv.value = 0X0
-  selectedPaymentMethod.value = 'credit-debit-atm-card'
+  // cardNumber.value = ''
+  // cardName.value = ''
+  // cardExpiryDate.value = ''
+  // cardCvv.value = 0X0
+  // selectedPaymentMethod.value = 'credit-debit-atm-card'
+  isCardDetailSaveBilling.value = false
+  cardError.value = ''
+
+  const elements = elms.value.elements
+
+  elements.getElement('card').clear()     
 }
 
 onMounted(async() => {
-
+  
   Subscription.defaultMethodsCheck()
     .then(res => {
       noDefaultMethod.value = res.data.hasDefaultPaymentMethod
@@ -103,22 +108,7 @@ onMounted(async() => {
       console.log(error)
     })
 
-  Subscription.paymentMethods()
-    .then(res => {
-      creditCards.value = []
-      for (var i = 0; i < res.data.length; i++){
-        creditCards.value.push({
-          name: res.data[i].cardName,
-          number: '',
-          expiry: res.data[i].cardExpiryDate,
-          isPrimary: res.data[i].isDefault,
-          type: res.data[i].brand === 'visa' ? 'visa' : 'mastercard',
-          cvv: '',
-          image: res.data[i].brand === 'visa' ? visa : mastercard,
-          cardLastFour: res.data[i].cardLastFour,
-        })
-      }
-    })
+  fetchPaymentMethods()
 
   Subscription.plan()
     .then(res => {
@@ -137,6 +127,49 @@ onMounted(async() => {
     })
 })
 
+const fetchPaymentMethods = async () => {
+  Subscription.paymentMethods()
+    .then(res => {
+      creditCards.value = []
+      for (var i = 0; i < res.data.length; i++){
+        creditCards.value.push({
+          pmId: res.data[i].id,
+          name: res.data[i].cardName,
+          number: '**** **** **** '+res.data[i].cardLastFour,
+          expiry: res.data[i].cardExpiryDate,
+          postalCode: res.data[i].postalCode,
+          isPrimary: res.data[i].isDefault,
+          type: res.data[i].brand === 'visa' ? 'visa' : 'mastercard',
+          cvv: '',
+          image: res.data[i].brand === 'visa' ? visa : mastercard,
+          cardLastFour: res.data[i].cardLastFour,
+        })
+      }
+    })
+}
+
+const openEditCardDialog = cardDetails => {
+  currentCardDetails.value = cardDetails
+  isCardEditDialogVisible.value = true
+}
+
+const confirmDelete = async pmId => {
+  pmIdToDelete.value = pmId
+  isConfirmDialogOpen.value = true
+}
+
+const handleConfirmation = async action => {
+  if(action===true && pmIdToDelete.value){
+    try {
+      await axiosIns.delete(`api/auth/stripe/payment-method/${pmIdToDelete.value}`)
+      pmIdToDelete.value = null
+      fetchPaymentMethods()
+    } catch (error) {
+      console.log('Error deleting card:', error)
+    }
+  }
+}
+
 const createPaymentMethod = async() => {
   const { data } = await axiosIns.post('api/auth/stripe/payment-method/store', {
     cardName: cardName.value,
@@ -144,26 +177,75 @@ const createPaymentMethod = async() => {
     cardNumber: cardNumber.value,
     cardCvv: cardCvv.value,
   })
+
 }
 
 const createPaymentMethodCard = async () => {
+  isDisabled.value = true
+  isLoading.value = true
+ 
   const cardNumberElement = cardNumber.value.stripeElement
 
+  const userData = JSON.parse(localStorage.getItem('userData') || 'null')
+  const userCardName = `${userData?.firstname || ''} ${userData?.lastname || ''}`.trim()
+  const userCardEmail = `${userData?.email ?? ''}`.trim()
+  
   elms.value.instance.createPaymentMethod({
     type: 'card',
     card: cardNumberElement,
     billing_details: {
-      name: 'HK 1',
+      name: userCardName,
+      email: userCardEmail,
     },
   }).then( async result => {
-    console.log(result)
-
+  
     const { data } = await axiosIns.post('api/auth/stripe/payment-method/store', {
       pmId: result.paymentMethod.id,
+      isCardSaveBilling: isCardDetailSaveBilling.value,
     })
 
-    console.log(data)
+    isDisabled.value = false
+    isLoading.value = false 
+    fetchPaymentMethods()
+    resetPaymentForm()
   })
+    .catch(error => {
+      console.log('An error occurred:', error)
+      isDisabled.value = false
+      isLoading.value = false
+    })
+  
+}
+
+const updatePaymentMethod = async cardDetails => {
+  try {
+    const response = await axiosIns.post('api/auth/stripe/payment-method/update', {
+      pmId: cardDetails.pmId,
+      expiryDate: cardDetails.expiry,
+      cardName: cardDetails.name,
+      postalCode: cardDetails.postalCode,
+      isPrimary: cardDetails.isPrimary,
+    })
+
+
+    if(response.data.status){
+      isCardEditDialogVisible.value = false
+      fetchPaymentMethods()
+    }else{
+      console.log(response.data)
+    }
+    
+  } catch (error) {
+    console.error('Error submitting card details:', error.response.data)
+  }
+}
+
+const handleChange = event => {
+  if (event.error) {
+    cardError.value = event.error.message
+  } else {
+    cardError.value = ''
+  }
 }
 </script>
 
@@ -260,12 +342,12 @@ const createPaymentMethodCard = async () => {
 
             <VCol cols="12">
               <div class="d-flex flex-wrap gap-y-4">
-                <!--                <VBtn -->
-                <!--                  class="me-3" -->
-                <!--                  @click="isPricingPlanDialogVisible = true" -->
-                <!--                > -->
-                <!--                  upgrade plan -->
-                <!--                </VBtn> -->
+                <VBtn 
+                  class="me-3" 
+                  @click="isPricingPlanDialogVisible = true" 
+                > 
+                  upgrade plan 
+                </VBtn> 
 
                 <VBtn
                   color="error"
@@ -323,16 +405,21 @@ const createPaymentMethodCard = async () => {
                           v-slot="{ elements }"
                           :stripe-key="key"
                         >
-                          <VCol cols="12">
-                            <StripeElement
-                              ref="cardNumber"
-                              tabindex="0"
-                              class="cardElement"
-                              type="card"
-                              :elements="elements"
-                              :options="elementsOptions"
-                            />
-                          </VCol>
+                          <StripeElement
+                            ref="cardNumber"
+                            tabindex="0"
+                            class="cardElement"
+                            type="card"
+                            :elements="elements"
+                            :options="elementsOptions"
+                            @change="handleChange"
+                          />
+                          <p
+                            v-if="cardError"
+                            class="error"
+                          >
+                            {{ cardError }}
+                          </p>
 
                           <!--                      <VRow class="pa-3"> -->
                           <!--                        &lt;!&ndash; 👉 Name &ndash;&gt; -->
@@ -485,6 +572,7 @@ const createPaymentMethodCard = async () => {
                           <VBtn
                             color="error"
                             variant="tonal"
+                            @click="confirmDelete(card.pmId)"
                           >
                             Delete
                           </VBtn>
@@ -499,6 +587,7 @@ const createPaymentMethodCard = async () => {
                 <CardAddEditDialog
                   v-model:isDialogVisible="isCardEditDialogVisible"
                   :card-details="currentCardDetails"
+                  @submit="updatePaymentMethod"
                 />
               </VCol>
 
@@ -509,6 +598,8 @@ const createPaymentMethodCard = async () => {
               >
                 <VBtn
                   type="submit"
+                  :disabled="isDisabled"
+                  :loading="isLoading"
                   @click.prevent="createPaymentMethodCard"
                 >
                   Save changes
@@ -528,117 +619,128 @@ const createPaymentMethodCard = async () => {
     </VCol>
 
     <!-- 👉 Billing Address -->
-    <VCol cols="12">
+    <!--
+      <VCol cols="12">
       <VCard title="Billing Address">
-        <VCardText>
-          <VForm @submit.prevent="() => {}">
-            <VRow>
-              <!-- 👉 Company name -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="Company Name" />
-              </VCol>
+      <VCardText>
+      <VForm @submit.prevent="() => {}">
+      <VRow>
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="Company Name" />
+      </VCol>
 
-              <!-- 👉 Billing Email -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="Billing Email" />
-              </VCol>
+             
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="Billing Email" />
+      </VCol>
 
-              <!-- 👉 Tax ID -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="Tax ID" />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="Tax ID" />
+      </VCol>
 
-              <!-- 👉 Vat Number -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="VAT Number" />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="VAT Number" />
+      </VCol>
 
-              <!-- 👉 Mobile -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  dirty
-                  label="Phone Number"
-                  type="number"
-                  prefix="US (+1)"
-                />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField
+      dirty
+      label="Phone Number"
+      type="number"
+      prefix="US (+1)"
+      />
+      </VCol>
 
-              <!-- 👉 Country -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppSelect
-                  label="Country"
-                  :items="countryList"
-                />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppSelect
+      label="Country"
+      :items="countryList"
+      />
+      </VCol>
 
-              <!-- 👉 Billing Address -->
-              <VCol cols="12">
-                <AppTextField label="Billing Address" />
-              </VCol>
+              
+      <VCol cols="12">
+      <AppTextField label="Billing Address" />
+      </VCol>
 
-              <!-- 👉 State -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField label="State" />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField label="State" />
+      </VCol>
 
-              <!-- 👉 Zip Code -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  label="Zip Code"
-                  type="number"
-                />
-              </VCol>
+              
+      <VCol
+      cols="12"
+      md="6"
+      >
+      <AppTextField
+      label="Zip Code"
+      type="number"
+      />
+      </VCol>
 
-              <!-- 👉 Actions Button -->
-              <VCol
-                cols="12"
-                class="d-flex flex-wrap gap-4"
-              >
-                <VBtn type="submit">
-                  Save changes
-                </VBtn>
-                <VBtn
-                  type="reset"
-                  color="secondary"
-                  variant="tonal"
-                >
-                  Reset
-                </VBtn>
-              </VCol>
-            </VRow>
-          </VForm>
-        </VCardText>
+              
+      <VCol
+      cols="12"
+      class="d-flex flex-wrap gap-4"
+      >
+      <VBtn type="submit">
+      Save changes
+      </VBtn>
+      <VBtn
+      type="reset"
+      color="secondary"
+      variant="tonal"
+      >
+      Reset
+      </VBtn>
+      </VCol>
+      </VRow>
+      </VForm>
+      </VCardText>
       </VCard>
-    </VCol>
+      </VCol>
+    -->
 
     <!-- 👉 Billing History -->
     <VCol cols="12">
       <BillingHistoryTable />
     </VCol>
+    <!-- Confirm Dialog -->
+    <ConfirmDialog
+      v-model:isDialogVisible="isConfirmDialogOpen"
+      confirmation-question="Are you sure you want to delete your card?"
+      confirm-title="Deleted!"
+      confirm-msg="Your card has been deleted successfully."
+      cancel-title="Cancelled"
+      cancel-msg="Card deletion cancelled!"
+      @confirm="handleConfirmation"
+    />
   </VRow>
 </template>
 
@@ -703,5 +805,11 @@ const createPaymentMethodCard = async () => {
     border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     box-shadow: none;
   }
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-block-start: 5px;
 }
 </style>

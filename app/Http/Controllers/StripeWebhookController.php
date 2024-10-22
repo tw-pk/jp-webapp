@@ -1,11 +1,13 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Jobs\AwardCredit;
 use App\Models\User;
+use App\Models\UserCredit;
+use App\Models\CreditHistory;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\CreditAwarded;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Laravel\Cashier\Cashier;
@@ -15,9 +17,11 @@ use Laravel\Cashier\Http\Controllers\WebhookController;
 use Laravel\Cashier\Http\Middleware\VerifyWebhookSignature;
 use Laravel\Cashier\Payment;
 use Laravel\Cashier\Subscription;
+use Spatie\Permission\Models\Role;
 use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
 
 class StripeWebhookController extends WebhookController
 {
@@ -34,19 +38,91 @@ class StripeWebhookController extends WebhookController
         $method = 'handle'.Str::studly(str_replace('.', '_', $payload['type']));
 
         WebhookReceived::dispatch($payload);
+        
+        if($method == 'handlePaymentIntentSucceeded'){
+            $this->billingHistory($payload);
+            $this->creditCustomerAccount($payload);
+        }
+
+        if($method == 'handleInvoicePaymentSucceeded'){
+            $this->changeRoleInactiveMember($payload);
+        }
 
         if (method_exists($this, $method)) {
             $this->setMaxNetworkRetries();
-
             $response = $this->{$method}($payload);
-
             WebhookHandled::dispatch($payload);
-
             return $response;
         }
 
         return $this->missingMethod($payload);
     }
+
+
+    private function creditCustomerAccount(array $payload)
+    {
+        $paymentIntent = $payload['data']['object'];
+        $paymentStatus = $paymentIntent['status'];
+        $paymentData = $paymentIntent['charges']['data'][0];
+        $customerId = $paymentData['customer'];
+        $amount = $paymentData['amount'] / 100;
+        if ($paymentStatus === 'succeeded') {
+            $user = User::where('stripe_id', $customerId)->first();
+            if ($user) {
+                if ($user->credit) {
+                    $user->credit->credit += $amount;
+                    $user->credit->save();                  
+                } else {
+                    UserCredit::create([
+                        'credit' => $amount,
+                        'user_id' => $user->id,
+                    ]);
+                }
+                $user->notify(new CreditAwarded($amount));
+            }
+        }
+    }
+
+    private function billingHistory(array $payload)
+    {
+        $paymentIntent = $payload['data']['object'];
+        $paymentStatus = $paymentIntent['status'];
+        $transaction_id = $paymentIntent['id'];
+
+        $paymentData = $paymentIntent['charges']['data'][0];
+        $customerId = $paymentData['customer'];
+        $amount = $paymentData['amount'] / 100;
+        $receipt_url = $paymentData['receipt_url'];
+        $user = User::where('stripe_id', $customerId)->first();
+
+        if ($user) {
+            CreditHistory::create([
+                'user_id' => $user->id,
+                'user_credit_id' => $user->credit?->id,
+                'transaction_id' => $transaction_id,
+                'amount' => $amount,
+                'status' => $paymentStatus,
+                'receipt_url' => $receipt_url,
+            ]);
+        }
+    }
+
+    private function changeRoleInactiveMember(array $payload)
+    {
+        $paymentIntent = $payload['data']['object'];
+        $customerId = $paymentIntent['customer'];
+        $user = User::where('stripe_id', $customerId)->first();
+
+        if ($user) {
+            if ($user->hasRole('InactiveMember')) {
+                $role = Role::where('name', 'Admin')->first();
+                if ($role) {
+                    $user->syncRoles([$role]);
+                } 
+            }
+        }
+    }
+
     protected function handleCustomerSubscriptionCreated(array $payload)
     {
         $user = $this->getUserByStripeId($payload['data']['object']['customer']);

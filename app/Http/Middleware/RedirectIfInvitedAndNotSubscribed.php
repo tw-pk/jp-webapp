@@ -38,7 +38,7 @@ class RedirectIfInvitedAndNotSubscribed
 
             $checkout = Session::create([
                 'customer' => Auth::user()->stripe_id,
-                'success_url' => config('app.url')."/dashboards",
+                'success_url' => config('app.url')."/dashboard",
                 "cancel_url" => config('app.url').'/team-members/invite',
                 "line_items" => [
                     [

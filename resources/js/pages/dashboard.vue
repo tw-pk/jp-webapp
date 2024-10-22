@@ -1,94 +1,27 @@
 <script setup>
+import DashboardNAnalysis from "@/pages/dashboards/components/DashboardNAnalysis.vue"
 import DashboardRecentCalls from "@/pages/dashboards/components/DashboardRecentCalls.vue"
 import DashboardStatistics from "@/pages/dashboards/components/DashboardStatistics.vue"
-
-
-import ApexChartExpenseRatio from "@/views/charts/apex-chart/ApexChartExpenseRatio.vue"
+import DashboardTMAnalysis from "@/pages/dashboards/components/DashboardTMAnalysis.vue"
+import { useLiveCallsStore } from "@/views/apps/dashboard/useLiveCallsStore"
 import ApexChartReportData from '@/views/charts/apex-chart/ApexChartReportData.vue'
+import { getCallsChartConfig } from '@core/libs/apex-chart/apexCharConfig'
+import { can } from "@layouts/plugins/casl"
+import { computed, onMounted, ref } from 'vue'
+import VueApexCharts from 'vue3-apexcharts'
 import { useTheme } from 'vuetify'
 
-import avatar1 from '@images/avatars/avatar-1.png'
-import avatar2 from '@images/avatars/avatar-2.png'
-import avatar3 from '@images/avatars/avatar-3.png'
-
-const items = [
-  {
-    name: 'John Doe',
-    avatar: avatar1,
-  },
-  {
-    name: 'Ali Connors',
-    avatar: avatar2,
-  },
-  {
-    name: 'Trevor Hansen',
-    avatar: avatar3,
-  },
-]
-
-const select_report = ref(['John Doe'])
-
+const liveCallsStore = useLiveCallsStore()
 const vuetifyTheme = useTheme()
 const currentTheme = vuetifyTheme.current.value.colors
-
-const statisticsVertical = {
-  title: 'Revenue Generated',
-  color: 'success',
-  icon: 'tabler-credit-card',
-  stats: '97.5k',
-  height: 97,
-  series: [{
-    data: [
-      300,
-      350,
-      330,
-      380,
-      340,
-      400,
-      380,
-    ],
-  }],
-  chartOptions: {
-    chart: {
-      height: 110,
-      type: 'area',
-      parentHeightOffset: 0,
-      toolbar: { show: false },
-      sparkline: { enabled: true },
-    },
-    tooltip: { enabled: false },
-    markers: {
-      colors: 'transparent',
-      strokeColors: 'transparent',
-    },
-    grid: { show: false },
-    colors: [currentTheme.success],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 0.8,
-        opacityFrom: 0.6,
-        opacityTo: 0.1,
-      },
-    },
-    dataLabels: { enabled: false },
-    stroke: {
-      width: 2,
-      curve: 'smooth',
-    },
-    xaxis: {
-      show: true,
-      lines: { show: false },
-      labels: { show: false },
-      stroke: { width: 0 },
-      axisBorder: { show: false },
-    },
-    yaxis: {
-      stroke: { width: 0 },
-      show: false,
-    },
-  },
-}
+const expenseRationChartConfig = computed(() => getCallsChartConfig(vuetifyTheme.current.value))
+const totalLiveCalls = ref(0)
+const totalMissed = ref(0)
+const totalOutboundCalls = ref(0)
+const totalInboundCalls = ref(0)
+const totalCompletedCalls = ref(0)
+const series = ref([])
+const userHaveNumber = ref(false)
 
 const moreList = [
   {
@@ -104,6 +37,67 @@ const moreList = [
     value: 'View All',
   },
 ]
+
+// headers
+const headers = [
+  {
+    title: 'Call Sid',
+    key: 'callSid',
+    sortable: false,
+  },
+  {
+    title: 'From',
+    key: 'from',
+    sortable: false,
+  },
+  {
+    title: 'To',
+    key: 'to',
+    sortable: false,
+  },
+  {
+    title: 'Call Time',
+    key: 'callTime',
+    sortable: false,
+  },
+]
+
+const options = ref({
+  page: 1,
+  itemsPerPage: 10,
+  sortBy: [],
+  groupBy: [],
+  search: undefined,
+})
+
+const fetchLiveCalls = async () => {
+  try {
+    const liveCallsResponse = await liveCallsStore.fetchLiveCalls()
+    if (liveCallsResponse.data) {
+      totalLiveCalls.value = liveCallsResponse.data.totalLiveCalls
+      totalOutboundCalls.value = liveCallsResponse.data.totalOutboundCalls
+      totalInboundCalls.value = liveCallsResponse.data.totalInboundCalls
+      totalCompletedCalls.value = liveCallsResponse.data.totalCompletedCalls
+      totalMissed.value = liveCallsResponse.data.totalMissed
+      userHaveNumber.value = liveCallsResponse.data.userHaveNumber
+
+      series.value = [
+        totalOutboundCalls.value,
+        totalInboundCalls.value,
+        totalMissed.value,
+      ]
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  }
+}
+
+onMounted(fetchLiveCalls)
+      
+//watchEffect(fetchLiveCalls)
+
+const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+const userRole = (userData && userData.role) ? userData.role : null
 </script>
 
 <template>
@@ -111,67 +105,29 @@ const moreList = [
     <div class="pb-4 font-weight-bold text-h4">
       Dashboard
     </div>
+    <VAlert
+      v-if="userHaveNumber && userRole=='InactiveMember'"
+      border="start"
+      color="primary"
+      variant="tonal"
+      class="mb-5"
+    >
+      Success! Thank you very much for using our system. You have been made an admin, please logout and login again get admin dashboard.
+    </VAlert>
     <VRow class="match-height">
-      <VCol
-        cols="12"
-        md="12"
-      >
-        <DashboardStatistics class="h-100" />
+      <DashboardStatistics class="h-100" />
+
+      <VCol cols="12">
+        <ApexChartReportData class="h-100" />
       </VCol>
 
       <VCol
         cols="12"
-        md="4"
-      >
-        <VCard max-height="515">
-          <VCardText>
-            <ApexChartExpenseRatio />
-          </VCardText>
-        </VCard>
-      </VCol>
-
-      <VCol cols="8">
-        <VCard>
-          <VCardItem class="d-flex flex-wrap justify-space-between gap-4">
-            <template #append>
-              <div class="d-flex align-center">
-                <AppSelect
-                  v-model="select_report"
-                  :items="items"
-                  item-title="name"
-                  item-value="name"
-                  class="mr-5"
-                >
-                  <template #selection="{ item }">
-                    <VChip>
-                      <VAvatar
-                        start
-                        :image="item.raw.avatar"
-                      />
-                      <span>{{ item.title }}</span>
-                    </VChip>
-                  </template>
-                </AppSelect>
-                <VBtn>
-                  Download Report
-                </VBtn>
-              </div>
-            </template>
-          </VCardItem>
-
-          <VCardText>
-            <ApexChartReportData />
-          </VCardText>
-        </VCard>
-      </VCol>
-
-      <VCol
-        cols="12"
-        md="4"
+        md="6"
       >
         <VCard
           title="Live Calls"
-          max-height="300"
+          max-height="515"
         >
           <template #append>
             <div class="me-n2">
@@ -181,12 +137,12 @@ const moreList = [
           <VCardText>
             <VRow justify="center">
               <h5 class="text-h1 text-center">
-                1
+                {{ totalLiveCalls }}
               </h5>
             </VRow>
             <VRow
               justify="center"
-              class="pl-3 pr-3 pt-3"
+              class="pt-3"
             >
               <VCol
                 cols="6"
@@ -207,10 +163,10 @@ const moreList = [
             >
               <VCol
                 cols="6"
-                class=" text-center __border-right"
+                class="text-center __border-right"
               >
                 <h5 class="text-h1 text-center">
-                  2
+                  {{ totalOutboundCalls }}
                 </h5>
               </VCol>
               <VCol
@@ -218,7 +174,7 @@ const moreList = [
                 class=" text-center"
               >
                 <h5 class="text-h1 text-center">
-                  3
+                  {{ totalCompletedCalls }}
                 </h5>
               </VCol>
             </VRow>
@@ -226,35 +182,40 @@ const moreList = [
         </VCard>
       </VCol>
 
-      <VCol cols="8">
-        <VCard>
-          <VCardText class="d-flex flex-column gap-4">
-            <!-- Default -->
-            <div class="d-flex flex-row justify-space-between">
-              <VTabs class="w-75">
-                <VTab>Live Calls</VTab>
-                <VTab>Recent</VTab>
-                <VTab>Calls in Queue</VTab>
-              </VTabs>
-              <VBtn
-                color="secondary"
-                class="justify-end"
-              >
-                Past 30 Minutes
-              </VBtn>
-            </div>
+      <VCol
+        cols="12"
+        md="6"
+      >
+        <VCard max-height="515">
+          <VCardText>
+            <VueApexCharts
+              v-if="series.length > 0"
+              type="donut"
+              height="410"
+              :options="expenseRationChartConfig"
+              :series="series"
+            />
           </VCardText>
         </VCard>
       </VCol>
-
-      <VCol cols="6">
-        <!--        <DashboardNAnalysis class="h-100" /> -->
+ 
+      <VCol
+        cols="12"
+        :sm="can('manage', 'all') ? 6 : 12"
+        :lg="can('manage', 'all') ? 6 : 12"
+      >
+        <DashboardNAnalysis class="h-100" />
       </VCol>
-
-      <VCol cols="6">
-        <!--        <DashboardTMAnalysis class="h-100" /> -->
+      
+      <VCol
+        v-if="can('manage', 'all')"
+        cols="12" 
+        sm="6"
+        lg="6"
+      >
+        <DashboardTMAnalysis class="h-100" />
       </VCol>
-
+      
       <VCol cols="12">
         <DashboardRecentCalls class="h-100" />
       </VCol>
@@ -277,5 +238,4 @@ const moreList = [
 meta:
   action: read
   subject: dashboard-analytics
-  title: Team Dialer - Dashboard
 </route>

@@ -166,9 +166,11 @@ class NumberController extends Controller
 
             $phoneNumberSid = $incomingPhoneNumbers->sid;
             $this->storeNumber($phoneNumber, $request->state, $request->city, $phoneNumberSid);
+            
             return response()->json([
                 'message' => "You have successfully purchased $phoneNumber",
-                'number' => $phoneNumber
+                'number' => $phoneNumber,
+                'isInactiveMember' =>  Auth::user()->hasRole('InactiveMember') ?? false,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -191,7 +193,8 @@ class NumberController extends Controller
                 'country_code' => $twilio_number_lookup->countryCode,
                 'country' => TwilioCountry::where('country_code', $twilio_number_lookup->countryCode)->first()->country ?? $twilio_number_lookup->country,
                 'state' => $city,
-                'city' => $state
+                'city' => $state,
+                'active' => true
             ]);
         } catch (TwilioException $exception) {
             return response()->json([

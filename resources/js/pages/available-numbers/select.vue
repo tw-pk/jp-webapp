@@ -56,7 +56,6 @@ onMounted(async () => {
   }
 })
 
-
 const type = [
   {
     name: 'Number',
@@ -267,13 +266,23 @@ watch(address_requirements,  (newValue, oldValue) => {
     isProcessing.value = false
   }).catch(error => {
     isProcessing.value = false
-})
+  })
     
 })
 </script>
 
 <template>
   <div class="pa-8">
+    <VAlert
+      type="info"
+      border="start"
+      color="primary"
+      variant="tonal"
+      closable
+      class="mb-3"
+    >
+      First! select the country and then search for the number of the country you want to add.
+    </VAlert>
     <VRow class="match-height">
       <VCol
         cols="12"

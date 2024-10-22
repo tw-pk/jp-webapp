@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 class VerificationController extends Controller
 {
     public function verify(Request $request){
+        $request->validate([
+            'otp' => 'required|min:6|max:6'
+        ]);
         $email_verification_service = new EmailVerificationService();
         return $email_verification_service->verifyOtp($request->otp);
     }

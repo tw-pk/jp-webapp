@@ -41,7 +41,33 @@ const headers = [
   },
 ]
 
-const tabTitles = ['all', 'outbound-dial', 'inbound', 'missed', 'voicemail']
+const tabTitles = [
+  {
+    icon: 'tabler-phone-call',
+    title: 'All',
+    
+  },
+  {
+    icon: 'tabler-phone-outgoing',
+    title: 'Outbound',
+    
+  },
+  {
+    icon: 'tabler-phone-incoming',
+    title: 'Inbound',
+    
+  },
+  {
+    icon: 'tabler-phone-pause',
+    title: 'Missed',
+    
+  },
+  {
+    icon: 'tabler-record-mail',
+    title: 'Voicemail',
+    
+  },
+]
 
 const options = ref({
   page: 1,
@@ -131,11 +157,18 @@ const resolveUserRoleVariant = direction => {
                   v-model="currentTab"
                   class="v-tabs-pill"
                 >
-                  <VTab>All</VTab>
-                  <VTab>Outbound</VTab>
-                  <VTab>Inbound</VTab>
-                  <VTab>Missed</VTab>
-                  <VTab>Voicemail</VTab>
+                  <VTab
+                    v-for="tab in tabTitles"
+                    :key="tab.icon"
+                    class="me-5"
+                  >
+                    <VIcon
+                      :size="18"
+                      :icon="tab.icon"
+                      class="me-1"
+                    />
+                    <span>{{ tab.title }}</span>
+                  </VTab>
                 </VTabs>
               </div>
               <div class="__dashboard__header-search">

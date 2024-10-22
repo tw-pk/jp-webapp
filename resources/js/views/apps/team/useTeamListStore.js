@@ -13,8 +13,11 @@ export const useTeamListStore = defineStore('TeamListStore', {
       })
     },
 
+    // 👉 Fetch Member list
+    fetchMemberList(params) { return axiosIns.post('api/auth/team/fetch/members', { params }) },
+
     // 👉 Fetch Members
-    fetchMembers(params) { return axiosIns.post('api/auth/team/fetch/members', { params }) },
+    fetchMembers(params) { return axiosIns.post('api/auth/team/fetch/members/teams', { params }) },
 
     // 👉 Add Team
     addTeam(data) {
@@ -34,7 +37,7 @@ export const useTeamListStore = defineStore('TeamListStore', {
       })
     },
 
-    // 👉 Delete User
+    // 👉 Delete Team
     deleteTeam(id) {
       return new Promise((resolve, reject) => {
         axiosIns.delete(`api/auth/team/delete/${id}`).then(response => resolve(response)).catch(error => reject(error))

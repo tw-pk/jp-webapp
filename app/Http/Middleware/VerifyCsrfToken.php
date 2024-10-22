@@ -17,6 +17,10 @@ class VerifyCsrfToken extends Middleware
         'twilio/dial',
         'voice/*',
         'https://checkout.stripe.com/*',
-        'api/twilio-sms'
+        'api/twilio-sms',
+        '/make-call',        
+        '/get-call-info',
+        '/call-disconnected',
+        '/twiml/*',                
     ];
 }

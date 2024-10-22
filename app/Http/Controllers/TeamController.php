@@ -11,6 +11,7 @@ use App\Models\UserProfile;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Services\AssignPhoneNumberService;
 
 class TeamController extends Controller
 {
@@ -107,24 +108,33 @@ class TeamController extends Controller
         ]);
     }
 
-    public function ownedActiveNumbers(){
-        $numbers = Auth::user()->numbers;
-        $numbers = $numbers->map(function ($number){
-           return [
-               'number' => $number->phone_number,
-               'active' => $number->active
-           ];
-        });
-
-        return response()->json($numbers);
+    public function ownedActiveNumbers()
+    {
+        $userId = Auth::user()->id;
+        $assignPhoneNumberService = new AssignPhoneNumberService();
+        $numbers = $assignPhoneNumberService->getAssignPhoneNumbers($userId);
+        $userNumbers = UserNumber::select('phone_number as number', 'active')
+            ->whereIn('phone_number', $numbers)
+            ->get()->toArray();
+            
+        return response()->json($userNumbers);
     }
 
     public function fetch_numbers()
     {
-        $userNumber = UserNumber::select('phone_number')->where('user_id', Auth::user()->id)->get();
+        $userNumbers = Auth::user()->numbers()->pluck('phone_number');
+
+        $roleName = Auth::user()->getRoleNames()->first();
+        if($roleName =='Admin' && $userNumbers->isEmpty()){
+            return response()->json([
+                'status' => false,
+                'message' => 'If you want to send an invitation to someone or create your own team, then you need to purchase your number from the phone number menu.'
+            ]);
+        }
         return response()->json([
+            'status' => true,
             'message' => 'Phone numbers fetched successfully',
-            'userNumber' => $userNumber
+            'userNumber' => $userNumbers
         ]);
     }
 
@@ -153,7 +163,7 @@ class TeamController extends Controller
 
         $inviteMembers->map(function ($item) {
             $item->fullname = $item->firstname . ' ' . $item->lastname;
-            if (!empty($item->invitationAccept->profile->avatar)) {
+            if (!empty($item->invitationAccept?->profile?->avatar)) {
                 $item->avatar_url = asset('storage/avatars/' .$item->invitationAccept->profile->avatar);
             } else {
                 $item->avatar_url = asset('images/avatars/avatar-0.png');
@@ -164,6 +174,33 @@ class TeamController extends Controller
             'message' => 'Members fetched successfully',
             'inviteMembers' => $inviteMembers,
             'teams' => $teams
+        ]);
+    }
+
+    public function teamFetchMembers()
+    {
+        $inviteMembers = Invitation::with(['invitationAccept' => function ($query) {
+            $query->select('id', 'email');
+        }, 'invitationAccept.profile' => function ($query) {
+            $query->select('user_id', 'avatar');
+        }])
+            ->select('id', 'user_id', 'firstname', 'lastname', 'email')
+            ->where('user_id', Auth::user()->id)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $inviteMembers->map(function ($item) {
+            $item->fullname = $item->firstname . ' ' . $item->lastname;
+            if (!empty($item->invitationAccept->profile->avatar)) {
+                $item->avatar_url = asset('storage/avatars/' .$item->invitationAccept->profile->avatar);
+            } else {
+                $item->avatar_url = asset('images/avatars/avatar-0.png');
+            }
+            return $item;
+        });
+        return response()->json([
+            'message' => 'Members fetched successfully',
+            'inviteMembers' => $inviteMembers,
         ]);
     }
 

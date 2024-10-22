@@ -1,14 +1,13 @@
 <script setup>
 import { paginationMeta } from '@/@fake-db/utils'
 import { useRecentCallsDashStore } from "@/views/apps/recent-calls/useRecentCallsDashStore"
+import { can } from "@layouts/plugins/casl"
 import { requiredValidator } from '@validators'
 import { ref } from "vue"
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
 const recentCallsDashStore = useRecentCallsDashStore()
 const currentTab = ref(0)
-const route = useRoute()
-const router = useRouter()
 const searchQuery = ref('')
 const error = ref(false)
 const errorMessage = ref('')
@@ -21,12 +20,11 @@ const editDialog = ref(false)
 const notes = ref()
 const isDisabled = ref(false)
 const isLoading = ref(false)
-const call_sid = ref()
+const call_id = ref()
 const isSnackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarActionColor = ref(' ')
 const form = ref()
-const isPlaying = ref(false)
 
 //const members = ['All members']
 const members = ref([])
@@ -73,16 +71,6 @@ const headers = [
     sortable: false,
   },
   {
-    title: "RATING",
-    key: "rating",
-    sortable: false,
-  },
-  {
-    title: "DISPOSITION",
-    key: "disposition",
-    sortable: false,
-  },
-  {
     title: "RECORD",
     key: "record",
     sortable: false,
@@ -91,17 +79,33 @@ const headers = [
 
 const tabTitles = ['all', 'outbound-dial', 'inbound', 'missed', 'voicemail']
 
+
 const resolveUserRoleVariant = call => {
-  if (call.direction === 'outbound-api' || call.direction === 'outbound-dial')
-    return {
-      color: 'success',
-      icon: 'tabler-phone-outgoing',
-    }
-  if (call.direction === 'inbound')
-    return {
-      color: 'error',
-      icon: 'tabler-phone-incoming',
-    }
+  const directions = {
+    'outbound-api': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'outbound-dial': { color: 'success', icon: 'tabler-phone-outgoing' },
+    'inbound': { color: 'error', icon: 'tabler-phone-incoming' },
+  }
+  
+  if (call.status === 'no-answer' && directions[call.direction]) {
+    return { color: 'warning', icon: 'tabler-phone-calling' }
+  }
+
+  return directions[call.direction] || { color: 'error', icon: 'tabler-phone-off' }
+}
+
+const resolveStatusColorVariant = status => {
+  const statusColors = {
+    completed: { color: 'success' },
+    'no-answer': { color: 'warning' },
+    failed: { color: 'error' },
+    busy: { color: 'primary' },
+    'in-progress': { color: 'primary' },
+    ringing: { color: 'info' },
+    queued: { color: 'secondary' },
+  }
+
+  return statusColors[status] || { color: 'secondary' }
 }
 
 // 👉 Fetching recent calls
@@ -112,22 +116,27 @@ const fetchRecentCalls = () => {
 
   recentCallsDashStore.fetchRecentCalls({
     callType: selectedTabTitle,
+    member: member.value,
     q: searchQuery.value,
     options: options.value,
   })
     .then(res => {
-      if(res.data.status){
+      if (res.data.status) {
         error.value = false
         isProcessing.value = false
         calls.value = res.data.calls
         totalPage.value = res.data.totalPage
         totalRecord.value = res.data.totalRecord
         options.value.page = res.data.page
+      } else {
+        error.value = true
+        errorMessage.value = res?.data?.message
+        isProcessing.value = false
       }
     })
     .catch(errors => {
       error.value = true
-      errorMessage.value = errors.response.data.message ? errors.response.data.message : errors.message
+      errorMessage.value = errors.response.data.message ?? errors.message
       isProcessing.value = false
     })
 }
@@ -142,7 +151,7 @@ const addNote = () => {
   isDisabled.value = true
   isLoading.value = true
   recentCallsDashStore.addNote({
-    call_sid: call_sid.value,
+    call_id: call_id.value,
     notes: notes.value,
   }).then(response => {
     editDialog.value = false
@@ -182,11 +191,11 @@ const submitNotes = () => {
 }
 
 // 👉 Fetching note
-const fetchNote = callSid => {
+const fetchNote = callId => {
   isProcessingNote.value = true
-  call_sid.value = callSid,
+  call_id.value = callId,
   recentCallsDashStore.fetchNote({
-    sid: callSid,
+    call_id: callId,
   }).then(response => {
     notes.value = response.data.note
     isProcessingNote.value = false
@@ -196,98 +205,164 @@ const fetchNote = callSid => {
   })
 }
 
-const editItem = callSid => {
-  fetchNote(callSid)
+const editItem = callId => {
+  fetchNote(callId)
   editDialog.value = true
 }
 
 onMounted(async () => {
   await recentCallsDashStore.fetchMemberList()
     .then(res => {
-      if(res.data.status){
-        members.value = res.data.members
-      }else{
-        console.log(res.data.message)
+      if (res.data.status) {
+        members.value = [{ id: "all", fullname: "All" }, ...res.data.members]
+      } else {
+        error.value = true
+        errorMessage.value = res.data.message
+        isProcessing.value = false
       }
+    })
+    .catch(errors => {
+      error.value = true
+      errorMessage.value = errors.response.data.message ?? errors.message
+      isProcessing.value = false
     })
 })
 
+const currentAudio = ref(null)
+const isPlayingId = ref(null)
+const currentTime = ref(0)
+const duration = ref(0)
+
 const playRecording = url => {
-  const audio = new Audio(url)
-
-  //audio.play()
-
-  if (isPlaying.value) {
-    audio.pause()
-  } else {
-    if (!audio || audio.src !== url) {
-      audio = new Audio(url)
-    }
-    audio.play()
+  if (currentAudio.value && currentAudio.value.src !== url) {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+    currentTime.value = 0
   }
-  isPlaying.value = !isPlaying.value
+
+  if (!currentAudio.value || currentAudio.value.src !== url) {
+    currentAudio.value = new Audio(url)
+
+    currentAudio.value.addEventListener('timeupdate', () => {
+      currentTime.value = currentAudio.value.currentTime
+      duration.value = currentAudio.value.duration
+    })
+
+    currentAudio.value.addEventListener('ended', () => {
+      currentTime.value = duration.value
+    })
+
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else if (currentAudio.value.paused) {
+    currentAudio.value.play()
+    isPlayingId.value = url
+  } else {
+    currentAudio.value.pause()
+    isPlayingId.value = null
+  }
+}
+
+const formatTime = time => {
+  const minutes = Math.floor(time / 60).toString().padStart(2, '0')
+  const seconds = Math.floor(time % 60).toString().padStart(2, '0')
+  
+  return `${minutes}:${seconds}`
 }
 </script>
 
 <template>
-  <div
+  <VAlert
     v-if="errorMessage"
     class="my-3"
+    density="compact"
+    color="error"
+    variant="tonal"
+    closable
   >
-    <VAlert
-      density="compact"
-      color="error"
-      variant="tonal"
-      closable
-    >
-      {{ errorMessage }}
-    </VAlert>
-  </div>
+    {{ errorMessage }}
+  </VAlert>
+ 
   <VCard>
-    <div class="__dashboard__recent-calls-header pa-4 __border-bottom-light">
-      <div class="__dashboard__header-title">
-        <h5 class="font-weight-bold text-h5">
-          Recent Calls
-        </h5>
-      </div>
-      
-      <div class="__dashboard__header-tabs">
-        <VTabs
-          v-model="currentTab"
-          class="v-tabs-pill"
+    <div class="pa-4">
+      <VRow class="align-center">
+        <VCol
+          cols="12"
+          sm="4"
+          md="3"
+          lg="2"
+          class="d-flex align-center"
         >
-          <VTab>All</VTab>
-          <VTab>Outbound</VTab>
-          <VTab>Inbound</VTab>
-          <VTab>Missed</VTab>
-          <VTab>Voicemail</VTab>
-        </VTabs>
-      </div>
-      <VCol
-        cols="2"
-        md="2"
-      >
-        <VAutocomplete
-          v-model="member"
-          label="Select members"
-          :items="members"
-          item-title="fullname"
-          item-value="fullname"
+          <h5 class="font-weight-bold text-h4">
+            Recent Calls
+          </h5>
+        </VCol>
+        <VCol
+          cols="12"
+          sm="8"
+          md="6"
+          lg="6"
+          class="d-flex align-center justify-center mt-3"
+        >
+          <VTabs
+            v-model="currentTab"
+            class="v-tabs-pill"
+            show-arrows
+          >
+            <VTab>All</VTab>
+            <VTab>Outbound</VTab>
+            <VTab>Inbound</VTab>
+            <VTab>Missed</VTab>
+            <VTab>Voicemail</VTab>
+          </VTabs>
+        </VCol>
+
+        <VCol
+          v-if="can('manage', 'all')"
+          cols="12"
+          sm="4"
+          md="3"
+          lg="2"
+          class="d-flex justify-end"
+        >
+          <VAutocomplete
+            v-model="member"
+            label="Select members"
+            :items="members"
+            item-title="fullname"
+            item-value="id"
+            dense
+          />
+        </VCol>
+        <VCol
+          v-else
+          cols="12"
+          sm="4"
+          md="3"
+          lg="2"
+          class="d-flex justify-end"
         />
-      </VCol>
-      <div class="__dashboard__header-search">
-        <AppTextField
-          v-model="searchQuery"
-          placeholder="Search Number"
-          density="compact"
-          append-inner-icon="tabler-search"
-          single-line
-          hide-details
-          dense
-          outlined
-        />
-      </div>
+        <VCol
+          cols="12"
+          sm="4"
+          md="4"
+          lg="2"
+          class="d-flex justify-end"
+        >
+          <AppTextField
+            v-model="searchQuery"
+            placeholder="Search Number"
+            density="compact"
+            append-inner-icon="tabler-search"
+            single-line
+            hide-details
+            dense
+            outlined
+          />
+        </VCol>
+      </VRow>
     </div>
+
     <VDivider />
 
     <!-- Show the loader -->
@@ -326,7 +401,7 @@ const playRecording = url => {
         <div class="d-flex align-center gap-4">
           <VBtn
             variant="plain"
-            @click="editItem(item.raw.call_sid)"
+            @click="editItem(item.raw.call_id)"
           >
             + Add Note
           </VBtn>
@@ -337,7 +412,7 @@ const playRecording = url => {
       <template #item.status="{ item }">
         <VChip
           label
-          color="success"
+          :color="resolveStatusColorVariant(item.raw?.status)?.color"
         >
           {{ item.raw.status }}
         </VChip>
@@ -352,13 +427,24 @@ const playRecording = url => {
             elevation="0"
             @click="playRecording(item.raw.record)"
           >
-            <VIcon :icon="isPlaying ? 'tabler-pause' : 'tabler-play'" />
+            <VIcon :icon="isPlayingId === item.raw.record ? 'tabler-pause' : 'tabler-play'" />
           </VBtn>
+          <span
+            v-if="isPlayingId === item.raw.record"
+            class="ml-2"
+            style="display: inline-block; width: 60px; text-align: end;"
+          >
+            {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+          </span>
         </div>
-        <div v-else>
+        <div
+          v-else
+          class="ml-3"
+        >
           {{ item.raw.record }}
         </div>
       </template>
+
 
       <!-- pagination -->
       <template #bottom>
@@ -485,7 +571,15 @@ const playRecording = url => {
 <style scoped lang="css">
 @use "@core-scss/template/pages/page-auth.scss";
 
+.v-tabs-wrapper {
+  -ms-overflow-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
 .v-tabs-pill {
+  display: inline-flex;
   font-size: 0.8125rem;
   padding-block: 0.2rem;
   padding-inline: 0.5rem;
@@ -499,6 +593,11 @@ const playRecording = url => {
 }
 
 .v-tabs-pill .v-tab__indicator {
-  block-size: 1px;
+  background-color: #000;
+  block-size: 2px;
+}
+
+.v-tabs-wrapper::-webkit-scrollbar {
+  display: none;
 }
 </style>

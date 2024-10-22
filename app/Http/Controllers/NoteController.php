@@ -11,14 +11,14 @@ class NoteController extends Controller
     public function add_note(Request $request)
     {
         $request->validate([
-            'call_sid' => 'required|string',
+            'call_id' => 'required|integer',
             'notes' => 'required|string',
         ]);
 
-        $note = Note::where('sid', $request->call_sid)->first();
+        $note = Note::where('call_id', $request->call_id)->first();
         if (!$note) {
             $note = new Note();
-            $note->sid = $request->call_sid;
+            $note->call_id = $request->call_id;
         }
         $note->notes = $request->notes;
         $note->save();
@@ -30,7 +30,7 @@ class NoteController extends Controller
 
     public function fetch_note(Request $request)
     {
-        $note = Note::where('sid', $request->sid)->pluck('notes')->first();
+        $note = Note::where('call_id', $request->call_id)->pluck('notes')->first();
         return response()->json([
             'message' => 'Note fetched successfully',
             'note' => $note

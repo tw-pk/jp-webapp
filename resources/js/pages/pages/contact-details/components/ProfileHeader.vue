@@ -56,9 +56,10 @@ fetchHeaderData()
             <span class="d-flex">
               <VIcon
                 size="20"
-                icon="tabler-color-swatch"
+                icon="tabler-address-book"
                 class="me-1"
               />
+              
               <span class="text-body-1">
                 Contact
               </span>

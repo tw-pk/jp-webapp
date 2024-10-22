@@ -37,10 +37,11 @@ class UpdateCustomerBalance extends Command
     public function handle()
     {
         Stripe::setApiKey(env('STRIPE_SECRET'));
-        $user = \App\Models\User::find(4);
+        $user = \App\Models\User::find(47);
         $amount = $this->ask('enter amount') * 100;
         $inv = $user->invoiceFor('Credit', $amount);
         $invoice = Invoice::retrieve($inv->asStripeInvoice()->id);
+        
         $paymentIntent = PaymentIntent::create([
             'amount' => $amount,
             'currency' => 'usd',
