@@ -1,5 +1,4 @@
 <script setup>
-import axios from '@axios'
 import { useThemeConfig } from '@core/composable/useThemeConfig'
 import Shepherd from 'shepherd.js'
 
@@ -174,8 +173,8 @@ if (userRole == "Admin") {
 // 👉 No Data suggestion
 const noDataSuggestions = [
   {
-    title: 'Analytics Dashboard',
-    icon: 'tabler-shopping-cart',
+    title: 'Dashboard',
+    icon: 'tabler-layout-dashboard',
     url: { name: 'dashboard' },
   },
   {
@@ -187,9 +186,9 @@ const noDataSuggestions = [
     },
   },
   {
-    title: 'Pricing Page',
-    icon: 'tabler-cash',
-    url: { name: 'pages-pricing' },
+    title: 'Phone Numbers',
+    icon: 'tabler-phone',
+    url: { name: 'pages-phone-numbers' },
   },
 ]
 
@@ -199,9 +198,13 @@ const router = useRouter()
 
 // 👉 fetch search result API
 watchEffect(() => {
-  axios.get('/app-bar/search', { params: { q: searchQuery.value } }).then(response => {
-    searchResult.value = response.data
+  const filteredResults = suggestionGroups.flatMap(group => {
+    return group.content.filter(item =>
+      item.title.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    )
   })
+
+  searchResult.value = filteredResults 
 })
 
 const redirectToSuggestedOrSearchedPage = selected => {

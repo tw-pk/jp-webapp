@@ -190,7 +190,8 @@ const resolveCategories = val => {
             :key="item.title"
           >
             <VListSubheader
-              v-if="item && typeof item === 'object' && 'header' in item"
+              v-if="item && typeof item == 'object' && 'header' in item"
+              
               class="text-disabled"
             >
               {{ resolveCategories(item.title) }}
