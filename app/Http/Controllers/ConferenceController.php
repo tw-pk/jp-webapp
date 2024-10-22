@@ -6,6 +6,7 @@ use Twilio\Rest\Client;
 use Illuminate\Http\Request;
 use Twilio\TwiML\VoiceResponse;
 use Illuminate\Support\Str;
+use App\Models\Call;
 
 
 class ConferenceController extends Controller
@@ -57,7 +58,16 @@ class ConferenceController extends Controller
                 $this->twilio->calls($childCallSid)->update([
                     'url' => $url,
                     'method' => 'POST',                    
-                ]);    
+                ]);   
+                
+                
+                Call::create([
+                    'call_sid' => $childCallSid,
+                    'conference_sid' => $conferenceName,
+                    'participant_number' => $call->to, 
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
                                 
             }
 

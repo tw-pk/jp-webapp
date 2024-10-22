@@ -36,7 +36,7 @@ class CallRepository implements CallRepositoryInterface
                 'to' => $data['To'],          
                 'from' => $data['Caller'],     
                 'status' => $data['CallStatus'],  
-                'duration' => 0,     
+                'duration' => 0 .' seconds',     
                 'direction' => $data['Direction'],  
                 'date_time' => null,    
                 'user_id' => $data['agent'],     
@@ -115,7 +115,7 @@ class CallRepository implements CallRepositoryInterface
                                   : null;
             \Log::info("here is the forward call details =>". $forwardCallDetails);
             // Total call duration from the current call
-            $totalCallDuration = $data['CallDuration'];
+            $totalCallDuration = $data['CallDuration'].'seconds';
             $totalPriceWithMargin = 0;
         
             // If the mobile call duration is 0, calculate base price without forward details
@@ -160,7 +160,7 @@ class CallRepository implements CallRepositoryInterface
             // Update call details in the database
             $updateCallDetails = Call::where('sid', $data['CallSid'])->update([
                 'status'        => $data['CallStatus'],
-                'duration'      => $data['CallDuration'],
+                'duration'      => $data['CallDuration'].' seconds',
                 'date_time'     => $data['Timestamp'],
                 'total_price'   => $totalPriceWithMargin,
                 'forward_call_duration' => $forwardCallDetails['duration'] ?? null
