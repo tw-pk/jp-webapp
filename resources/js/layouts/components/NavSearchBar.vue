@@ -1,5 +1,4 @@
 <script setup>
-import axios from '@axios'
 import { useThemeConfig } from '@core/composable/useThemeConfig'
 import Shepherd from 'shepherd.js'
 
@@ -11,117 +10,171 @@ defineOptions({ inheritAttrs: false })
 const isAppSearchBarVisible = ref(false)
 
 // 👉 Default suggestions
-const suggestionGroups = [
+const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+const userRole = (userData && userData.role) ? userData.role : null
+
+// Common Menu Content
+const commonDashboard = [
   {
-    title: 'Popular Searches',
-    content: [
-      {
-        icon: 'tabler-chart-donut',
-        title: 'Analytics',
-        url: { name: 'dashboard' },
-      },
-      {
-        icon: 'tabler-chart-bubble',
-        title: 'CRM',
-        url: { name: 'dashboard-crm' },
-      },
-      {
-        icon: 'tabler-file',
-        title: 'Invoice List',
-        url: { name: 'apps-invoice-list' },
-      },
-      {
-        icon: 'tabler-users',
-        title: 'User List',
-        url: { name: 'apps-user-list' },
-      },
-    ],
+    icon: 'tabler-layout-dashboard',
+    title: 'Dashboard',
+    url: { name: 'dashboard' },
   },
   {
-    title: 'Apps & Pages',
-    content: [
-      {
-        icon: 'tabler-calendar',
-        title: 'Calendar',
-        url: { name: 'apps-calendar' },
-      },
-      {
-        icon: 'tabler-file-plus',
-        title: 'Invoice Add',
-        url: { name: 'apps-invoice-add' },
-      },
-      {
-        icon: 'tabler-currency-dollar',
-        title: 'Pricing',
-        url: { name: 'pages-pricing' },
-      },
-      {
-        icon: 'tabler-user',
-        title: 'Account Settings',
-        url: {
-          name: 'pages-account-settings-tab',
-          params: { tab: 'account' },
-        },
-      },
-    ],
+    icon: 'tabler-users',
+    title: 'Manage Team',
+    url: { name: 'pages-teams-manage-teams' },
   },
   {
-    title: 'User Interface',
-    content: [
-      {
-        icon: 'tabler-letter-a',
-        title: 'Typography',
-        url: { name: 'pages-typography' },
-      },
-      {
-        icon: 'tabler-square',
-        title: 'Tabs',
-        url: { name: 'components-tabs' },
-      },
-      {
-        icon: 'tabler-hand-click',
-        title: 'Buttons',
-        url: { name: 'components-button' },
-      },
-      {
-        icon: 'tabler-keyboard',
-        title: 'Statistics',
-        url: { name: 'pages-cards-card-statistics' },
-      },
-    ],
+    icon: 'tabler-user-circle',
+    title: 'Contact',
+    url: { name: 'pages-contact' },
   },
   {
-    title: 'Popular Searches',
-    content: [
-      {
-        icon: 'tabler-list',
-        title: 'Select',
-        url: { name: 'forms-select' },
-      },
-      {
-        icon: 'tabler-space',
-        title: 'Combobox',
-        url: { name: 'forms-combobox' },
-      },
-      {
-        icon: 'tabler-calendar',
-        title: 'Date & Time Picker',
-        url: { name: 'forms-date-time-picker' },
-      },
-      {
-        icon: 'tabler-hexagon',
-        title: 'Rating',
-        url: { name: 'forms-rating' },
-      },
-    ],
+    icon: 'tabler-phone-call',
+    title: 'Recent Calls',
+    url: { name: 'pages-recent-calls' },
   },
 ]
+
+const commonSettings = [
+  {
+    icon: 'tabler-users',
+    title: 'Profile',
+    url: {
+      name: 'pages-account-settings-tab',
+      params: { tab: 'account' },
+    },
+  },
+  {
+    icon: 'tabler-lock',
+    title: 'Security',
+    url: {
+      name: 'pages-account-settings-tab',
+      params: { tab: 'security' },
+    },
+  },
+]
+
+const phoneNumbers = [
+  {
+    icon: 'tabler-phone',
+    title: 'Phone Numbers',
+    url: { name: 'pages-phone-numbers' },
+  },
+]
+
+// Role-Specific Menu Items
+const adminExtras = {
+  dashboard: [
+    {
+      icon: 'tabler-users',
+      title: 'Manage Members',
+      url: { name: 'pages-teams-manage-members' },
+    },
+    {
+      icon: 'tabler-message-circle-2',
+      title: 'SMS & MMS',
+      url: { name: 'messages-inbox' },
+    },
+    {
+      icon: 'tabler-transfer-in',
+      title: 'Top Up Credit',
+      url: { name: 'pages-top-up-credit' },
+    },
+  ],
+  settings: [
+    {
+      icon: 'tabler-file-text',
+      title: 'Payment Methods',
+      url: {
+        name: 'pages-account-settings-tab',
+        params: { tab: 'billing-plans' },
+      },
+    },
+    {
+      icon: 'tabler-bell',
+      title: 'Notifications',
+      url: {
+        name: 'pages-account-settings-tab',
+        params: { tab: 'notification' },
+      },
+    },
+    {
+      icon: 'tabler-building-skyscraper',
+      title: 'Business Profile',
+      url: {
+        name: 'pages-account-settings-tab',
+        params: { tab: 'business-profile' },
+      },
+    },
+  ],
+}
+
+// Generate suggestion groups based on user role
+let suggestionGroups = []
+
+if (userRole == "Admin") {
+  suggestionGroups = [
+    {
+      title: 'Dashboard',
+      content: [...commonDashboard, ...adminExtras.dashboard],
+    },
+    {
+      title: 'Settings',
+      content: [...commonSettings, ...adminExtras.settings],
+    },
+    {
+      title: 'Phone Numbers',
+      content: phoneNumbers,
+    },
+  ]
+} else if (userRole == "InactiveMember") {
+  suggestionGroups = [
+    {
+      title: 'Dashboard',
+      content: commonDashboard,
+    },
+    {
+      title: 'Settings',
+      content: commonSettings,
+    },
+    {
+      title: 'Phone Numbers',
+      content: phoneNumbers,
+    },
+  ]
+} else {
+  // Default user suggestions
+  suggestionGroups = [
+    {
+      title: 'Dashboard',
+      content: [
+        ...commonDashboard,
+        {
+          icon: 'tabler-message-circle-2',
+          title: 'SMS & MMS',
+          url: { name: 'messages-inbox' },
+        },
+      ],
+    },
+    {
+      title: 'Settings',
+      content: commonSettings,
+    },
+    {
+      title: 'Phone Numbers',
+      content: phoneNumbers,
+    },
+  ]
+}
+
 
 // 👉 No Data suggestion
 const noDataSuggestions = [
   {
-    title: 'Analytics Dashboard',
-    icon: 'tabler-shopping-cart',
+    title: 'Dashboard',
+    icon: 'tabler-layout-dashboard',
     url: { name: 'dashboard' },
   },
   {
@@ -133,9 +186,9 @@ const noDataSuggestions = [
     },
   },
   {
-    title: 'Pricing Page',
-    icon: 'tabler-cash',
-    url: { name: 'pages-pricing' },
+    title: 'Phone Numbers',
+    icon: 'tabler-phone',
+    url: { name: 'pages-phone-numbers' },
   },
 ]
 
@@ -145,9 +198,13 @@ const router = useRouter()
 
 // 👉 fetch search result API
 watchEffect(() => {
-  axios.get('/app-bar/search', { params: { q: searchQuery.value } }).then(response => {
-    searchResult.value = response.data
+  const filteredResults = suggestionGroups.flatMap(group => {
+    return group.content.filter(item =>
+      item.title.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    )
   })
+
+  searchResult.value = filteredResults 
 })
 
 const redirectToSuggestedOrSearchedPage = selected => {

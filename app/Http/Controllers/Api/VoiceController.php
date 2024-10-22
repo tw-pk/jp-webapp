@@ -82,8 +82,6 @@ class VoiceController extends Controller
 
         ]);
 
-        Log::info('inside VoiceController');
-        
         if ($call_created) {
             return response()->json([
                 'status' => true,
@@ -153,44 +151,53 @@ class VoiceController extends Controller
             }
 
             if (!empty($dateRange) && is_string($dateRange)) {
-                $dateArray = explode('to', $dateRange);
-                if (!empty($dateArray[0])) {
-                    $startTimeBefore = $dateArray[0];
-                    $filter['startTimeBefore'] = Carbon::parse($startTimeBefore)->format('Y-m-d H:i:s');
+                $dateRange = trim($dateRange);
+                if (str_contains($dateRange, ' to ')) {
+                    list($startDate, $endDate) = explode(' to ', $dateRange);
+                    $startDate = Carbon::parse(trim($startDate))->format('Y-m-d H:i:s');
+                    $endDate = Carbon::parse(trim($endDate))->format('Y-m-d H:i:s');
+                } else {
+                    $startDate = Carbon::parse($dateRange)->format('Y-m-d H:i:s');
+                    $endDate = null;
                 }
-                if (!empty($dateArray[1])) {
-                    $startTimeAfter = $dateArray[1];
-                    $filter['startTimeAfter'] = Carbon::parse($startTimeAfter)->format('Y-m-d H:i:s');
+            
+                if (!empty($startDate)) {
+                    $filter['startTimeBefore'] = $startDate;
+                }
+                if (!empty($endDate)) {
+                    $filter['startTimeAfter'] = $endDate;
                 }
             }
             
             $twilioCalls = Call::where(function ($query) use ($assignPhoneNumbers) {
-                    $query->whereIn('to', $assignPhoneNumbers)
-                        ->orWhereIn('from', $assignPhoneNumbers);
-                })
-                ->when($searchQuery, function ($query, $searchQuery) {
-                    $query->where('to', 'LIKE', "%{$searchQuery}%")
-                        ->orWhere('from', 'LIKE', "%{$searchQuery}%");
-                })
-                ->when($selectedItem !== 'Default', function ($query) use ($selectedItem) {
-                    $query->where('direction', 'LIKE', "%{$selectedItem}%");
-                })
-                ->when($filter, function ($query) use ($filter) {
-                    // Apply filters if provided
-                    if (!empty($filter['startTimeBefore']) && empty($filter['startTimeAfter'])) {
-                        $query->where('created_at', '<=', $filter['startTimeBefore']);
-                    }
-
-                    if (!empty($filter['startTimeBefore']) && !empty($filter['startTimeAfter'])) {
-                        $query->whereBetween('created_at', [$filter['startTimeBefore'], $filter['startTimeAfter']]);
-                    }
-
-                    if (!empty($filter['status'])) {
-                        $query->whereIn('status', (array) $filter['status']);
-                    }
-                })
-                ->orderByDesc('created_at')
-                ->get();
+                $query->whereIn('to', $assignPhoneNumbers)
+                      ->orWhereIn('from', $assignPhoneNumbers);
+            })
+            ->when($searchQuery, function ($query) use ($searchQuery) {
+                $query->where(function ($subQuery) use ($searchQuery) {
+                    $subQuery->where('to', 'LIKE', "%{$searchQuery}%")
+                             ->orWhere('from', 'LIKE', "%{$searchQuery}%");
+                });
+            })
+            ->when($selectedItem !== 'Default', function ($query) use ($selectedItem) {
+                $query->where('direction', 'LIKE', "%{$selectedItem}%");
+            })
+            ->when($filter, function ($query) use ($filter) {
+                
+                if (!empty($filter['startTimeBefore'])) {
+                    $query->when(empty($filter['startTimeAfter']), 
+                        fn($q) => $q->where('created_at', '<=', $filter['startTimeBefore'])
+                    )->when(!empty($filter['startTimeAfter']), 
+                        fn($q) => $q->whereBetween('created_at', [$filter['startTimeBefore'], $filter['startTimeAfter']])
+                    );
+                }
+        
+                if (!empty($filter['status'])) {
+                    $query->whereIn('status', (array) $filter['status']);
+                }
+            })
+            ->orderByDesc('created_at')
+            ->get();
             
             $twilioCalls = $this->formattedDateTime($twilioCalls);
             $totalRecord = $twilioCalls->count(); 

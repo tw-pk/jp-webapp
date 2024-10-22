@@ -140,7 +140,7 @@ class TeamController extends Controller
 
     public function fetch_roles()
     {
-        $roles = Role::select('id', 'name')->get();
+        $roles = Role::select('id', 'name')->where('name', '!=', 'InactiveMember')->get();
         return response()->json([
             'message' => 'Roles fetched successfully',
             'roles' => $roles

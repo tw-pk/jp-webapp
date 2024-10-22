@@ -1,4 +1,6 @@
 <script setup>
+import { ref, watch } from 'vue'
+
 const props = defineProps({
   totalInput: {
     type: Number,
@@ -17,32 +19,64 @@ const emit = defineEmits(['updateOtp'])
 const digits = ref([])
 const refOtpComp = ref(null)
 
+watch(() => props.default, newValue => {
+  digits.value = newValue.split('')
+})
+
 digits.value = props.default.split('')
 
 const defaultStyle = { style: 'max-width: 54px; text-align: center;' }
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
 const handleKeyDown = (event, index) => {
-  if (event.code !== 'Tab' && event.code !== 'ArrowRight' && event.code !== 'ArrowLeft')
-    event.preventDefault()
+  // Allow navigation keys (Tab, ArrowLeft, ArrowRight) and Ctrl + V (paste)
+  if (['Tab', 'ArrowRight', 'ArrowLeft'].includes(event.code) || 
+      (event.ctrlKey || event.metaKey) && event.code === 'KeyV') {
+    return
+  }
+
+  event.preventDefault()
+
   if (event.code === 'Backspace') {
     digits.value[index - 1] = ''
-    if (refOtpComp.value !== null && index > 1) {
+
+    if (refOtpComp.value && index > 1) {
       const inputEl = refOtpComp.value.children[index - 2].querySelector('input')
-      if (inputEl)
-        inputEl.focus()
+      if (inputEl) inputEl.focus()
     }
+    emit('updateOtp', digits.value.join(''))
+    
+    return
   }
-  const numberRegExp = /^([0-9])$/
+
+
+  const numberRegExp = /^[0-9]$/
   if (numberRegExp.test(event.key)) {
     digits.value[index - 1] = event.key
-    if (refOtpComp.value !== null && index !== 0 && index < refOtpComp.value.children.length) {
+
+    if (refOtpComp.value && index < props.totalInput) {
       const inputEl = refOtpComp.value.children[index].querySelector('input')
-      if (inputEl)
-        inputEl.focus()
+      if (inputEl) inputEl.focus()
     }
+    emit('updateOtp', digits.value.join(''))
   }
-  emit('updateOtp', digits.value.join(''))
+}
+
+const handlePaste = event => {
+  const pastedData = (event.clipboardData || window.clipboardData).getData('text')
+
+ 
+  if (pastedData.length === props.totalInput && /^\d+$/.test(pastedData)) {
+    digits.value = pastedData.split('') 
+    emit('updateOtp', digits.value.join('')) 
+
+    if (refOtpComp.value) {
+      const lastInput = refOtpComp.value.children[props.totalInput - 1].querySelector('input')
+      if (lastInput) {
+        lastInput.focus()
+      }
+    }
+    event.preventDefault()
+  }
 }
 </script>
 
@@ -54,6 +88,7 @@ const handleKeyDown = (event, index) => {
     <div
       ref="refOtpComp"
       class="d-flex align-center gap-4"
+      @paste="handlePaste"
     >
       <AppTextField
         v-for="i in props.totalInput"

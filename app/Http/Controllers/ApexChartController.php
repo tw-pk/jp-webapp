@@ -201,7 +201,7 @@ class ApexChartController extends Controller
                             $totalAnsDurationSeconds += $callDuration;
                         }
                     } catch (\Exception $e) {
-                        Log::error("Date parsing error: " . $e->getMessage());
+                        //\Log::error("Date parsing error: " . $e->getMessage());
                     }
                 }
             }
