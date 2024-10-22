@@ -341,7 +341,7 @@ class TwilioController extends Controller
 
             // Prepare data for updating
             $updateData = [
-                'duration' => $duration . " seconds",
+                'duration' => $duration . "seconds",
                 'status' => $status,
                 'date_time' => $dateTime,
             ];

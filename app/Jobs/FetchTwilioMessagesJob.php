@@ -55,7 +55,7 @@ class FetchTwilioMessagesJob implements ShouldQueue
                                     'to' => $call->to,
                                     'from' => $call->from,
                                     'status' => $call->status,
-                                    'duration' => $call->duration . " seconds" ?? '-',
+                                    'duration' => $call->duration . ". 00 sec" ?? '-',
                                     'direction' => $call->direction,
                                     'date_time' => "From ". Carbon::parse($call->startTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A')." - To ".Carbon::parse($call->endTime)->setTimezone('Asia/Karachi')->format('d M, Y h:i:s A'),
                                     'user_id' => $user->id,
